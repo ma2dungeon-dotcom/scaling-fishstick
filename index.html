@@ -3,9 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Вход</title>
+    <title>Ma2DUNGEON · Firebase</title>
+    <!-- Подключаем Firebase (твоя конфигурация) -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* Стили, чтобы всё выглядело аккуратно */
+        /* Стили полностью сохранены */
         * {
             margin: 0;
             padding: 0;
@@ -20,7 +23,6 @@
             flex-direction: column;
         }
 
-        /* Шапка (хедер) — верхняя полоса */
         .header {
             background-color: rgba(10, 14, 23, 0.85);
             backdrop-filter: blur(12px);
@@ -32,9 +34,670 @@
             border-bottom: 2px solid #3c3f5e;
             box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6);
             position: relative;
-            flex-wrap: wrap; /* на случай узких экранов */
+            flex-wrap: wrap;
+            z-index: 20;
         }
 
+        .site-title {
+            font-size: 1.9rem;
+            font-weight: 800;
+            letter-spacing: 2px;
+            background: linear-gradient(135deg, #b886fd, #a45ee5);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 12px #9147ff80;
+            border-right: 2px solid #5f559b;
+            padding-right: 20px;
+            min-width: fit-content;
+        }
+
+        .user-name-center {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #2d2f47;
+            padding: 0.5rem 2rem;
+            border-radius: 60px;
+            border: 1px solid #6b5f9e;
+            box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #342b53;
+            font-weight: 600;
+            font-size: 1.3rem;
+            color: #f2e9ff;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
+            max-width: 40%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .user-name-center:hover {
+            background: #3e4063;
+            border-color: #9f8ae0;
+        }
+
+        .settings-btn {
+            background: #262b3d;
+            border: 2px solid #5a4d84;
+            color: #d4c2ff;
+            font-size: 1.3rem;
+            padding: 0.5rem 1.5rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 10px #433f6b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.5px;
+            backdrop-filter: blur(4px);
+            margin-left: auto;
+        }
+        .settings-btn:hover {
+            background: #313a57;
+            border-color: #9b83e0;
+            color: #f0eaff;
+            box-shadow: 0 0 18px #7d63c5;
+        }
+
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            color: #cbcbe0;
+            padding: 2rem;
+            text-align: center;
+        }
+
+        .welcome-block {
+            background: rgba(18, 22, 38, 0.7);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid #57608c;
+            border-radius: 48px;
+            padding: 3rem 4rem;
+            box-shadow: 0 25px 40px -10px black;
+        }
+
+        .welcome-block h2 {
+            font-size: 2.8rem;
+            background: linear-gradient(145deg, #ded5ff, #b29eff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-block p {
+            font-size: 1.3rem;
+            max-width: 600px;
+            color: #b6b7d0;
+        }
+
+        .dungeon-icon {
+            font-size: 4rem;
+            filter: drop-shadow(0 0 16px #aa88ff);
+            margin-bottom: 20px;
+        }
+
+        /* Меню настроек */
+        .settings-menu {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 750px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #1e2337;
+            border: 3px solid #6d5aa3;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 0 4px #362d52 inset;
+            padding: 2rem 1.5rem;
+            z-index: 1000;
+            display: none;
+            color: #e3d9ff;
+            backdrop-filter: blur(20px);
+        }
+
+        .settings-menu.active {
+            display: block;
+        }
+
+        .settings-menu h2 {
+            font-size: 2.2rem;
+            text-align: center;
+            margin-bottom: 20px;
+            color: #cbb7ff;
+            border-bottom: 2px dashed #7b68b0;
+            padding-bottom: 15px;
+        }
+
+        .close-menu {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #b7a4ff;
+            background: #2f2b4a;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #7361b0;
+            transition: 0.2s;
+        }
+        .close-menu:hover {
+            background: #493f70;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 25px;
+            border-bottom: 2px solid #47407c;
+            padding-bottom: 15px;
+        }
+        .tab {
+            background: #2b2e48;
+            padding: 12px 25px;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: 2px solid #4f4580;
+            transition: 0.2s;
+            color: #b7afdc;
+        }
+        .tab.active {
+            background: #554a88;
+            border-color: #b595ff;
+            color: white;
+            box-shadow: 0 0 15px #846fcf;
+        }
+        .tab:hover {
+            background: #3e3768;
+        }
+
+        .tab-panel {
+            display: none;
+        }
+        .tab-panel.active {
+            display: block;
+        }
+
+        .change-name-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        .change-name-panel input {
+            background: #0b0f21;
+            border: 3px solid #5a4f8f;
+            padding: 18px 25px;
+            font-size: 1.3rem;
+            border-radius: 60px;
+            color: white;
+            outline: none;
+            width: 100%;
+        }
+        .change-name-panel button {
+            background: #594e94;
+            border: none;
+            padding: 18px;
+            font-size: 1.4rem;
+            font-weight: bold;
+            border-radius: 60px;
+            color: white;
+            cursor: pointer;
+            border-bottom: 5px solid #2e274b;
+            transition: 0.1s;
+        }
+        .change-name-panel button:active {
+            border-bottom-width: 2px;
+            transform: translateY(3px);
+        }
+
+        .users-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #14182b;
+            border-radius: 30px;
+            overflow: hidden;
+            border: 2px solid #4d4382;
+        }
+        .users-table th {
+            background: #2e2b55;
+            color: #ded1ff;
+            font-size: 1rem;
+            padding: 15px 5px;
+            font-weight: 600;
+            text-align: center;
+            border-bottom: 3px solid #7e6ec0;
+        }
+        .users-table td {
+            padding: 12px 5px;
+            text-align: center;
+            border-bottom: 1px solid #3a3462;
+            color: #cfc5f5;
+            word-break: break-word;
+        }
+        .users-table tr:last-child td {
+            border-bottom: none;
+        }
+        .block-btn {
+            background: #b1536b;
+            border: none;
+            color: white;
+            font-weight: bold;
+            padding: 6px 12px;
+            border-radius: 40px;
+            cursor: pointer;
+            border-bottom: 3px solid #71283b;
+            font-size: 0.9rem;
+            transition: 0.1s;
+        }
+        .block-btn:active {
+            border-bottom-width: 1px;
+            transform: translateY(2px);
+        }
+        .block-btn.blocked {
+            background: #3f3f6b;
+            border-bottom-color: #20203b;
+            cursor: default;
+            opacity: 0.6;
+        }
+        .block-btn:not(.blocked):hover {
+            background: #c45f7a;
+        }
+
+        .empty-message {
+            text-align: center;
+            padding: 30px;
+            font-size: 1.3rem;
+            color: #a096c9;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(6px);
+            z-index: 999;
+            display: none;
+        }
+        .overlay.active {
+            display: block;
+        }
+
+        @media (max-width: 700px) {
+            .user-name-center {
+                position: static;
+                transform: none;
+                margin: 10px 0;
+                order: 3;
+                width: 100%;
+                max-width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="overlay" id="overlay"></div>
+
+    <!-- Меню настроек -->
+    <div class="settings-menu" id="settingsMenu">
+        <div class="close-menu" id="closeMenu">✕</div>
+        <h2>⚙️ ПОДЗЕМЕЛЬЕ НАСТРОЕК</h2>
+        
+        <div class="tabs">
+            <div class="tab active" data-tab="tab1">👤 Сменить имя</div>
+            <div class="tab" data-tab="tab2">👑 Админ панель</div>
+        </div>
+
+        <div class="tab-panel active" id="tab1">
+            <div class="change-name-panel">
+                <input type="text" id="newNameInput" placeholder="Введите новое имя" autocomplete="off">
+                <button id="changeNameBtn">Сменить имя</button>
+            </div>
+        </div>
+
+        <div class="tab-panel" id="tab2">
+            <h3 style="margin-bottom:15px;">📋 Все, кто заходил</h3>
+            <div id="usersListContainer"></div>
+        </div>
+    </div>
+
+    <!-- Шапка сайта -->
+    <header class="header">
+        <div class="site-title">⚔️ Ma2DUNGEON</div>
+        <div id="userNameDisplay" class="user-name-center" title="Двойной клик — сменить">─── ⋆⋅ stranger ⋅⋆ ───</div>
+        <div class="settings-btn" id="settingsBtn">⚙️ Настройки</div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="content">
+        <div class="welcome-block">
+            <div class="dungeon-icon">🗝️🏮</div>
+            <h2>Подземелье ждёт</h2>
+            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Твоё имя теперь знают даже стены.</p>
+            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Имя — это ключ к легенде»</p>
+        </div>
+    </main>
+
+    <script>
+        (function() {
+            // ========== 1. Инициализация Firebase (твоя конфигурация) ==========
+            const firebaseConfig = { 
+                databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" 
+            };
+            firebase.initializeApp(firebaseConfig);
+            const database = firebase.database();
+
+            // ========== 2. Глобальные переменные ==========
+            let currentUser = null;               // { id, name, ip, firstSeen, lastSeen }
+            const currentUserIdKey = 'ma2dungeon_currentId'; // для хранения ID в localStorage (как сессия)
+
+            // ========== 3. Вспомогательные функции для работы с Firebase ==========
+            function generateUserId() {
+                return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+            }
+
+            // Получить ссылку на пользователя в Realtime Database
+            function getUserRef(userId) {
+                return database.ref('users/' + userId);
+            }
+
+            // Получить ссылку на весь список users
+            function getUsersRef() {
+                return database.ref('users');
+            }
+
+            // Получить ссылку на список заблокированных (banned)
+            function getBannedRef() {
+                return database.ref('banned');
+            }
+
+            // Сохранить или обновить данные пользователя в Firebase
+            function saveUserToFirebase(user) {
+                return getUserRef(user.id).set(user);
+            }
+
+            // Удалить пользователя из Firebase (при блокировке мы не удаляем, а переносим в banned)
+            function banUser(userId) {
+                // Сначала получим данные пользователя, чтобы сохранить их в banned
+                return getUserRef(userId).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        // Добавим пометку о бане
+                        userData.bannedAt = new Date().toLocaleString();
+                        // Сохраняем в узел banned
+                        return database.ref('banned/' + userId).set(userData).then(() => {
+                            // Удаляем из активных users
+                            return getUserRef(userId).remove();
+                        });
+                    }
+                });
+            }
+
+            // Разблокировать (вернуть из banned в users)
+            function unbanUser(userId) {
+                return database.ref('banned/' + userId).once('value').then(snapshot => {
+                    const userData = snapshot.val();
+                    if (userData) {
+                        // удаляем метку bannedAt, если хочешь
+                        delete userData.bannedAt;
+                        // сохраняем обратно в users
+                        return getUserRef(userId).set(userData).then(() => {
+                            // удаляем из banned
+                            return database.ref('banned/' + userId).remove();
+                        });
+                    }
+                });
+            }
+
+            // Проверить, заблокирован ли пользователь (по ID)
+            function checkUserBanned(userId) {
+                return database.ref('banned/' + userId).once('value').then(snapshot => snapshot.exists());
+            }
+
+            // ========== 4. Инициализация / восстановление текущего пользователя ==========
+            function initCurrentUser() {
+                const storedId = localStorage.getItem(currentUserIdKey);
+                
+                if (storedId) {
+                    // Пробуем найти пользователя в Firebase по ID
+                    getUserRef(storedId).once('value').then(snapshot => {
+                        if (snapshot.exists()) {
+                            // Пользователь есть в активных
+                            currentUser = snapshot.val();
+                            // Обновляем lastSeen
+                            currentUser.lastSeen = new Date().toLocaleString();
+                            saveUserToFirebase(currentUser).then(() => {
+                                updateDisplayName(currentUser.name);
+                                // Проверим, не забанили ли его (на всякий случай, но раз он в users — не забанили)
+                                // подпишемся на изменения этого пользователя (вдруг админ банит прямо сейчас)
+                                listenUserChanges(currentUser.id);
+                            });
+                        } else {
+                            // Пользователя нет в активных — проверим banned
+                            checkUserBanned(storedId).then(isBanned => {
+                                if (isBanned) {
+                                    alert('❌ Вы заблокированы. Доступ запрещён.');
+                                    localStorage.removeItem(currentUserIdKey);
+                                    window.location.reload();
+                                } else {
+                                    // нет ни в users, ни в banned — создаём заново
+                                    createNewUser();
+                                }
+                            });
+                        }
+                    });
+                } else {
+                    // Нет сохранённого ID — создаём нового пользователя
+                    createNewUser();
+                }
+            }
+
+            // Создание нового пользователя
+            function createNewUser() {
+                let name = prompt('Добро пожаловать в Ma2DUNGEON!\nКак нам тебя называть?', 'Искатель приключений');
+                if (name === null) name = 'Отважный путник';
+                if (name.trim() === '') name = 'Безымянный герой';
+
+                // Имитация IP (можно заменить на реальный, если будешь передавать с сервера)
+                const fakeIp = '127.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255);
+                
+                const newUser = {
+                    id: generateUserId(),
+                    name: name,
+                    ip: fakeIp,
+                    firstSeen: new Date().toLocaleString(),
+                    lastSeen: new Date().toLocaleString()
+                };
+
+                // Сохраняем в Firebase
+                saveUserToFirebase(newUser).then(() => {
+                    currentUser = newUser;
+                    localStorage.setItem(currentUserIdKey, newUser.id);
+                    updateDisplayName(newUser.name);
+                    listenUserChanges(newUser.id);
+                });
+            }
+
+            // Слушаем изменения пользователя (например, если админ заблокировал)
+            function listenUserChanges(userId) {
+                database.ref('banned/' + userId).on('value', snapshot => {
+                    if (snapshot.exists()) {
+                        // Нас заблокировали!
+                        alert('❌ Вы были заблокированы администратором.');
+                        localStorage.removeItem(currentUserIdKey);
+                        window.location.reload();
+                    }
+                });
+            }
+
+            // Обновить имя текущего пользователя
+            function changeUserName(newName) {
+                if (!currentUser) return;
+                currentUser.name = newName;
+                currentUser.lastSeen = new Date().toLocaleString();
+                saveUserToFirebase(currentUser).then(() => {
+                    updateDisplayName(newName);
+                    renderUsersList(); // если открыта админка
+                });
+            }
+
+            // Обновить отображение имени в центре
+            function updateDisplayName(name) {
+                const display = document.getElementById('userNameDisplay');
+                if (display) {
+                    display.textContent = '✨ ' + name + ' ✨';
+                }
+            }
+
+            // ========== 5. Рендер списка пользователей (из Firebase) ==========
+            function renderUsersList() {
+                const container = document.getElementById('usersListContainer');
+                if (!container) return;
+
+                // Получаем всех активных пользователей
+                getUsersRef().once('value', snapshot => {
+                    const usersData = snapshot.val(); // объект { userId: {...}, ... }
+                    const usersArray = usersData ? Object.values(usersData) : [];
+                    
+                    // Получаем список заблокированных, чтобы отметить кнопки
+                    getBannedRef().once('value', bannedSnapshot => {
+                        const bannedData = bannedSnapshot.val(); // { userId: {...} } или null
+                        const bannedSet = new Set(bannedData ? Object.keys(bannedData) : []);
+
+                        if (usersArray.length === 0) {
+                            container.innerHTML = '<div class="empty-message">👀 Пока никто не заходил</div>';
+                            return;
+                        }
+
+                        // Сортировка по последнему входу (новые сверху)
+                        usersArray.sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || ''));
+
+                        let html = `<table class="users-table">
+                            <thead><tr><th>Имя</th><th>IP</th><th>Последний вход</th><th>Действие</th></tr></thead>
+                            <tbody>`;
+
+                        usersArray.forEach(u => {
+                            const isCurrent = currentUser && u.id === currentUser.id;
+                            const isBanned = bannedSet.has(u.id);
+                            
+                            html += `<tr>
+                                <td>${u.name} ${isCurrent ? '👑' : ''}</td>
+                                <td>${u.ip}</td>
+                                <td>${u.lastSeen || '—'}</td>
+                                <td>
+                                    ${ !isCurrent ? 
+                                        `<button class="block-btn ${isBanned ? 'blocked' : ''}" data-user-id="${u.id}">${isBanned ? '🔒 Разблокировать' : '🚫 Блокировать'}</button>` 
+                                        : '<span style="color:#b5a5e0;">⚡ это вы</span>'}
+                                </td>
+                            </tr>`;
+                        });
+
+                        html += '</tbody></table>';
+                        container.innerHTML = html;
+
+                        // Навешиваем обработчики на кнопки
+                        container.querySelectorAll('.block-btn').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const userId = btn.dataset.userId;
+                                if (!userId) return;
+
+                                const currentlyBlocked = btn.classList.contains('blocked');
+                                
+                                if (currentlyBlocked) {
+                                    // Разблокировать
+                                    unbanUser(userId).then(() => {
+                                        renderUsersList(); // обновить список
+                                    });
+                                } else {
+                                    // Заблокировать
+                                    banUser(userId).then(() => {
+                                        renderUsersList(); // обновить список
+                                    });
+                                }
+                            });
+                        });
+                    });
+                });
+            }
+
+            // ========== 6. Инициализация приложения ==========
+            initCurrentUser();
+
+            // ========== 7. Элементы интерфейса ==========
+            const settingsBtn = document.getElementById('settingsBtn');
+            const settingsMenu = document.getElementById('settingsMenu');
+            const overlay = document.getElementById('overlay');
+            const closeMenu = document.getElementById('closeMenu');
+            const tabs = document.querySelectorAll('.tab');
+            const panels = document.querySelectorAll('.tab-panel');
+            const changeNameBtn = document.getElementById('changeNameBtn');
+            const newNameInput = document.getElementById('newNameInput');
+            const userNameDisplay = document.getElementById('userNameDisplay');
+
+            function openSettings() {
+                settingsMenu.classList.add('active');
+                overlay.classList.add('active');
+                renderUsersList(); // при открытии настроек загружаем список из Firebase
+            }
+            function closeSettings() {
+                settingsMenu.classList.remove('active');
+                overlay.classList.remove('active');
+            }
+
+            settingsBtn.addEventListener('click', openSettings);
+            closeMenu.addEventListener('click', closeSettings);
+            overlay.addEventListener('click', closeSettings);
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    const target = tab.dataset.tab;
+                    panels.forEach(p => p.classList.remove('active'));
+                    document.getElementById(target).classList.add('active');
+                });
+            });
+
+            changeNameBtn.addEventListener('click', () => {
+                const newName = newNameInput.value.trim();
+                if (!newName) {
+                    alert('Введите имя!');
+                    return;
+                }
+                changeUserName(newName);
+                newNameInput.value = '';
+            });
+
+            userNameDisplay.addEventListener('dblclick', () => {
+                let newName = prompt('Введи новое имя:');
+                if (newName !== null) {
+                    newName = newName.trim();
+                    if (newName === '') newName = 'Безымянный герой';
+                    changeUserName(newName);
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
         /* Левая часть — название */
         .site-title {
             font-size: 1.9rem;
