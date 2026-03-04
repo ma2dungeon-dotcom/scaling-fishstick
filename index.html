@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Друзья</title>
+    <title>Ma2DUNGEON · Входящие</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -236,6 +236,7 @@
             border-bottom: 2px solid #47407c;
             padding-bottom: 15px;
             flex-wrap: wrap;
+            position: relative;
         }
         .tab {
             background: #2b2e48;
@@ -247,6 +248,7 @@
             border: 2px solid #4f4580;
             transition: 0.2s;
             color: #b7afdc;
+            position: relative;
         }
         .tab.active {
             background: #554a88;
@@ -256,6 +258,25 @@
         }
         .tab:hover {
             background: #3e3768;
+        }
+        
+        .tab-badge {
+            position: absolute;
+            top: -8px;
+            right: -8px;
+            background: #ff4757;
+            color: white;
+            font-size: 0.8rem;
+            font-weight: bold;
+            min-width: 20px;
+            height: 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 2px solid #8b0000;
+            box-shadow: 0 0 10px #ff0000;
         }
 
         .tab-panel {
@@ -329,6 +350,9 @@
             align-self: flex-end;
             border-color: #a285ff;
         }
+        .message.unread {
+            border-left: 4px solid #ffaa00;
+        }
         .message-header {
             font-size: 0.85rem;
             color: #b1a6e0;
@@ -370,6 +394,62 @@
             font-weight: bold;
             cursor: pointer;
             border-bottom: 3px solid #2e274b;
+        }
+
+        /* Входящие сообщения */
+        .inbox-list {
+            background: #14182b;
+            border-radius: 30px;
+            padding: 20px;
+            border: 2px solid #4d4382;
+            max-height: 500px;
+            overflow-y: auto;
+        }
+        .inbox-item {
+            background: #262b44;
+            border-radius: 20px;
+            padding: 15px 20px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+            transition: 0.2s;
+            border: 2px solid #5b4e93;
+        }
+        .inbox-item:hover {
+            background: #313a57;
+            border-color: #9b83e0;
+        }
+        .inbox-item.unread {
+            border-left: 8px solid #ffaa00;
+            background: #2f2b55;
+        }
+        .inbox-info h4 {
+            color: #d7c9ff;
+            margin-bottom: 5px;
+        }
+        .inbox-info p {
+            color: #8f84b0;
+            font-size: 0.9rem;
+            max-width: 300px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .inbox-badge {
+            background: #ff4757;
+            color: white;
+            font-weight: bold;
+            min-width: 25px;
+            height: 25px;
+            border-radius: 25px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            font-size: 0.9rem;
+            border: 2px solid #8b0000;
         }
 
         /* Админ панель */
@@ -722,10 +802,11 @@
         <div class="close-menu" id="closeMenu">✕</div>
         <h2>⚙️ ПОДЗЕМЕЛЬЕ НАСТРОЕК</h2>
         
-        <div class="tabs">
+        <div class="tabs" id="tabsContainer">
             <div class="tab active" data-tab="tab1">👤 Сменить имя</div>
             <div class="tab" data-tab="tab2">👑 Админ панель</div>
-            <div class="tab" data-tab="tab3">💬 Общий чат</div>
+            <div class="tab" data-tab="tab3" id="inboxTab">📥 Входящие</div>
+            <div class="tab" data-tab="tab4">💬 Общий чат</div>
         </div>
 
         <!-- Вкладка смены имени -->
@@ -745,8 +826,14 @@
             <div id="usersListContainer"></div>
         </div>
 
-        <!-- Вкладка общего чата -->
+        <!-- Вкладка входящих -->
         <div class="tab-panel" id="tab3">
+            <h3 style="margin-bottom:15px;">📥 Входящие сообщения</h3>
+            <div class="inbox-list" id="inboxList"></div>
+        </div>
+
+        <!-- Вкладка общего чата -->
+        <div class="tab-panel" id="tab4">
             <h3 style="margin-bottom:15px;">💬 Общий чат</h3>
             <div class="chat-container">
                 <div class="chat-messages" id="globalChatMessages"></div>
@@ -796,6 +883,10 @@
             // Для личных сообщений
             let currentPMUser = null;
             let pmListener = null;
+            
+            // Для счетчика непрочитанных
+            let unreadCount = 0;
+            let inboxListener = null;
 
             // ========== 3. Работа с Firebase (пользователи) ==========
             function generateUserId() {
@@ -862,7 +953,8 @@
                             saveUserToFirebase(currentUser).then(() => {
                                 updateDisplayName(currentUser.name);
                                 listenUserChanges(currentUser.id);
-                                loadFriends(); // загружаем друзей
+                                loadFriends();
+                                setupInboxListener(); // Слушаем входящие
                             });
                         } else {
                             checkUserBanned(storedId).then(isBanned => {
@@ -906,6 +998,7 @@
                     updateDisplayName(newUser.name);
                     listenUserChanges(newUser.id);
                     loadFriends();
+                    setupInboxListener();
                 });
             }
 
@@ -964,7 +1057,6 @@
 
                 const friendIds = Object.keys(friendsObj);
                 
-                // Получаем данные о друзьях
                 getUsersRef().once('value', snapshot => {
                     const allUsers = snapshot.val() || {};
                     let html = '';
@@ -986,7 +1078,6 @@
                     
                     container.innerHTML = html;
                     
-                    // Обработчики
                     container.querySelectorAll('[data-action="remove-friend"]').forEach(btn => {
                         btn.addEventListener('click', () => {
                             removeFriend(btn.dataset.userId);
@@ -1038,10 +1129,33 @@
                     toUserId: toUserId,
                     text: text,
                     timestamp: Date.now(),
-                    timeStr: new Date().toLocaleTimeString()
+                    timeStr: new Date().toLocaleTimeString(),
+                    read: false // Новое сообщение не прочитано
                 };
                 
                 return database.ref('privateChats/' + chatId).push(message);
+            }
+
+            function markMessagesAsRead(otherUserId) {
+                if (!currentUser) return;
+                
+                const chatId = [currentUser.id, otherUserId].sort().join('_');
+                const chatRef = database.ref('privateChats/' + chatId);
+                
+                chatRef.once('value', snapshot => {
+                    const updates = {};
+                    snapshot.forEach(child => {
+                        const msg = child.val();
+                        // Если сообщение адресовано текущему пользователю и не прочитано
+                        if (msg.toUserId === currentUser.id && !msg.read) {
+                            updates[child.key + '/read'] = true;
+                        }
+                    });
+                    
+                    if (Object.keys(updates).length > 0) {
+                        chatRef.update(updates);
+                    }
+                });
             }
 
             function subscribeToPrivateChat(otherUserId, callback) {
@@ -1061,7 +1175,114 @@
                 return () => chatRef.off();
             }
 
-            // ========== 7. Поиск пользователей ==========
+            // ========== 7. Входящие и уведомления ==========
+            function setupInboxListener() {
+                if (!currentUser) return;
+                
+                // Слушаем все чаты, где текущий пользователь - получатель
+                const allChatsRef = database.ref('privateChats');
+                
+                inboxListener = allChatsRef.on('value', snapshot => {
+                    const chats = snapshot.val() || {};
+                    let totalUnread = 0;
+                    const inboxItems = [];
+                    
+                    // Проходим по всем чатам
+                    Object.entries(chats).forEach(([chatId, messages]) => {
+                        const [id1, id2] = chatId.split('_');
+                        const otherId = id1 === currentUser.id ? id2 : id1;
+                        
+                        // Проверяем, есть ли сообщения для текущего пользователя
+                        const userMessages = Object.values(messages).filter(msg => 
+                            msg.toUserId === currentUser.id
+                        );
+                        
+                        if (userMessages.length > 0) {
+                            // Сортируем по времени (новые сверху)
+                            userMessages.sort((a, b) => b.timestamp - a.timestamp);
+                            const lastMsg = userMessages[0];
+                            const unreadInChat = userMessages.filter(msg => !msg.read).length;
+                            
+                            totalUnread += unreadInChat;
+                            
+                            // Получаем имя отправителя
+                            getUserRef(otherId).once('value', userSnapshot => {
+                                const otherUser = userSnapshot.val();
+                                if (otherUser) {
+                                    inboxItems.push({
+                                        userId: otherId,
+                                        userName: otherUser.name,
+                                        lastMessage: lastMsg.text,
+                                        lastTime: lastMsg.timeStr,
+                                        unread: unreadInChat
+                                    });
+                                }
+                                renderInbox(inboxItems);
+                            });
+                        }
+                    });
+                    
+                    updateUnreadBadge(totalUnread);
+                });
+            }
+
+            function renderInbox(items) {
+                const container = document.getElementById('inboxList');
+                if (!container) return;
+                
+                if (items.length === 0) {
+                    container.innerHTML = '<div style="color: #8f84b0; text-align: center; padding: 30px;">✉️ Нет входящих сообщений</div>';
+                    return;
+                }
+                
+                // Сортируем по непрочитанным (сначала новые)
+                items.sort((a, b) => b.unread - a.unread);
+                
+                let html = '';
+                items.forEach(item => {
+                    html += `
+                        <div class="inbox-item ${item.unread > 0 ? 'unread' : ''}" data-user-id="${item.userId}" data-user-name="${item.userName}">
+                            <div class="inbox-info">
+                                <h4>${item.userName}</h4>
+                                <p>${item.lastMessage}</p>
+                                <small>${item.lastTime}</small>
+                            </div>
+                            ${item.unread > 0 ? `<div class="inbox-badge">${item.unread}</div>` : ''}
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+                
+                // Клик по диалогу открывает чат
+                container.querySelectorAll('.inbox-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const userId = item.dataset.userId;
+                        const userName = item.dataset.userName;
+                        openPrivateChat(userId, userName);
+                        markMessagesAsRead(userId);
+                    });
+                });
+            }
+
+            function updateUnreadBadge(count) {
+                unreadCount = count;
+                const inboxTab = document.getElementById('inboxTab');
+                
+                // Удаляем старый бейдж
+                const oldBadge = inboxTab.querySelector('.tab-badge');
+                if (oldBadge) oldBadge.remove();
+                
+                // Добавляем новый, если есть непрочитанные
+                if (count > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'tab-badge';
+                    badge.textContent = count > 99 ? '99+' : count;
+                    inboxTab.appendChild(badge);
+                }
+            }
+
+            // ========== 8. Поиск пользователей ==========
             function searchUsers(searchTerm) {
                 return getUsersRef().once('value').then(snapshot => {
                     const users = snapshot.val() || {};
@@ -1087,7 +1308,6 @@
                         return;
                     }
                     
-                    // Получаем список друзей
                     database.ref('friends/' + currentUser.id).once('value', friendsSnapshot => {
                         const friends = friendsSnapshot.val() || {};
                         
@@ -1112,7 +1332,6 @@
                         
                         container.innerHTML = html;
                         
-                        // Обработчики
                         container.querySelectorAll('[data-action="friend"]').forEach(btn => {
                             btn.addEventListener('click', () => {
                                 const userId = btn.dataset.userId;
@@ -1134,7 +1353,7 @@
                 });
             }
 
-            // ========== 8. Админка: рендер списка пользователей ==========
+            // ========== 9. Админка: рендер списка пользователей ==========
             function renderUsersList(searchTerm = '') {
                 const container = document.getElementById('usersListContainer');
                 if (!container) return;
@@ -1211,7 +1430,7 @@
                 });
             }
 
-            // ========== 9. Личные сообщения ==========
+            // ========== 10. Личные сообщения (обновлено с пометкой прочтения) ==========
             function openPrivateChat(userId, userName) {
                 if (!currentUser) return;
                 
@@ -1221,6 +1440,9 @@
                 }
                 
                 currentPMUser = { id: userId, name: userName };
+                
+                // Помечаем сообщения как прочитанные
+                markMessagesAsRead(userId);
                 
                 document.getElementById('pmModal').classList.remove('hidden');
                 document.getElementById('overlay').classList.add('active');
@@ -1235,8 +1457,9 @@
                     
                     messages.forEach(msg => {
                         const isOwn = msg.fromUserId === currentUser.id;
+                        const isUnread = !isOwn && !msg.read;
                         const msgDiv = document.createElement('div');
-                        msgDiv.className = `message ${isOwn ? 'own-message' : ''}`;
+                        msgDiv.className = `message ${isOwn ? 'own-message' : ''} ${isUnread ? 'unread' : ''}`;
                         msgDiv.innerHTML = `
                             <div class="message-header">
                                 <span class="message-sender">${isOwn ? 'Вы' : msg.fromUserName}</span>
@@ -1261,7 +1484,7 @@
                 currentPMUser = null;
             }
 
-            // ========== 10. Управление модальными окнами ==========
+            // ========== 11. Управление модальными окнами ==========
             function openSearchModal() {
                 document.getElementById('searchModal').classList.add('active');
                 document.getElementById('searchOverlay').classList.add('active');
@@ -1275,10 +1498,10 @@
                 document.getElementById('userSearchField').value = '';
             }
 
-            // ========== 11. Инициализация ==========
+            // ========== 12. Инициализация ==========
             initCurrentUser();
 
-            // ========== 12. Интерфейс ==========
+            // ========== 13. Интерфейс ==========
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsMenu = document.getElementById('settingsMenu');
             const overlay = document.getElementById('overlay');
@@ -1386,7 +1609,7 @@
             // Общий чат
             let unsubscribeGlobal = null;
 
-            document.querySelector('[data-tab="tab3"]').addEventListener('click', () => {
+            document.querySelector('[data-tab="tab4"]').addEventListener('click', () => {
                 if (unsubscribeGlobal) unsubscribeGlobal();
                 
                 unsubscribeGlobal = subscribeToGlobalChat((messages) => {
@@ -1442,4 +1665,4 @@
         })();
     </script>
 </body>
-</html>
+    </html>
