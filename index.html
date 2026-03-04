@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Чат</title>
+    <title>Ma2DUNGEON · Друзья</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -77,6 +77,36 @@
             border-color: #9f8ae0;
         }
 
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-left: auto;
+        }
+
+        .search-header-btn {
+            background: #262b3d;
+            border: 2px solid #5a4d84;
+            color: #d4c2ff;
+            font-size: 1.5rem;
+            padding: 0.5rem 1.2rem;
+            border-radius: 40px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+            box-shadow: 0 0 10px #433f6b;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            backdrop-filter: blur(4px);
+        }
+        .search-header-btn:hover {
+            background: #313a57;
+            border-color: #9b83e0;
+            color: #f0eaff;
+            box-shadow: 0 0 18px #7d63c5;
+        }
+
         .settings-btn {
             background: #262b3d;
             border: 2px solid #5a4d84;
@@ -91,9 +121,7 @@
             display: flex;
             align-items: center;
             gap: 8px;
-            letter-spacing: 0.5px;
             backdrop-filter: blur(4px);
-            margin-left: auto;
         }
         .settings-btn:hover {
             background: #313a57;
@@ -413,6 +441,144 @@
             background: #6170b5;
         }
 
+        /* Модальное окно поиска/друзей */
+        .search-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 600px;
+            max-height: 80vh;
+            overflow-y: auto;
+            background: #1e2337;
+            border: 3px solid #6d5aa3;
+            border-radius: 40px;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9);
+            padding: 2rem 1.5rem;
+            z-index: 2000;
+            display: none;
+            color: #e3d9ff;
+            backdrop-filter: blur(20px);
+        }
+        .search-modal.active {
+            display: block;
+        }
+        .search-modal h3 {
+            font-size: 1.8rem;
+            margin-bottom: 20px;
+            color: #cbb7ff;
+            border-bottom: 2px dashed #7b68b0;
+            padding-bottom: 10px;
+        }
+        .search-close {
+            position: absolute;
+            top: 20px;
+            right: 25px;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #b7a4ff;
+            background: #2f2b4a;
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #7361b0;
+        }
+        .search-field {
+            width: 100%;
+            background: #0b0f21;
+            border: 3px solid #5a4f8f;
+            padding: 15px 20px;
+            border-radius: 60px;
+            color: white;
+            outline: none;
+            margin-bottom: 25px;
+            font-size: 1.1rem;
+        }
+        .users-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 30px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        .user-card {
+            background: #262b44;
+            border-radius: 30px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 2px solid #5b4e93;
+        }
+        .user-card-info h4 {
+            color: #d7c9ff;
+            font-size: 1.2rem;
+        }
+        .user-card-info p {
+            color: #8f84b0;
+            font-size: 0.9rem;
+        }
+        .user-card-actions {
+            display: flex;
+            gap: 10px;
+        }
+        .friend-btn {
+            background: #4f5b99;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 3px solid #2d3563;
+        }
+        .friend-btn.friend {
+            background: #3f6b5f;
+            border-bottom-color: #235347;
+        }
+        .friend-btn:hover {
+            opacity: 0.9;
+        }
+        .pm-btn-small {
+            background: #8f6bb3;
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 40px;
+            cursor: pointer;
+            font-weight: bold;
+            border-bottom: 3px solid #5a4180;
+        }
+
+        .friends-section {
+            border-top: 2px solid #47407c;
+            padding-top: 20px;
+        }
+        .friends-section h4 {
+            color: #cbb7ff;
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+        }
+        .friend-item {
+            background: #2b2e48;
+            border-radius: 30px;
+            padding: 10px 15px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .friend-item span {
+            color: #d7c9ff;
+            font-weight: 600;
+        }
+
         /* Модальное окно личных сообщений */
         .pm-modal {
             position: fixed;
@@ -498,14 +664,11 @@
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
             backdrop-filter: blur(6px);
-            z-index: 999;
+            z-index: 1999;
             display: none;
         }
         .overlay.active {
             display: block;
-        }
-        .overlay.dark {
-            z-index: 1999;
         }
 
         @media (max-width: 700px) {
@@ -517,13 +680,29 @@
                 width: 100%;
                 max-width: 100%;
             }
+            .header-actions {
+                margin-left: 0;
+            }
         }
     </style>
 </head>
 <body>
-    <!-- Затемнения -->
+    <!-- Затемнение -->
     <div class="overlay" id="overlay"></div>
-    <div class="overlay dark" id="pmOverlay"></div>
+    <div class="overlay" id="searchOverlay"></div>
+
+    <!-- Модальное окно поиска/друзей -->
+    <div class="search-modal" id="searchModal">
+        <div class="search-close" id="closeSearch">✕</div>
+        <h3>🔍 Поиск пользователей</h3>
+        <input type="text" class="search-field" id="userSearchField" placeholder="Введите имя...">
+        <div class="users-grid" id="searchResults"></div>
+        
+        <div class="friends-section">
+            <h4>👥 Мои друзья</h4>
+            <div id="friendsList"></div>
+        </div>
+    </div>
 
     <!-- Модальное окно личных сообщений -->
     <div class="pm-modal hidden" id="pmModal">
@@ -583,7 +762,10 @@
     <header class="header">
         <div class="site-title">⚔️ Ma2DUNGEON</div>
         <div id="userNameDisplay" class="user-name-center" title="Двойной клик — сменить">─── ⋆⋅ stranger ⋅⋆ ───</div>
-        <div class="settings-btn" id="settingsBtn">⚙️ Настройки</div>
+        <div class="header-actions">
+            <div class="search-header-btn" id="searchHeaderBtn">🔍 Поиск</div>
+            <div class="settings-btn" id="settingsBtn">⚙️ Настройки</div>
+        </div>
     </header>
 
     <!-- Основной контент -->
@@ -591,8 +773,8 @@
         <div class="welcome-block">
             <div class="dungeon-icon">🗝️🏮</div>
             <h2>Подземелье ждёт</h2>
-            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Твоё имя и пароль теперь знают даже стены.</p>
-            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Имя и пароль — ключи к легенде»</p>
+            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Ищи друзей и общайся!</p>
+            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Друзья делают подземелье светлее»</p>
         </div>
     </main>
 
@@ -612,8 +794,8 @@
             let adminAccessGranted = false;
             
             // Для личных сообщений
-            let currentPMUser = null; // кому пишем
-            let pmListener = null;     // слушатель сообщений
+            let currentPMUser = null;
+            let pmListener = null;
 
             // ========== 3. Работа с Firebase (пользователи) ==========
             function generateUserId() {
@@ -630,6 +812,10 @@
 
             function getBannedRef() {
                 return database.ref('banned');
+            }
+
+            function getFriendsRef(userId) {
+                return database.ref('friends/' + userId);
             }
 
             function saveUserToFirebase(user) {
@@ -676,6 +862,7 @@
                             saveUserToFirebase(currentUser).then(() => {
                                 updateDisplayName(currentUser.name);
                                 listenUserChanges(currentUser.id);
+                                loadFriends(); // загружаем друзей
                             });
                         } else {
                             checkUserBanned(storedId).then(isBanned => {
@@ -718,6 +905,7 @@
                     localStorage.setItem(currentUserIdKey, newUser.id);
                     updateDisplayName(newUser.name);
                     listenUserChanges(newUser.id);
+                    loadFriends();
                 });
             }
 
@@ -747,9 +935,74 @@
                 }
             }
 
-            // ========== 5. Работа с чатами ==========
-            
-            // Отправка сообщения в общий чат
+            // ========== 5. Друзья ==========
+            function addFriend(userId) {
+                if (!currentUser) return;
+                return database.ref('friends/' + currentUser.id + '/' + userId).set(true);
+            }
+
+            function removeFriend(userId) {
+                if (!currentUser) return;
+                return database.ref('friends/' + currentUser.id + '/' + userId).remove();
+            }
+
+            function loadFriends() {
+                if (!currentUser) return;
+                database.ref('friends/' + currentUser.id).on('value', snapshot => {
+                    renderFriendsList(snapshot.val());
+                });
+            }
+
+            function renderFriendsList(friendsObj) {
+                const container = document.getElementById('friendsList');
+                if (!container) return;
+                
+                if (!friendsObj || Object.keys(friendsObj).length === 0) {
+                    container.innerHTML = '<div style="color: #8f84b0; text-align: center;">У вас пока нет друзей</div>';
+                    return;
+                }
+
+                const friendIds = Object.keys(friendsObj);
+                
+                // Получаем данные о друзьях
+                getUsersRef().once('value', snapshot => {
+                    const allUsers = snapshot.val() || {};
+                    let html = '';
+                    
+                    friendIds.forEach(id => {
+                        const friend = allUsers[id];
+                        if (friend) {
+                            html += `
+                                <div class="friend-item">
+                                    <span>${friend.name}</span>
+                                    <div>
+                                        <button class="pm-btn-small" data-user-id="${friend.id}" data-user-name="${friend.name}">✉️</button>
+                                        <button class="action-btn" data-user-id="${friend.id}" data-action="remove-friend">✖</button>
+                                    </div>
+                                </div>
+                            `;
+                        }
+                    });
+                    
+                    container.innerHTML = html;
+                    
+                    // Обработчики
+                    container.querySelectorAll('[data-action="remove-friend"]').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            removeFriend(btn.dataset.userId);
+                        });
+                    });
+                    
+                    container.querySelectorAll('.pm-btn-small').forEach(btn => {
+                        btn.addEventListener('click', () => {
+                            openPrivateChat(btn.dataset.userId, btn.dataset.userName);
+                            closeSearchModal();
+                        });
+                    });
+                });
+            }
+
+            // ========== 6. Работа с чатами ==========
             function sendGlobalMessage(text) {
                 if (!currentUser || !text.trim()) return;
                 const message = {
@@ -762,7 +1015,6 @@
                 database.ref('globalChat').push(message);
             }
 
-            // Подписка на общий чат
             function subscribeToGlobalChat(callback) {
                 const chatRef = database.ref('globalChat').limitToLast(50);
                 chatRef.on('value', snapshot => {
@@ -770,16 +1022,14 @@
                     snapshot.forEach(child => {
                         messages.push({ id: child.key, ...child.val() });
                     });
-                    callback(messages.reverse()); // новые сверху
+                    callback(messages.reverse());
                 });
-                return () => chatRef.off(); // функция отписки
+                return () => chatRef.off();
             }
 
-            // Отправка личного сообщения
             function sendPrivateMessage(toUserId, text) {
                 if (!currentUser || !toUserId || !text.trim()) return;
                 
-                // Создаем уникальный ID диалога (сортируем ID, чтобы он был одинаков для обоих)
                 const chatId = [currentUser.id, toUserId].sort().join('_');
                 
                 const message = {
@@ -794,7 +1044,6 @@
                 return database.ref('privateChats/' + chatId).push(message);
             }
 
-            // Подписка на личные сообщения
             function subscribeToPrivateChat(otherUserId, callback) {
                 if (!currentUser || !otherUserId) return;
                 
@@ -812,7 +1061,80 @@
                 return () => chatRef.off();
             }
 
-            // ========== 6. Админка: рендер списка пользователей ==========
+            // ========== 7. Поиск пользователей ==========
+            function searchUsers(searchTerm) {
+                return getUsersRef().once('value').then(snapshot => {
+                    const users = snapshot.val() || {};
+                    return Object.values(users).filter(user => 
+                        user.id !== currentUser?.id && 
+                        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                });
+            }
+
+            function renderSearchResults(searchTerm = '') {
+                const container = document.getElementById('searchResults');
+                if (!container) return;
+                
+                if (!searchTerm) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                searchUsers(searchTerm).then(users => {
+                    if (users.length === 0) {
+                        container.innerHTML = '<div style="color: #8f84b0; text-align: center;">Ничего не найдено</div>';
+                        return;
+                    }
+                    
+                    // Получаем список друзей
+                    database.ref('friends/' + currentUser.id).once('value', friendsSnapshot => {
+                        const friends = friendsSnapshot.val() || {};
+                        
+                        let html = '';
+                        users.forEach(user => {
+                            const isFriend = friends[user.id] === true;
+                            html += `
+                                <div class="user-card">
+                                    <div class="user-card-info">
+                                        <h4>${user.name}</h4>
+                                        <p>Был(а): ${user.lastSeen || 'неизвестно'}</p>
+                                    </div>
+                                    <div class="user-card-actions">
+                                        <button class="friend-btn ${isFriend ? 'friend' : ''}" data-user-id="${user.id}" data-action="friend">
+                                            ${isFriend ? '✓ Друг' : '➕ Добавить'}
+                                        </button>
+                                        <button class="pm-btn-small" data-user-id="${user.id}" data-user-name="${user.name}">✉️</button>
+                                    </div>
+                                </div>
+                            `;
+                        });
+                        
+                        container.innerHTML = html;
+                        
+                        // Обработчики
+                        container.querySelectorAll('[data-action="friend"]').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                const userId = btn.dataset.userId;
+                                if (btn.classList.contains('friend')) {
+                                    removeFriend(userId);
+                                } else {
+                                    addFriend(userId);
+                                }
+                            });
+                        });
+                        
+                        container.querySelectorAll('.pm-btn-small').forEach(btn => {
+                            btn.addEventListener('click', () => {
+                                openPrivateChat(btn.dataset.userId, btn.dataset.userName);
+                                closeSearchModal();
+                            });
+                        });
+                    });
+                });
+            }
+
+            // ========== 8. Админка: рендер списка пользователей ==========
             function renderUsersList(searchTerm = '') {
                 const container = document.getElementById('usersListContainer');
                 if (!container) return;
@@ -825,7 +1147,6 @@
                         const bannedData = bannedSnapshot.val();
                         const bannedSet = new Set(bannedData ? Object.keys(bannedData) : []);
 
-                        // Фильтрация по поиску
                         if (searchTerm) {
                             usersArray = usersArray.filter(u => 
                                 u.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -864,7 +1185,6 @@
                         html += '</tbody></table>';
                         container.innerHTML = html;
 
-                        // Обработчики кнопок
                         container.querySelectorAll('[data-action="block"]').forEach(btn => {
                             btn.addEventListener('click', (e) => {
                                 e.stopPropagation();
@@ -891,11 +1211,10 @@
                 });
             }
 
-            // ========== 7. Личные сообщения (модальное окно) ==========
+            // ========== 9. Личные сообщения ==========
             function openPrivateChat(userId, userName) {
                 if (!currentUser) return;
                 
-                // Закрываем предыдущий слушатель
                 if (pmListener) {
                     pmListener();
                     pmListener = null;
@@ -903,18 +1222,15 @@
                 
                 currentPMUser = { id: userId, name: userName };
                 
-                // Показываем модалку
                 document.getElementById('pmModal').classList.remove('hidden');
-                document.getElementById('pmOverlay').classList.add('active');
+                document.getElementById('overlay').classList.add('active');
                 document.getElementById('pmUserName').textContent = `Чат с ${userName}`;
                 document.getElementById('pmMessages').innerHTML = '';
                 
-                // Подписываемся на сообщения
                 pmListener = subscribeToPrivateChat(userId, (messages) => {
                     const container = document.getElementById('pmMessages');
                     container.innerHTML = '';
                     
-                    // Сортируем по времени (старые сверху)
                     messages.sort((a, b) => a.timestamp - b.timestamp);
                     
                     messages.forEach(msg => {
@@ -931,7 +1247,6 @@
                         container.appendChild(msgDiv);
                     });
                     
-                    // Скролл вниз
                     container.scrollTop = container.scrollHeight;
                 });
             }
@@ -942,14 +1257,28 @@
                     pmListener = null;
                 }
                 document.getElementById('pmModal').classList.add('hidden');
-                document.getElementById('pmOverlay').classList.remove('active');
+                document.getElementById('overlay').classList.remove('active');
                 currentPMUser = null;
             }
 
-            // ========== 8. Инициализация ==========
+            // ========== 10. Управление модальными окнами ==========
+            function openSearchModal() {
+                document.getElementById('searchModal').classList.add('active');
+                document.getElementById('searchOverlay').classList.add('active');
+                document.getElementById('userSearchField').focus();
+                renderSearchResults('');
+            }
+
+            function closeSearchModal() {
+                document.getElementById('searchModal').classList.remove('active');
+                document.getElementById('searchOverlay').classList.remove('active');
+                document.getElementById('userSearchField').value = '';
+            }
+
+            // ========== 11. Инициализация ==========
             initCurrentUser();
 
-            // ========== 9. Интерфейс ==========
+            // ========== 12. Интерфейс ==========
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsMenu = document.getElementById('settingsMenu');
             const overlay = document.getElementById('overlay');
@@ -960,6 +1289,13 @@
             const newNameInput = document.getElementById('newNameInput');
             const userNameDisplay = document.getElementById('userNameDisplay');
             
+            // Элементы поиска
+            const searchHeaderBtn = document.getElementById('searchHeaderBtn');
+            const searchModal = document.getElementById('searchModal');
+            const searchOverlay = document.getElementById('searchOverlay');
+            const closeSearch = document.getElementById('closeSearch');
+            const userSearchField = document.getElementById('userSearchField');
+            
             // Элементы чата
             const globalChatInput = document.getElementById('globalChatInput');
             const globalChatSend = document.getElementById('globalChatSend');
@@ -969,8 +1305,6 @@
             const userSearch = document.getElementById('userSearch');
             
             // Элементы ЛС
-            const pmModal = document.getElementById('pmModal');
-            const pmOverlay = document.getElementById('pmOverlay');
             const closePmBtn = document.getElementById('closePmBtn');
             const pmInput = document.getElementById('pmInput');
             const pmSendBtn = document.getElementById('pmSendBtn');
@@ -989,13 +1323,21 @@
             closeMenu.addEventListener('click', closeSettings);
             overlay.addEventListener('click', closeSettings);
 
+            // Поиск
+            searchHeaderBtn.addEventListener('click', openSearchModal);
+            closeSearch.addEventListener('click', closeSearchModal);
+            searchOverlay.addEventListener('click', closeSearchModal);
+
+            userSearchField.addEventListener('input', (e) => {
+                renderSearchResults(e.target.value);
+            });
+
             // Переключение вкладок
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
                     const targetId = tab.dataset.tab;
                     
-                    if (targetId === 'tab2') { // Админка
-                        // Запрос пароля админа
+                    if (targetId === 'tab2') {
                         if (!adminAccessGranted) {
                             const pwd = prompt('Введите пароль администратора:');
                             if (pwd === ADMIN_PASSWORD) {
@@ -1012,19 +1354,16 @@
                     panels.forEach(p => p.classList.remove('active'));
                     document.getElementById(targetId).classList.add('active');
                     
-                    // Если открыли админку — рендерим список
                     if (targetId === 'tab2') {
                         renderUsersList(userSearch.value);
                     }
                 });
             });
 
-            // Поиск в админке
             userSearch.addEventListener('input', (e) => {
                 renderUsersList(e.target.value);
             });
 
-            // Смена имени
             changeNameBtn.addEventListener('click', () => {
                 const newName = newNameInput.value.trim();
                 if (!newName) {
@@ -1044,10 +1383,9 @@
                 }
             });
 
-            // ========== 10. Общий чат ==========
+            // Общий чат
             let unsubscribeGlobal = null;
 
-            // Подписка при открытии вкладки
             document.querySelector('[data-tab="tab3"]').addEventListener('click', () => {
                 if (unsubscribeGlobal) unsubscribeGlobal();
                 
@@ -1084,9 +1422,8 @@
                 }
             });
 
-            // ========== 11. Личные сообщения ==========
+            // Личные сообщения
             closePmBtn.addEventListener('click', closePrivateChat);
-            pmOverlay.addEventListener('click', closePrivateChat);
 
             pmSendBtn.addEventListener('click', () => {
                 if (!currentPMUser) return;
