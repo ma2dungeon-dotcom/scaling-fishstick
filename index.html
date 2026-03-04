@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Реалистичный скелет</title>
+    <title>Ma2DUNGEON · Онлайн</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -24,7 +24,7 @@
             overflow-x: hidden;
         }
 
-        /* Улучшенный неоновый фон с кубиками и частицами */
+        /* Неоновый фон */
         .neon-background {
             position: fixed;
             top: 0;
@@ -46,149 +46,59 @@
             position: absolute;
             background: rgba(180, 130, 255, 0.15);
             border: 2px solid rgba(170, 136, 255, 0.4);
-            box-shadow: 0 0 30px rgba(170, 136, 255, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
-            transform-style: preserve-3d;
+            box-shadow: 0 0 30px rgba(170, 136, 255, 0.4);
             animation: float-cube linear infinite;
-            backdrop-filter: blur(2px);
-        }
-
-        .cube::before {
-            content: '';
-            position: absolute;
-            top: -2px;
-            left: -2px;
-            right: -2px;
-            bottom: -2px;
-            background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 107, 0.3) 50%, transparent 70%);
-            animation: shine 4s linear infinite;
-        }
-
-        .cube::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent);
-            pointer-events: none;
         }
 
         @keyframes float-cube {
-            0% {
-                transform: rotateX(0deg) rotateY(0deg) translateZ(0) translateY(100vh);
-                opacity: 0;
-            }
-            10% {
-                opacity: 0.8;
-            }
-            90% {
-                opacity: 0.8;
-            }
-            100% {
-                transform: rotateX(360deg) rotateY(180deg) translateZ(100px) translateY(-100vh);
-                opacity: 0;
-            }
-        }
-
-        @keyframes shine {
-            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+            0% { transform: rotateX(0deg) rotateY(0deg) translateY(100vh); opacity: 0; }
+            10% { opacity: 0.8; }
+            90% { opacity: 0.8; }
+            100% { transform: rotateX(360deg) rotateY(180deg) translateY(-100vh); opacity: 0; }
         }
 
         .particle {
             position: absolute;
-            background: radial-gradient(circle, rgba(255,107,107,0.6) 0%, rgba(181,149,255,0.6) 100%);
+            background: radial-gradient(circle, rgba(255,107,107,0.6), transparent);
             border-radius: 50%;
             filter: blur(3px);
             animation: float-particle linear infinite;
-            box-shadow: 0 0 20px currentColor;
         }
 
         @keyframes float-particle {
-            0% {
-                transform: translateY(100vh) scale(1) rotate(0deg);
-                opacity: 0;
-            }
-            20% {
-                opacity: 0.8;
-            }
-            80% {
-                opacity: 0.8;
-            }
-            100% {
-                transform: translateY(-100vh) scale(0.5) rotate(360deg);
-                opacity: 0;
-            }
+            0% { transform: translateY(100vh) scale(1); opacity: 0; }
+            20% { opacity: 0.8; }
+            100% { transform: translateY(-100vh) scale(0.5); opacity: 0; }
         }
 
-        .glow-spot {
-            position: absolute;
-            width: 300px;
-            height: 300px;
-            background: radial-gradient(circle, rgba(181,149,255,0.3) 0%, transparent 70%);
-            border-radius: 50%;
-            filter: blur(50px);
-            animation: glowPulse 5s ease-in-out infinite;
-        }
-
-        @keyframes glowPulse {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.2); }
-        }
-
-        .neon-line {
-            position: absolute;
-            background: linear-gradient(90deg, transparent, #ff6b6b, #b595ff, #ff6b6b, transparent);
-            height: 3px;
-            width: 100%;
-            filter: blur(4px);
-            animation: move-line 10s linear infinite;
-            opacity: 0.4;
-            box-shadow: 0 0 30px #ff6b6b;
-        }
-
-        @keyframes move-line {
-            0% { transform: translateX(-100%) rotate(0deg); }
-            100% { transform: translateX(100%) rotate(360deg); }
-        }
-
+        /* Шапка */
         .header {
             background-color: rgba(10, 14, 23, 0.85);
             backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
             padding: 0.8rem 2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
             border-bottom: 2px solid #b595ff;
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 50px #b595ff;
+            box-shadow: 0 8px 30px rgba(0,0,0,0.6), 0 0 50px #b595ff;
             position: relative;
             flex-wrap: wrap;
             z-index: 20;
-            animation: headerGlow 3s ease-in-out infinite;
         }
 
-        @keyframes headerGlow {
-            0%, 100% { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 50px #b595ff; }
-            50% { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 80px #ff6b6b; }
-        }
-
-        /* Улучшенный логотип */
+        /* Логотип */
         .site-title {
             font-size: 2.2rem;
             font-weight: 800;
             letter-spacing: 3px;
-            background: linear-gradient(135deg, #ff6b6b, #b595ff, #ff6b6b);
+            background: linear-gradient(135deg, #ff6b6b, #b595ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 0 30px #ff6b6b, 0 0 60px #b595ff;
+            text-shadow: 0 0 30px #ff6b6b;
             border-right: 2px solid #b595ff;
             padding-right: 20px;
-            min-width: fit-content;
             position: relative;
-            animation: titleGlow 2s ease-in-out infinite;
         }
 
         .site-title::before {
@@ -198,8 +108,7 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 2rem;
-            animation: skullSpin 4s linear infinite;
-            filter: drop-shadow(0 0 20px #ff6b6b);
+            animation: spin 4s linear infinite;
         }
 
         .site-title::after {
@@ -209,26 +118,16 @@
             top: 50%;
             transform: translateY(-50%);
             font-size: 2rem;
-            animation: swordSpin 4s linear infinite;
-            filter: drop-shadow(0 0 20px #b595ff);
+            animation: spin 4s linear infinite reverse;
         }
 
-        @keyframes skullSpin {
+        @keyframes spin {
             0%, 100% { transform: translateY(-50%) rotate(0deg); }
             25% { transform: translateY(-50%) rotate(10deg); }
             75% { transform: translateY(-50%) rotate(-10deg); }
         }
 
-        @keyframes swordSpin {
-            0%, 100% { transform: translateY(-50%) rotate(0deg) scale(1); }
-            50% { transform: translateY(-50%) rotate(20deg) scale(1.2); }
-        }
-
-        @keyframes titleGlow {
-            0%, 100% { text-shadow: 0 0 30px #ff6b6b, 0 0 60px #b595ff; }
-            50% { text-shadow: 0 0 50px #ff6b6b, 0 0 90px #b595ff; }
-        }
-
+        /* Инфо пользователя в шапке */
         .user-info {
             position: absolute;
             left: 50%;
@@ -240,23 +139,9 @@
             padding: 0.4rem 1.5rem 0.4rem 0.8rem;
             border-radius: 60px;
             border: 2px solid #b595ff;
-            box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #b595ff, 0 0 30px rgba(181,149,255,0.5);
+            box-shadow: 0 4px 15px #b595ff;
             cursor: pointer;
-            transition: 0.2s;
             backdrop-filter: blur(5px);
-            animation: userInfoPulse 3s ease-in-out infinite;
-        }
-
-        @keyframes userInfoPulse {
-            0%, 100% { box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #b595ff, 0 0 30px rgba(181,149,255,0.5); }
-            50% { box-shadow: inset 0 2px 5px #0b0b15, 0 4px 25px #ff6b6b, 0 0 50px rgba(255,107,107,0.5); }
-        }
-
-        .user-info:hover {
-            background: #3e4063;
-            border-color: #ff6b6b;
-            box-shadow: 0 0 40px #ff6b6b;
-            transform: translateX(-50%) scale(1.05);
         }
 
         .header-avatar {
@@ -270,22 +155,13 @@
             font-size: 1.2rem;
             color: white;
             border: 2px solid #b595ff;
-            box-shadow: 0 0 20px #aa88ff;
-            animation: avatarPulse 2s ease-in-out infinite;
-        }
-
-        @keyframes avatarPulse {
-            0%, 100% { box-shadow: 0 0 20px #aa88ff; }
-            50% { box-shadow: 0 0 40px #ff6b6b; }
         }
 
         .user-name-center {
             font-weight: 600;
             font-size: 1.3rem;
             color: #f2e9ff;
-            letter-spacing: 0.5px;
             white-space: nowrap;
-            text-shadow: 0 0 10px #b595ff;
         }
 
         .header-actions {
@@ -304,40 +180,21 @@
             border-radius: 40px;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 0 30px #b595ff;
+            box-shadow: 0 0 20px #b595ff;
             display: flex;
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(5px);
-            position: relative;
-            overflow: hidden;
-        }
-
-        .search-header-btn::before, .settings-btn::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
-            transform: rotate(45deg);
-            animation: btnShine 3s linear infinite;
-        }
-
-        @keyframes btnShine {
-            0% { transform: translateX(-100%) rotate(45deg); }
-            100% { transform: translateX(100%) rotate(45deg); }
         }
 
         .search-header-btn:hover, .settings-btn:hover {
             background: #313a57;
             border-color: #ff6b6b;
-            color: #f0eaff;
-            box-shadow: 0 0 50px #ff6b6b;
+            box-shadow: 0 0 30px #ff6b6b;
             transform: scale(1.05);
         }
 
+        /* Основной контент */
         .content {
             flex: 1;
             display: flex;
@@ -351,28 +208,21 @@
             z-index: 1;
         }
 
-        /* Супер-реалистичная голова скелета */
+        /* Скелет */
         .skull-container {
             position: relative;
-            width: 600px;
-            height: 600px;
+            width: 500px;
+            height: 500px;
             margin: 0 auto 30px;
-            perspective: 1200px;
-            filter: drop-shadow(0 0 80px rgba(255, 107, 107, 0.6));
+            perspective: 1000px;
+            filter: drop-shadow(0 0 50px rgba(255,107,107,0.5));
             cursor: pointer;
-            transition: all 0.3s;
-            animation: skullFloat 4s ease-in-out infinite;
+            animation: float 4s ease-in-out infinite;
         }
 
-        @keyframes skullFloat {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-10px) rotate(1deg); }
-            75% { transform: translateY(10px) rotate(-1deg); }
-        }
-
-        .skull-container:hover {
-            filter: drop-shadow(0 0 120px rgba(181, 149, 255, 0.9));
-            transform: scale(1.02);
+        @keyframes float {
+            0%,100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
         }
 
         .skull {
@@ -380,34 +230,18 @@
             height: 100%;
             position: relative;
             transform-style: preserve-3d;
-            transition: transform 0.3s;
         }
 
         .skull.shaking {
-            animation: realisticShake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+            animation: shake 0.6s ease-in-out;
         }
 
-        .skull.easter-egg {
-            animation: skullEasterGlow 0.5s ease-in-out;
-        }
-
-        @keyframes skullEasterGlow {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(2) drop-shadow(0 0 100px #ff6b6b); }
-        }
-
-        @keyframes realisticShake {
-            0% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            10% { transform: translate(-15px, -10px) rotate(-5deg) scale(1.03); }
-            20% { transform: translate(12px, 14px) rotate(6deg) scale(1.04); }
-            30% { transform: translate(-18px, -8px) rotate(-7deg) scale(1.03); }
-            40% { transform: translate(16px, 12px) rotate(7deg) scale(1.05); }
-            50% { transform: translate(-12px, -14px) rotate(-6deg) scale(1.04); }
-            60% { transform: translate(10px, 10px) rotate(5deg) scale(1.03); }
-            70% { transform: translate(-8px, -6px) rotate(-4deg) scale(1.02); }
-            80% { transform: translate(6px, 4px) rotate(3deg) scale(1.01); }
-            90% { transform: translate(-3px, -2px) rotate(-2deg) scale(1); }
-            100% { transform: translate(0, 0) rotate(0deg) scale(1); }
+        @keyframes shake {
+            0%,100% { transform: translate(0,0) rotate(0deg); }
+            20% { transform: translate(-15px, -10px) rotate(-5deg); }
+            40% { transform: translate(15px, 10px) rotate(5deg); }
+            60% { transform: translate(-10px, 5px) rotate(-3deg); }
+            80% { transform: translate(10px, -5px) rotate(3deg); }
         }
 
         .skull-3d {
@@ -418,361 +252,174 @@
             transform-style: preserve-3d;
         }
 
-        /* Основная часть черепа с улучшенной текстурой */
         .skull-main {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: 
-                radial-gradient(circle at 30% 30%, #f5f5f5, #e0e0e0, #b0b0b0, #8a8a8a);
+            background: radial-gradient(circle at 30% 30%, #f5f5f5, #d4d4d4, #a0a0a0);
             border-radius: 50% 50% 45% 45%;
             box-shadow: 
-                0 0 80px rgba(255, 107, 107, 0.4),
-                inset -40px -40px 60px rgba(0,0,0,0.7),
-                inset 40px 40px 60px rgba(255,255,255,0.7),
-                0 20px 40px rgba(0,0,0,0.5);
-            border: 3px solid rgba(181, 149, 255, 0.7);
+                0 0 50px rgba(255,107,107,0.3),
+                inset -30px -30px 50px rgba(0,0,0,0.6),
+                inset 30px 30px 50px rgba(255,255,255,0.6);
+            border: 3px solid rgba(181,149,255,0.5);
             overflow: hidden;
-            transform: translateZ(30px);
-            transition: all 0.3s;
+            transform: translateZ(20px);
         }
 
-        /* Улучшенная текстура кости */
         .bone-texture {
             position: absolute;
             width: 100%;
             height: 100%;
-            background-image: 
-                repeating-linear-gradient(45deg, 
-                    rgba(0,0,0,0.03) 0px, 
-                    rgba(0,0,0,0.03) 3px,
-                    rgba(255,255,255,0.07) 3px,
-                    rgba(255,255,255,0.07) 6px),
-                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.2) 0%, transparent 30%),
-                radial-gradient(circle at 80% 70%, rgba(0,0,0,0.1) 0%, transparent 30%);
-            pointer-events: none;
-            mix-blend-mode: overlay;
+            background-image: repeating-linear-gradient(45deg, 
+                rgba(0,0,0,0.02) 0px, 
+                rgba(0,0,0,0.02) 2px,
+                rgba(255,255,255,0.05) 2px,
+                rgba(255,255,255,0.05) 4px);
         }
 
-        /* Реалистичные трещины */
-        .crack {
-            position: absolute;
-            background: rgba(0,0,0,0.3);
-            box-shadow: 0 0 15px rgba(0,0,0,0.5);
-            transform: rotate(var(--angle));
-            width: var(--width);
-            height: var(--height);
-            left: var(--left);
-            top: var(--top);
-            border-radius: 50%;
-            filter: blur(2px);
-            z-index: 2;
-        }
-
-        /* Детали черепа - надбровные дуги */
-        .brow-ridge {
-            position: absolute;
-            width: 130px;
-            height: 40px;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
-            border-radius: 50%;
-            top: 100px;
-            filter: blur(3px);
-        }
-        
-        .brow-ridge.left {
-            left: 70px;
-            transform: rotate(-5deg);
-        }
-        
-        .brow-ridge.right {
-            right: 70px;
-            transform: rotate(5deg);
-        }
-
-        /* Улучшенные глазницы */
         .eye-socket {
             position: absolute;
-            width: 110px;
-            height: 130px;
+            width: 100px;
+            height: 120px;
             background: #0a0a1a;
             border-radius: 50%;
-            top: 120px;
-            box-shadow: 
-                inset 0 0 40px #000,
-                0 0 40px rgba(255, 107, 107, 0.6);
-            border: 4px solid #4a3a6a;
+            top: 130px;
+            box-shadow: inset 0 0 30px #000, 0 0 30px rgba(255,107,107,0.5);
+            border: 3px solid #4a3a6a;
             overflow: hidden;
-            transform: translateZ(40px);
-            z-index: 5;
+            transform: translateZ(30px);
         }
 
-        .eye-socket.left {
-            left: 75px;
-        }
-
-        .eye-socket.right {
-            right: 75px;
-        }
-
-        .eye-socket::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: radial-gradient(circle at 40% 40%, rgba(255,107,107,0.8), transparent 70%);
-            animation: eyeGlowComplex 2s ease-in-out infinite;
-        }
-
-        @keyframes eyeGlowComplex {
-            0%, 100% { opacity: 0.7; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.2); filter: blur(2px); }
-        }
+        .eye-socket.left { left: 75px; }
+        .eye-socket.right { right: 75px; }
 
         .eye-glow {
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000, #4a0000);
-            opacity: 0.9;
-            animation: eyePulseAdvanced 2.5s ease-in-out infinite;
-            box-shadow: 0 0 60px #ff6b6b;
-            mix-blend-mode: screen;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000);
+            opacity: 0.8;
+            animation: pulse 2s ease-in-out infinite;
         }
 
-        @keyframes eyePulseAdvanced {
-            0%, 100% { opacity: 0.8; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.15); filter: brightness(1.5); }
+        @keyframes pulse {
+            0%,100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
 
-        /* Носовая полость с глубиной */
         .nose-cavity {
             position: absolute;
-            width: 35px;
-            height: 50px;
+            width: 30px;
+            height: 45px;
             background: #1a1030;
-            border-radius: 40%;
-            top: 190px;
-            left: 282px;
-            box-shadow: inset 0 0 20px #000, 0 5px 15px rgba(0,0,0,0.5);
-            border: 3px solid #5a4a7a;
-            transform: translateZ(35px) rotateX(10deg);
-            z-index: 4;
-        }
-
-        .nose-cavity::after {
-            content: '';
-            position: absolute;
-            top: 5px;
-            left: 5px;
-            width: 10px;
-            height: 15px;
-            background: rgba(255,107,107,0.3);
             border-radius: 50%;
-            filter: blur(3px);
+            top: 200px;
+            left: 235px;
+            box-shadow: inset 0 0 15px #000;
+            border: 2px solid #5a4a7a;
+            transform: translateZ(25px);
         }
 
-        /* Скуловые кости */
-        .cheekbone {
-            position: absolute;
-            width: 70px;
-            height: 40px;
-            background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.2), transparent);
-            border-radius: 50%;
-            bottom: 200px;
-            filter: blur(5px);
-            z-index: 3;
-        }
-        
-        .cheekbone.left {
-            left: 50px;
-            transform: rotate(-10deg);
-        }
-        
-        .cheekbone.right {
-            right: 50px;
-            transform: rotate(10deg);
-        }
-
-        /* Улучшенная челюсть */
         .jaw {
             position: absolute;
-            width: 88%;
-            height: 42%;
-            bottom: 30px;
-            left: 6%;
-            background: 
-                radial-gradient(circle at 30% 0%, #e0e0e0, #b0b0b0, #909090);
-            border-radius: 0 0 45% 45%;
-            box-shadow: 
-                inset -15px -15px 25px rgba(0,0,0,0.5),
-                inset 15px 15px 25px rgba(255,255,255,0.5),
-                0 10px 30px rgba(0,0,0,0.6);
-            transform: translateZ(25px) rotateX(5deg);
-            border-top: 4px solid #8a7aaa;
-            z-index: 2;
+            width: 85%;
+            height: 40%;
+            bottom: 40px;
+            left: 7.5%;
+            background: radial-gradient(circle at 30% 0%, #e0e0e0, #b0b0b0);
+            border-radius: 0 0 40% 40%;
+            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.4), inset 10px 10px 20px rgba(255,255,255,0.4);
+            transform: translateZ(15px);
+            border-top: 3px solid #8a7aaa;
         }
 
-        /* Зубы с детализацией */
         .teeth {
             position: absolute;
-            width: 92%;
-            height: 45px;
-            bottom: 25px;
-            left: 4%;
+            width: 90%;
+            height: 30px;
+            bottom: 30px;
+            left: 5%;
             display: flex;
             justify-content: space-around;
-            transform: translateZ(50px);
-            z-index: 6;
+            transform: translateZ(35px);
         }
 
         .tooth {
-            width: 24px;
-            height: 45px;
-            background: linear-gradient(to bottom, #ffffff, #f0f0f0, #d0d0d0);
-            border-radius: 6px 6px 3px 3px;
-            border: 2px solid #a0a0a0;
-            border-bottom: 3px solid #808080;
-            box-shadow: 
-                inset -3px -3px 8px rgba(0,0,0,0.3),
-                inset 3px 3px 8px rgba(255,255,255,0.7),
-                2px 2px 5px rgba(0,0,0,0.3);
-            transform: rotateX(5deg);
+            width: 20px;
+            height: 35px;
+            background: #f5f5f5;
+            border-radius: 5px 5px 0 0;
+            border: 2px solid #b0b0b0;
+            border-bottom: none;
+            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2), inset 2px 2px 5px rgba(255,255,255,0.5);
         }
 
-        .tooth::before {
-            content: '';
-            position: absolute;
-            top: 2px;
-            left: 2px;
-            width: 8px;
-            height: 15px;
-            background: rgba(255,255,255,0.5);
-            border-radius: 3px;
-        }
-
-        /* Аксессуары */
         .accessory {
             position: absolute;
-            transform: translateZ(70px);
+            transform: translateZ(50px);
             pointer-events: none;
-            z-index: 20;
-            filter: drop-shadow(0 0 30px currentColor);
         }
 
         .crown {
-            width: 180px;
-            height: 100px;
-            background: linear-gradient(135deg, #ffd700, #ffa500, #ff8c00);
-            top: -60px;
-            left: 210px;
+            width: 150px;
+            height: 80px;
+            background: linear-gradient(135deg, #ffd700, #ffa500);
+            top: -40px;
+            left: 175px;
             clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 0 50px #ffd700;
-            animation: crownGlow 2s ease-in-out infinite;
-        }
-
-        @keyframes crownGlow {
-            0%, 100% { filter: drop-shadow(0 0 30px #ffd700); }
-            50% { filter: drop-shadow(0 0 60px #ffa500); }
+            box-shadow: 0 0 30px #ffd700;
         }
 
         .wizard-hat {
-            width: 220px;
-            height: 180px;
-            background: linear-gradient(135deg, #6a4a9a, #3a2a5a);
-            top: -130px;
-            left: 190px;
+            width: 180px;
+            height: 150px;
+            background: linear-gradient(135deg, #4a2a6a, #2a1a3a);
+            top: -100px;
+            left: 160px;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
             border-radius: 50% 50% 0 0;
-            box-shadow: 0 0 50px #b595ff;
-            animation: hatGlow 3s ease-in-out infinite;
-        }
-
-        @keyframes hatGlow {
-            0%, 100% { filter: drop-shadow(0 0 30px #b595ff); }
-            50% { filter: drop-shadow(0 0 60px #6a4a9a); }
+            box-shadow: 0 0 30px #b595ff;
         }
 
         .warrior-helm {
-            width: 240px;
-            height: 120px;
-            background: linear-gradient(135deg, #c0c0c0, #808080, #606060);
-            top: -70px;
-            left: 180px;
+            width: 200px;
+            height: 100px;
+            background: linear-gradient(135deg, #c0c0c0, #808080);
+            top: -50px;
+            left: 150px;
             clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 0 50px #c0c0c0;
-            animation: helmGlow 2.5s ease-in-out infinite;
+            box-shadow: 0 0 30px #c0c0c0;
         }
 
-        @keyframes helmGlow {
-            0%, 100% { filter: drop-shadow(0 0 30px #c0c0c0); }
-            50% { filter: drop-shadow(0 0 60px #ffd700); }
-        }
-
-        .cape {
-            width: 350px;
-            height: 250px;
-            background: linear-gradient(135deg, #8b0000, #4a0000, #2a0000);
-            top: 200px;
-            left: 125px;
-            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
-            box-shadow: 0 0 50px #ff6b6b;
-            opacity: 0.8;
-            animation: capeFlow 4s ease-in-out infinite;
-            transform-origin: top;
-        }
-
-        @keyframes capeFlow {
-            0%, 100% { transform: rotate(0deg) scale(1); }
-            50% { transform: rotate(2deg) scale(1.02); }
-        }
-
-        /* Тень с эффектом */
         .skull-shadow {
             position: absolute;
-            width: 450px;
-            height: 80px;
-            background: radial-gradient(ellipse at center, rgba(181, 149, 255, 0.5) 0%, transparent 80%);
-            bottom: -60px;
-            left: 75px;
+            width: 400px;
+            height: 60px;
+            background: radial-gradient(ellipse at center, rgba(181,149,255,0.3) 0%, transparent 70%);
+            bottom: -40px;
+            left: 50px;
             border-radius: 50%;
-            filter: blur(25px);
-            animation: shadowDance 4s ease-in-out infinite;
+            filter: blur(15px);
         }
 
-        @keyframes shadowDance {
-            0%, 100% { opacity: 0.4; transform: scale(1); }
-            50% { opacity: 0.7; transform: scale(1.2); filter: blur(30px); }
-        }
-
-        /* Счетчик кликов */
         .click-counter {
             position: absolute;
             top: -40px;
             right: -40px;
-            background: linear-gradient(135deg, #ff6b6b, #ff4757);
+            background: #ff6b6b;
             color: white;
-            width: 70px;
-            height: 70px;
+            width: 60px;
+            height: 60px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
+            font-size: 1.8rem;
             font-weight: bold;
-            border: 4px solid #b595ff;
-            box-shadow: 0 0 40px #ff6b6b;
+            border: 3px solid #b595ff;
+            box-shadow: 0 0 30px #ff6b6b;
             opacity: 0;
             transition: opacity 0.3s;
-            pointer-events: none;
-            z-index: 30;
-            animation: counterPulse 1s ease-in-out infinite;
-        }
-
-        @keyframes counterPulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
         }
 
         .click-counter.visible {
@@ -780,77 +427,25 @@
         }
 
         .welcome-block {
-            background: rgba(18, 22, 38, 0.7);
+            background: rgba(18,22,38,0.7);
             backdrop-filter: blur(10px);
             border: 2px solid #b595ff;
-            border-radius: 60px;
+            border-radius: 48px;
             padding: 3rem 4rem;
-            box-shadow: 0 30px 50px -10px black, 0 0 50px #b595ff, inset 0 0 30px rgba(181,149,255,0.3);
-            margin-top: 30px;
-            animation: blockGlow 4s ease-in-out infinite;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .welcome-block::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,107,107,0.2) 0%, transparent 60%);
-            animation: blockRotate 10s linear infinite;
-        }
-
-        @keyframes blockGlow {
-            0%, 100% { box-shadow: 0 30px 50px -10px black, 0 0 50px #b595ff; }
-            50% { box-shadow: 0 30px 50px -10px black, 0 0 80px #ff6b6b; }
-        }
-
-        @keyframes blockRotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+            box-shadow: 0 25px 40px -10px black, 0 0 30px #b595ff;
+            margin-top: 20px;
         }
 
         .welcome-block h2 {
-            font-size: 3.2rem;
-            background: linear-gradient(145deg, #ff8b8b, #c5a5ff, #ff8b8b);
+            font-size: 2.8rem;
+            background: linear-gradient(145deg, #ff6b6b, #b595ff);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 1rem;
-            text-shadow: 0 0 40px rgba(255, 107, 107, 0.7);
-            animation: textShimmer 3s linear infinite;
-            background-size: 200% auto;
         }
 
-        @keyframes textShimmer {
-            0% { background-position: 0% center; }
-            100% { background-position: 200% center; }
-        }
-
-        .welcome-block p {
-            font-size: 1.4rem;
-            max-width: 600px;
-            color: #e0d0ff;
-            text-shadow: 0 0 20px #b595ff;
-        }
-
-        .dungeon-icon {
-            font-size: 5rem;
-            filter: drop-shadow(0 0 50px #b595ff) drop-shadow(0 0 20px #ff6b6b);
-            margin-bottom: 20px;
-            animation: iconDance 3s ease-in-out infinite;
-        }
-
-        @keyframes iconDance {
-            0%, 100% { transform: translateY(0) rotate(0deg); }
-            25% { transform: translateY(-10px) rotate(5deg); }
-            75% { transform: translateY(10px) rotate(-5deg); }
-        }
-
-        /* Остальные стили (без изменений) */
+        /* Меню настроек */
         .settings-menu {
             position: fixed;
             top: 50%;
@@ -860,10 +455,10 @@
             max-width: 900px;
             max-height: 85vh;
             overflow-y: auto;
-            background: rgba(30, 35, 55, 0.95);
+            background: rgba(30,35,55,0.95);
             border: 3px solid #b595ff;
             border-radius: 40px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 80px #b595ff;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.9), 0 0 50px #b595ff;
             padding: 2rem 1.5rem;
             z-index: 1000;
             display: none;
@@ -873,12 +468,6 @@
 
         .settings-menu.active {
             display: block;
-            animation: menuAppear 0.3s ease-out;
-        }
-
-        @keyframes menuAppear {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         .settings-menu h2 {
@@ -908,13 +497,6 @@
             align-items: center;
             justify-content: center;
             border: 2px solid #b595ff;
-            transition: 0.2s;
-        }
-        .close-menu:hover {
-            background: #493f70;
-            color: white;
-            transform: scale(1.1);
-            box-shadow: 0 0 20px #ff6b6b;
         }
 
         .tabs {
@@ -924,7 +506,6 @@
             border-bottom: 2px solid #b595ff;
             padding-bottom: 15px;
             flex-wrap: wrap;
-            position: relative;
         }
         .tab {
             background: #2b2e48;
@@ -934,19 +515,14 @@
             font-size: 1.1rem;
             cursor: pointer;
             border: 2px solid #b595ff;
-            transition: 0.2s;
             color: #b7afdc;
-            position: relative;
+            transition: 0.2s;
         }
         .tab.active {
             background: #554a88;
             border-color: #ff6b6b;
             color: white;
             box-shadow: 0 0 15px #ff6b6b;
-        }
-        .tab:hover {
-            background: #3e3768;
-            transform: scale(1.05);
         }
         
         .tab-badge {
@@ -965,7 +541,6 @@
             justify-content: center;
             padding: 0 5px;
             border: 2px solid #8b0000;
-            box-shadow: 0 0 10px #ff0000;
         }
 
         .tab-panel {
@@ -975,99 +550,9 @@
             display: block;
         }
 
-        /* Кастомизация скелета */
-        .skull-customization {
-            background: rgba(20, 24, 43, 0.9);
-            border-radius: 30px;
-            padding: 25px;
-            border: 2px solid #b595ff;
-        }
-
-        .color-section, .outfit-section {
-            margin-bottom: 30px;
-        }
-
-        .color-section h4, .outfit-section h4 {
-            color: #d7c9ff;
-            margin-bottom: 15px;
-            font-size: 1.2rem;
-        }
-
-        .color-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .color-option {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            cursor: pointer;
-            border: 3px solid transparent;
-            transition: 0.2s;
-            box-shadow: 0 0 10px currentColor;
-        }
-        .color-option.selected {
-            border-color: white;
-            transform: scale(1.1);
-            box-shadow: 0 0 20px currentColor;
-        }
-
-        .outfit-grid {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 15px;
-        }
-
-        .outfit-option {
-            width: 100px;
-            height: 100px;
-            background: #2b2e48;
-            border: 2px solid #b595ff;
-            border-radius: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 10px;
-            cursor: pointer;
-            transition: 0.2s;
-            color: #d7c9ff;
-        }
-        .outfit-option.selected {
-            border-color: #ff6b6b;
-            background: #554a88;
-            transform: scale(1.05);
-            box-shadow: 0 0 20px #ff6b6b;
-        }
-        .outfit-option span {
-            font-size: 2rem;
-        }
-
-        .save-skull-btn {
-            background: linear-gradient(135deg, #ff6b6b, #b595ff);
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 60px;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            margin-top: 20px;
-            width: 100%;
-            border-bottom: 5px solid #2e274b;
-            transition: 0.1s;
-        }
-        .save-skull-btn:active {
-            border-bottom-width: 2px;
-            transform: translateY(3px);
-        }
-
         /* Панель профиля */
         .profile-panel {
-            background: rgba(20, 24, 43, 0.9);
+            background: rgba(20,24,43,0.9);
             border-radius: 30px;
             padding: 25px;
             border: 2px solid #b595ff;
@@ -1087,31 +572,24 @@
             border-radius: 60px;
             color: white;
             outline: none;
-            width: 100%;
         }
         .change-name-panel button, .change-password-panel button {
             background: #594e94;
             border: none;
             padding: 18px;
             font-size: 1.4rem;
-            font-weight: bold;
             border-radius: 60px;
             color: white;
             cursor: pointer;
             border-bottom: 5px solid #2e274b;
-            transition: 0.1s;
-        }
-        .change-name-panel button:active, .change-password-panel button:active {
-            border-bottom-width: 2px;
-            transform: translateY(3px);
         }
 
+        /* Настройки аватара */
         .avatar-settings {
-            background: rgba(20, 24, 43, 0.9);
+            background: rgba(20,24,43,0.9);
             border-radius: 30px;
             padding: 25px;
             border: 2px solid #b595ff;
-            margin-top: 20px;
         }
         .current-avatar {
             display: flex;
@@ -1131,13 +609,23 @@
             font-weight: bold;
             color: white;
             border: 3px solid #b595ff;
-            box-shadow: 0 0 20px #aa88ff;
         }
         .avatar-colors {
             display: flex;
             flex-wrap: wrap;
             gap: 10px;
             margin: 20px 0;
+        }
+        .color-option {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 3px solid transparent;
+        }
+        .color-option.selected {
+            border-color: white;
+            transform: scale(1.1);
         }
         .avatar-icons {
             display: flex;
@@ -1156,30 +644,52 @@
             font-size: 1.5rem;
             cursor: pointer;
             border: 2px solid #b595ff;
-            transition: 0.2s;
         }
         .icon-option.selected {
             border-color: #ff6b6b;
             background: #554a88;
-            transform: scale(1.1);
         }
 
-        .save-avatar-btn {
-            background: #594e94;
-            border: none;
-            padding: 15px 30px;
-            font-size: 1.2rem;
-            border-radius: 60px;
-            color: white;
+        /* Кастомизация скелета */
+        .skull-customization {
+            background: rgba(20,24,43,0.9);
+            border-radius: 30px;
+            padding: 25px;
+            border: 2px solid #b595ff;
+        }
+        .color-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .outfit-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .outfit-option {
+            width: 100px;
+            height: 100px;
+            background: #2b2e48;
+            border: 2px solid #b595ff;
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
             cursor: pointer;
-            font-weight: bold;
-            margin-top: 20px;
-            width: 100%;
+            color: #d7c9ff;
+        }
+        .outfit-option.selected {
+            border-color: #ff6b6b;
+            background: #554a88;
         }
 
         /* Чат */
         .chat-container {
-            background: rgba(20, 24, 43, 0.9);
+            background: rgba(20,24,43,0.9);
             border-radius: 30px;
             padding: 20px;
             border: 2px solid #b595ff;
@@ -1191,48 +701,22 @@
             flex: 1;
             overflow-y: auto;
             padding: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
         }
         .message {
-            background: rgba(38, 43, 68, 0.9);
+            background: rgba(38,43,68,0.9);
             padding: 10px 15px;
             border-radius: 20px;
-            max-width: 80%;
-            align-self: flex-start;
+            margin-bottom: 10px;
             border: 1px solid #b595ff;
-            display: flex;
-            gap: 12px;
-            align-items: flex-start;
         }
         .message.own-message {
-            background: rgba(63, 60, 107, 0.9);
-            align-self: flex-end;
+            background: rgba(63,60,107,0.9);
             border-color: #ff6b6b;
-        }
-        .message-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            cursor: pointer;
-            transition: 0.2s;
-            border: 2px solid #b595ff;
-            flex-shrink: 0;
-        }
-        .message-avatar:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 15px #aa88ff;
         }
 
         /* Входящие */
         .inbox-list {
-            background: rgba(20, 24, 43, 0.9);
+            background: rgba(20,24,43,0.9);
             border-radius: 30px;
             padding: 20px;
             border: 2px solid #b595ff;
@@ -1240,32 +724,25 @@
             overflow-y: auto;
         }
         .inbox-item {
-            background: rgba(38, 43, 68, 0.9);
+            background: rgba(38,43,68,0.9);
             border-radius: 20px;
-            padding: 15px 20px;
+            padding: 15px;
             margin-bottom: 10px;
             display: flex;
             align-items: center;
             gap: 15px;
             cursor: pointer;
-            transition: 0.2s;
             border: 2px solid #b595ff;
-        }
-        .inbox-item:hover {
-            background: #313a57;
-            border-color: #ff6b6b;
-            transform: scale(1.02);
         }
         .inbox-item.unread {
             border-left: 8px solid #ff6b6b;
-            background: #2f2b55;
         }
 
         /* Админ панель */
         .users-table {
             width: 100%;
             border-collapse: collapse;
-            background: rgba(20, 24, 43, 0.9);
+            background: rgba(20,24,43,0.9);
             border-radius: 30px;
             overflow: hidden;
             border: 2px solid #4d4382;
@@ -1274,37 +751,11 @@
             background: #2e2b55;
             color: #ded1ff;
             padding: 15px 5px;
-            border-bottom: 3px solid #7e6ec0;
         }
         .users-table td {
             padding: 12px 5px;
             text-align: center;
             border-bottom: 1px solid #3a3462;
-            color: #cfc5f5;
-        }
-        .table-avatar {
-            width: 35px;
-            height: 35px;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-        .action-btn {
-            background: #b1536b;
-            border: none;
-            color: white;
-            padding: 6px 12px;
-            border-radius: 40px;
-            cursor: pointer;
-            border-bottom: 3px solid #71283b;
-            margin: 2px;
-        }
-        .action-btn.blocked {
-            background: #3f3f6b;
-            border-bottom-color: #20203b;
         }
 
         /* Модальные окна */
@@ -1315,24 +766,17 @@
             transform: translate(-50%, -50%);
             width: 90%;
             max-width: 500px;
-            background: rgba(30, 35, 55, 0.95);
+            background: rgba(30,35,55,0.95);
             border: 3px solid #b595ff;
             border-radius: 40px;
             padding: 30px;
             z-index: 2000;
             display: none;
             color: white;
-            box-shadow: 0 30px 60px black, 0 0 80px #b595ff;
             backdrop-filter: blur(10px);
         }
         .profile-modal.active, .search-modal.active, .pm-modal.active {
             display: block;
-            animation: modalAppear 0.3s ease-out;
-        }
-
-        @keyframes modalAppear {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         .pm-modal {
@@ -1341,11 +785,145 @@
             flex-direction: column;
         }
 
+        .pm-modal.active {
+            display: flex;
+        }
+
+        /* Меню онлайна */
+        .online-menu {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 300px;
+            background: rgba(30,35,55,0.95);
+            border: 3px solid #b595ff;
+            border-radius: 30px;
+            padding: 20px;
+            color: white;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 0 50px #b595ff;
+            z-index: 50;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            0% { transform: translateX(100%); opacity: 0; }
+            100% { transform: translateX(0); opacity: 1; }
+        }
+
+        .online-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #b595ff;
+        }
+
+        .online-header h3 {
+            font-size: 1.4rem;
+            background: linear-gradient(135deg, #ff6b6b, #b595ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .online-count {
+            background: #ff6b6b;
+            color: white;
+            padding: 3px 10px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: bold;
+        }
+
+        .online-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .online-user {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px;
+            border-radius: 20px;
+            margin-bottom: 5px;
+            background: rgba(255,255,255,0.05);
+            cursor: pointer;
+            transition: 0.2s;
+        }
+
+        .online-user:hover {
+            background: rgba(181,149,255,0.2);
+            transform: translateX(-5px);
+        }
+
+        .online-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            border: 2px solid #b595ff;
+        }
+
+        .online-info {
+            flex: 1;
+        }
+
+        .online-name {
+            font-weight: bold;
+            color: #d7c9ff;
+        }
+
+        .online-status {
+            font-size: 0.8rem;
+            color: #4ade80;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .online-status::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            background: #4ade80;
+            border-radius: 50%;
+            display: inline-block;
+            animation: blink 2s infinite;
+        }
+
+        @keyframes blink {
+            0%,100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .online-actions {
+            display: flex;
+            gap: 5px;
+        }
+
+        .online-pm-btn {
+            background: #4f5b99;
+            border: none;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            border-bottom: 2px solid #2d3563;
+        }
+
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(8px);
+            backdrop-filter: blur(6px);
             z-index: 999;
             display: none;
         }
@@ -1358,57 +936,57 @@
                 position: static;
                 transform: none;
                 margin: 10px 0;
-                order: 3;
                 width: 100%;
-                justify-content: center;
             }
             .skull-container {
-                width: 350px;
-                height: 350px;
+                width: 300px;
+                height: 300px;
             }
-            .site-title::before, .site-title::after {
-                display: none;
+            .online-menu {
+                width: 250px;
+                bottom: 20px;
+                right: 20px;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Улучшенный неоновый фон -->
+    <!-- Фон -->
     <div class="neon-background">
-        <div class="glow-spot" style="top: 20%; left: 20%;"></div>
-        <div class="glow-spot" style="bottom: 20%; right: 20%; animation-delay: -2s;"></div>
         <div class="floating-cubes" id="cubesContainer"></div>
-        <div class="neon-line" style="top: 15%;"></div>
-        <div class="neon-line" style="top: 45%; transform: rotate(30deg);"></div>
-        <div class="neon-line" style="top: 75%; transform: rotate(-20deg);"></div>
     </div>
 
     <!-- Затемнение -->
     <div class="overlay" id="overlay"></div>
 
-    <!-- Модальное окно профиля -->
+    <!-- Меню онлайна -->
+    <div class="online-menu" id="onlineMenu">
+        <div class="online-header">
+            <h3>👥 В сети</h3>
+            <span class="online-count" id="onlineCount">0</span>
+        </div>
+        <div class="online-list" id="onlineList">
+            <div style="text-align: center; color: #8f84b0; padding: 20px;">Загрузка...</div>
+        </div>
+    </div>
+
+    <!-- Модальные окна -->
     <div class="profile-modal" id="profileModal">
         <div class="profile-close" id="closeProfile">✕</div>
         <div id="profileContent"></div>
     </div>
 
-    <!-- Модальное окно поиска/друзей -->
     <div class="search-modal" id="searchModal">
         <div class="search-close" id="closeSearch">✕</div>
         <h3>🔍 Поиск пользователей</h3>
         <input type="text" class="search-field" id="userSearchField" placeholder="Введите имя...">
         <div id="searchResults"></div>
-        <div class="friends-section">
-            <h4>👥 Мои друзья</h4>
-            <div id="friendsList"></div>
-        </div>
     </div>
 
-    <!-- Модальное окно личных сообщений -->
     <div class="pm-modal" id="pmModal">
         <div class="pm-header">
             <div class="pm-header-avatar" id="pmAvatar">😊</div>
-            <h3 id="pmUserName" style="cursor: pointer;">Чат с пользователем</h3>
+            <h3 id="pmUserName">Чат с пользователем</h3>
             <div class="close-pm" id="closePmBtn">✕</div>
         </div>
         <div class="pm-messages" id="pmMessages"></div>
@@ -1432,7 +1010,7 @@
             <div class="tab" data-tab="tab6">💬 Общий чат</div>
         </div>
 
-        <!-- Вкладка профиля (смена имени и пароля) -->
+        <!-- Вкладка профиля -->
         <div class="tab-panel active" id="tab1">
             <div class="profile-panel">
                 <h3>👤 Настройки профиля</h3>
@@ -1447,15 +1025,12 @@
             </div>
         </div>
 
-        <!-- Вкладка смены аватара -->
+        <!-- Вкладка аватара -->
         <div class="tab-panel" id="tab2">
             <div class="avatar-settings">
                 <h3>Текущий аватар</h3>
                 <div class="current-avatar">
                     <div class="preview-avatar" id="avatarPreview">😊</div>
-                    <div>
-                        <p>Выбери цвет и иконку</p>
-                    </div>
                 </div>
                 
                 <h4>Цвет фона</h4>
@@ -1492,72 +1067,50 @@
             </div>
         </div>
 
-        <!-- Вкладка кастомизации скелета -->
+        <!-- Вкладка скелета -->
         <div class="tab-panel" id="tab3">
             <div class="skull-customization">
                 <h3>💀 Настрой скелета</h3>
                 
-                <div class="color-section">
-                    <h4>Цвет скелета</h4>
-                    <div class="color-grid" id="skullColors">
-                        <div class="color-option selected" data-color="white" style="background: #f5f5f5; border-color: #000;"></div>
-                        <div class="color-option" data-color="black" style="background: #2a2a2a;"></div>
-                        <div class="color-option" data-color="gold" style="background: #ffd700;"></div>
-                        <div class="color-option" data-color="silver" style="background: #c0c0c0;"></div>
-                        <div class="color-option" data-color="bronze" style="background: #cd7f32;"></div>
-                        <div class="color-option" data-color="copper" style="background: #b87333;"></div>
-                        <div class="color-option" data-color="pink" style="background: #ffb6c1;"></div>
-                        <div class="color-option" data-color="cyan" style="background: #00ffff;"></div>
-                        <div class="color-option" data-color="green" style="background: #00ff00;"></div>
-                        <div class="color-option" data-color="purple" style="background: #800080;"></div>
-                    </div>
-
-                    <h4>Цвет глаз</h4>
-                    <div class="color-grid" id="eyeColors">
-                        <div class="color-option selected" data-color="red" style="background: #ff0000;"></div>
-                        <div class="color-option" data-color="blue" style="background: #0000ff;"></div>
-                        <div class="color-option" data-color="green" style="background: #00ff00;"></div>
-                        <div class="color-option" data-color="purple" style="background: #800080;"></div>
-                        <div class="color-option" data-color="orange" style="background: #ffa500;"></div>
-                        <div class="color-option" data-color="yellow" style="background: #ffff00;"></div>
-                    </div>
+                <h4>Цвет скелета</h4>
+                <div class="color-grid" id="skullColors">
+                    <div class="color-option selected" data-color="white" style="background: #f5f5f5;"></div>
+                    <div class="color-option" data-color="black" style="background: #2a2a2a;"></div>
+                    <div class="color-option" data-color="gold" style="background: #ffd700;"></div>
+                    <div class="color-option" data-color="silver" style="background: #c0c0c0;"></div>
+                    <div class="color-option" data-color="bronze" style="background: #cd7f32;"></div>
+                    <div class="color-option" data-color="copper" style="background: #b87333;"></div>
+                    <div class="color-option" data-color="pink" style="background: #ffb6c1;"></div>
+                    <div class="color-option" data-color="cyan" style="background: #00ffff;"></div>
+                    <div class="color-option" data-color="green" style="background: #00ff00;"></div>
+                    <div class="color-option" data-color="purple" style="background: #800080;"></div>
                 </div>
 
-                <div class="outfit-section">
-                    <h4>Костюм</h4>
-                    <div class="outfit-grid" id="outfits">
-                        <div class="outfit-option selected" data-outfit="none">
-                            <span>💀</span>
-                            <small>Обычный</small>
-                        </div>
-                        <div class="outfit-option" data-outfit="crown">
-                            <span>👑</span>
-                            <small>Король</small>
-                        </div>
-                        <div class="outfit-option" data-outfit="wizard">
-                            <span>🧙</span>
-                            <small>Маг</small>
-                        </div>
-                        <div class="outfit-option" data-outfit="warrior">
-                            <span>⚔️</span>
-                            <small>Воин</small>
-                        </div>
-                        <div class="outfit-option" data-outfit="priest">
-                            <span>🙏</span>
-                            <small>Жрец</small>
-                        </div>
-                        <div class="outfit-option" data-outfit="rogue">
-                            <span>🗡️</span>
-                            <small>Разбойник</small>
-                        </div>
-                    </div>
+                <h4>Цвет глаз</h4>
+                <div class="color-grid" id="eyeColors">
+                    <div class="color-option selected" data-color="red" style="background: #ff0000;"></div>
+                    <div class="color-option" data-color="blue" style="background: #0000ff;"></div>
+                    <div class="color-option" data-color="green" style="background: #00ff00;"></div>
+                    <div class="color-option" data-color="purple" style="background: #800080;"></div>
+                    <div class="color-option" data-color="orange" style="background: #ffa500;"></div>
+                    <div class="color-option" data-color="yellow" style="background: #ffff00;"></div>
+                </div>
+
+                <h4>Костюм</h4>
+                <div class="outfit-grid" id="outfits">
+                    <div class="outfit-option selected" data-outfit="none"><span>💀</span><small>Обычный</small></div>
+                    <div class="outfit-option" data-outfit="crown"><span>👑</span><small>Король</small></div>
+                    <div class="outfit-option" data-outfit="wizard"><span>🧙</span><small>Маг</small></div>
+                    <div class="outfit-option" data-outfit="warrior"><span>⚔️</span><small>Воин</small></div>
+                    <div class="outfit-option" data-outfit="priest"><span>🙏</span><small>Жрец</small></div>
+                    <div class="outfit-option" data-outfit="rogue"><span>🗡️</span><small>Разбойник</small></div>
                 </div>
 
                 <button class="save-skull-btn" id="saveSkullBtn">Сохранить облик скелета</button>
             </div>
         </div>
 
-        <!-- Вкладка админ панели -->
+        <!-- Вкладка админки -->
         <div class="tab-panel" id="tab4">
             <h3>📋 Все пользователи</h3>
             <div class="admin-controls">
@@ -1585,7 +1138,7 @@
         </div>
     </div>
 
-    <!-- Шапка сайта с улучшенным логотипом -->
+    <!-- Шапка -->
     <header class="header">
         <div class="site-title">Ma2DUNGEON</div>
         <div class="user-info" id="userInfo">
@@ -1600,54 +1153,19 @@
 
     <!-- Основной контент -->
     <main class="content">
-        <!-- Супер-реалистичная голова скелета -->
         <div class="skull-container" id="skullContainer">
             <div class="skull" id="skull">
                 <div class="skull-3d">
                     <div class="skull-main" id="skullMain">
                         <div class="bone-texture"></div>
-                        
-                        <!-- Надбровные дуги -->
-                        <div class="brow-ridge left"></div>
-                        <div class="brow-ridge right"></div>
-                        
-                        <!-- Трещины -->
-                        <div class="crack" style="--width: 40px; --height: 8px; --left: 150px; --top: 100px; --angle: 15deg;"></div>
-                        <div class="crack" style="--width: 50px; --height: 8px; --left: 350px; --top: 150px; --angle: -10deg;"></div>
-                        <div class="crack" style="--width: 35px; --height: 6px; --left: 250px; --top: 280px; --angle: 30deg;"></div>
-                        <div class="crack" style="--width: 30px; --height: 5px; --left: 400px; --top: 220px; --angle: 45deg;"></div>
-                        
-                        <!-- Скулы -->
-                        <div class="cheekbone left"></div>
-                        <div class="cheekbone right"></div>
-                        
-                        <!-- Глаза -->
-                        <div class="eye-socket left">
-                            <div class="eye-glow" id="leftEye"></div>
-                        </div>
-                        <div class="eye-socket right">
-                            <div class="eye-glow" id="rightEye"></div>
-                        </div>
-                        
-                        <!-- Нос -->
+                        <div class="eye-socket left"><div class="eye-glow" id="leftEye"></div></div>
+                        <div class="eye-socket right"><div class="eye-glow" id="rightEye"></div></div>
                         <div class="nose-cavity"></div>
-                        
-                        <!-- Челюсть -->
                         <div class="jaw"></div>
-                        
-                        <!-- Зубы -->
                         <div class="teeth">
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
-                            <div class="tooth"></div>
+                            <div class="tooth"></div><div class="tooth"></div><div class="tooth"></div><div class="tooth"></div>
+                            <div class="tooth"></div><div class="tooth"></div><div class="tooth"></div><div class="tooth"></div>
                         </div>
-
-                        <!-- Аксессуары -->
                         <div id="skullAccessories"></div>
                     </div>
                 </div>
@@ -1659,107 +1177,83 @@
         <div class="welcome-block">
             <div class="dungeon-icon">🗝️🏮</div>
             <h2>Подземелье ждёт</h2>
-            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Ищи друзей и общайся!</p>
-            <p style="margin-top: 30px; font-style: italic; color: #d4c2ff;">«Друзья делают подземелье светлее»</p>
+            <p>Добро пожаловать в таверну Ma2DUNGEON</p>
         </div>
     </main>
 
     <script>
         (function() {
-            // ========== 1. Firebase ==========
+            // Firebase
             const firebaseConfig = { 
                 databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" 
             };
             firebase.initializeApp(firebaseConfig);
             const database = firebase.database();
 
-            // ========== 2. Глобальные переменные ==========
+            // Глобальные переменные
             let currentUser = null;
             const currentUserIdKey = 'ma2dungeon_currentId';
             const ADMIN_PASSWORD = 'ADMINHACKER';
             let adminAccessGranted = false;
-            
-            // Для личных сообщений
             let currentPMUser = null;
             let pmListener = null;
-            
-            // Для счетчика непрочитанных
             let unreadCount = 0;
             let inboxListener = null;
-
-            // Для пасхалки со скелетом
             let clickCount = 0;
             let clickTimer = null;
 
-            // Цвета для аватаров
+            // Цвета
             const avatarColors = [
                 '#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7',
                 '#D4A5A5', '#9B59B6', '#3498DB', '#E67E22', '#2ECC71'
             ];
 
-            // Цвета для скелета
             const skullColors = {
-                white: '#f5f5f5',
-                black: '#2a2a2a',
-                gold: '#ffd700',
-                silver: '#c0c0c0',
-                bronze: '#cd7f32',
-                copper: '#b87333',
-                pink: '#ffb6c1',
-                cyan: '#00ffff',
-                green: '#00ff00',
-                purple: '#800080'
+                white: '#f5f5f5', black: '#2a2a2a', gold: '#ffd700', silver: '#c0c0c0',
+                bronze: '#cd7f32', copper: '#b87333', pink: '#ffb6c1', cyan: '#00ffff',
+                green: '#00ff00', purple: '#800080'
             };
 
-            // ========== 3. Генерация фона с кубиками ==========
+            // Генерация фона
             function generateBackground() {
                 const container = document.getElementById('cubesContainer');
                 if (!container) return;
                 
-                // Кубики
-                for (let i = 0; i < 40; i++) {
+                for (let i = 0; i < 30; i++) {
                     const cube = document.createElement('div');
                     cube.className = 'cube';
-                    const size = Math.random() * 80 + 30;
+                    const size = Math.random() * 60 + 20;
                     cube.style.width = size + 'px';
                     cube.style.height = size + 'px';
                     cube.style.left = Math.random() * 100 + '%';
-                    cube.style.top = Math.random() * 100 + '%';
-                    cube.style.animationDuration = (Math.random() * 25 + 15) + 's';
+                    cube.style.animationDuration = (Math.random() * 20 + 15) + 's';
                     cube.style.animationDelay = (Math.random() * 10) + 's';
-                    cube.style.background = `rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.15)`;
-                    cube.style.borderColor = `rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.5)`;
                     container.appendChild(cube);
                 }
                 
-                // Частицы
-                for (let i = 0; i < 80; i++) {
+                for (let i = 0; i < 50; i++) {
                     const particle = document.createElement('div');
                     particle.className = 'particle';
-                    const size = Math.random() * 15 + 5;
+                    const size = Math.random() * 10 + 5;
                     particle.style.width = size + 'px';
                     particle.style.height = size + 'px';
                     particle.style.left = Math.random() * 100 + '%';
-                    particle.style.animationDuration = (Math.random() * 20 + 15) + 's';
-                    particle.style.animationDelay = (Math.random() * 10) + 's';
-                    particle.style.background = `radial-gradient(circle, rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.8), transparent)`;
+                    particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
+                    particle.style.animationDelay = (Math.random() * 5) + 's';
                     container.appendChild(particle);
                 }
             }
 
-            // ========== 4. Анимация тряски скелета ==========
+            // Анимация тряски
             function setupSkullAnimation() {
                 const skull = document.getElementById('skull');
-                
                 setInterval(() => {
                     skull.classList.add('shaking');
-                    setTimeout(() => {
-                        skull.classList.remove('shaking');
-                    }, 600);
+                    setTimeout(() => skull.classList.remove('shaking'), 600);
                 }, 4000);
             }
 
-            // ========== 5. Пасхалка со скелетом ==========
+            // Пасхалка
             function setupSkullEasterEgg() {
                 const skullContainer = document.getElementById('skullContainer');
                 const skull = document.getElementById('skull');
@@ -1770,15 +1264,7 @@
                     clickCounter.textContent = clickCount;
                     clickCounter.classList.add('visible');
                     
-                    skull.classList.add('easter-egg');
-                    setTimeout(() => {
-                        skull.classList.remove('easter-egg');
-                    }, 200);
-                    
-                    if (clickTimer) {
-                        clearTimeout(clickTimer);
-                    }
-                    
+                    if (clickTimer) clearTimeout(clickTimer);
                     clickTimer = setTimeout(() => {
                         clickCount = 0;
                         clickCounter.textContent = '0';
@@ -1791,65 +1277,31 @@
                         clickCounter.textContent = '0';
                         clickCounter.classList.remove('visible');
                         clearTimeout(clickTimer);
-                        
-                        skull.style.animation = 'realisticShake 1s, skullEasterGlow 0.5s 3';
-                        setTimeout(() => {
-                            skull.style.animation = '';
-                        }, 1500);
                     }
                 });
             }
 
-            // Генерация звука костей
             function playBoneSound() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-                    
-                    for (let i = 0; i < 8; i++) {
+                    for (let i = 0; i < 5; i++) {
                         setTimeout(() => {
                             const oscillator = audioContext.createOscillator();
                             const gainNode = audioContext.createGain();
-                            
                             oscillator.type = 'sawtooth';
-                            oscillator.frequency.setValueAtTime(80 + Math.random() * 300, audioContext.currentTime);
-                            
-                            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
-                            
+                            oscillator.frequency.value = 100 + Math.random() * 200;
+                            gainNode.gain.value = 0.1;
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
                             oscillator.connect(gainNode);
                             gainNode.connect(audioContext.destination);
-                            
                             oscillator.start();
-                            oscillator.stop(audioContext.currentTime + 0.25);
-                        }, i * 40);
+                            oscillator.stop(audioContext.currentTime + 0.2);
+                        }, i * 50);
                     }
-                    
-                    const bufferSize = 4096;
-                    const noiseNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
-                    noiseNode.onaudioprocess = function(e) {
-                        const output = e.outputBuffer.getChannelData(0);
-                        for (let i = 0; i < bufferSize; i++) {
-                            output[i] = Math.random() * 0.15;
-                        }
-                    };
-                    
-                    const noiseGain = audioContext.createGain();
-                    noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
-                    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
-                    
-                    noiseNode.connect(noiseGain);
-                    noiseGain.connect(audioContext.destination);
-                    
-                    setTimeout(() => {
-                        noiseNode.disconnect();
-                    }, 400);
-                    
-                } catch (e) {
-                    console.log('Аудио контекст не поддерживается');
-                }
+                } catch (e) {}
             }
 
-            // ========== 6. Кастомизация скелета ==========
+            // Кастомизация скелета
             function customizeSkull(color, eyeColor, outfit) {
                 const skullMain = document.getElementById('skullMain');
                 const leftEye = document.getElementById('leftEye');
@@ -1858,105 +1310,57 @@
                 
                 if (skullMain) {
                     const baseColor = skullColors[color] || '#f5f5f5';
-                    skullMain.style.background = `radial-gradient(circle at 30% 30%, ${baseColor}, ${adjustColor(baseColor, -30)}, ${adjustColor(baseColor, -60)})`;
+                    skullMain.style.background = `radial-gradient(circle at 30% 30%, ${baseColor}, ${baseColor}dd, ${baseColor}aa)`;
                 }
                 
                 if (leftEye && rightEye) {
-                    const eyeColorMap = {
-                        red: '#ff0000',
-                        blue: '#0000ff',
-                        green: '#00ff00',
-                        purple: '#800080',
-                        orange: '#ffa500',
-                        yellow: '#ffff00'
-                    };
+                    const eyeColorMap = { red: '#ff0000', blue: '#0000ff', green: '#00ff00', purple: '#800080', orange: '#ffa500', yellow: '#ffff00' };
                     const eyeBase = eyeColorMap[eyeColor] || '#ff0000';
-                    const eyeStyle = `radial-gradient(circle at 30% 30%, ${eyeBase}, ${adjustColor(eyeBase, -50)}, ${adjustColor(eyeBase, -80)})`;
-                    leftEye.style.background = eyeStyle;
-                    rightEye.style.background = eyeStyle;
+                    leftEye.style.background = `radial-gradient(circle at 30% 30%, ${eyeBase}, #8b0000)`;
+                    rightEye.style.background = `radial-gradient(circle at 30% 30%, ${eyeBase}, #8b0000)`;
                 }
                 
                 if (accessories) {
                     accessories.innerHTML = '';
-                    
-                    switch(outfit) {
-                        case 'crown':
-                            accessories.innerHTML += '<div class="accessory crown"></div>';
-                            break;
-                        case 'wizard':
-                            accessories.innerHTML += '<div class="accessory wizard-hat"></div>';
-                            break;
-                        case 'warrior':
-                            accessories.innerHTML += '<div class="accessory warrior-helm"></div>';
-                            break;
-                        case 'priest':
-                            accessories.innerHTML += '<div class="accessory cape" style="background: linear-gradient(135deg, #ffffff, #e0e0e0);"></div>';
-                            break;
-                        case 'rogue':
-                            accessories.innerHTML += '<div class="accessory cape" style="background: linear-gradient(135deg, #2a2a2a, #1a1a1a);"></div>';
-                            break;
-                    }
+                    if (outfit === 'crown') accessories.innerHTML += '<div class="accessory crown"></div>';
+                    else if (outfit === 'wizard') accessories.innerHTML += '<div class="accessory wizard-hat"></div>';
+                    else if (outfit === 'warrior') accessories.innerHTML += '<div class="accessory warrior-helm"></div>';
                 }
             }
 
-            function adjustColor(color, amount) {
-                return color;
-            }
-
-            // ========== 7. Аватарки ==========
+            // Аватарки
             function generateAvatar(user) {
                 if (user.avatar) return user.avatar;
-                
                 const firstLetter = user.name.charAt(0).toUpperCase();
                 const color = avatarColors[Math.floor(Math.random() * avatarColors.length)];
-                const icon = '😊';
-                
-                const avatar = {
-                    icon: icon,
-                    color: color,
-                    letter: firstLetter
-                };
-                
+                const avatar = { icon: '😊', color: color, letter: firstLetter };
                 user.avatar = avatar;
                 saveUserToFirebase(user);
                 return avatar;
             }
 
             function updateAvatar(user, color, icon) {
-                user.avatar = {
-                    icon: icon,
-                    color: color,
-                    letter: user.name.charAt(0).toUpperCase()
-                };
+                user.avatar = { icon: icon, color: color, letter: user.name.charAt(0).toUpperCase() };
                 saveUserToFirebase(user);
                 updateDisplayAvatar(user);
             }
 
             function updateDisplayAvatar(user) {
-                if (!user.avatar) return;
-                const elements = document.querySelectorAll('#headerAvatar, #avatarPreview');
-                elements.forEach(el => {
+                if (!user?.avatar) return;
+                document.querySelectorAll('#headerAvatar, #avatarPreview').forEach(el => {
                     el.style.background = user.avatar.color;
                     el.textContent = user.avatar.icon || user.avatar.letter;
                 });
             }
 
-            // ========== 8. Firebase функции ==========
+            // Firebase
             function generateUserId() {
                 return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
 
-            function getUserRef(userId) {
-                return database.ref('users/' + userId);
-            }
-
-            function getUsersRef() {
-                return database.ref('users');
-            }
-
-            function getBannedRef() {
-                return database.ref('banned');
-            }
+            function getUserRef(userId) { return database.ref('users/' + userId); }
+            function getUsersRef() { return database.ref('users'); }
+            function getBannedRef() { return database.ref('banned'); }
 
             function saveUserToFirebase(user) {
                 return getUserRef(user.id).set(user);
@@ -1990,7 +1394,7 @@
                 return database.ref('banned/' + userId).once('value').then(snapshot => snapshot.exists());
             }
 
-            // ========== 9. Инициализация пользователя ==========
+            // Инициализация пользователя
             function initCurrentUser() {
                 const storedId = localStorage.getItem(currentUserIdKey);
                 
@@ -2000,16 +1404,9 @@
                             currentUser = snapshot.val();
                             currentUser.lastSeen = new Date().toLocaleString();
                             
-                            if (!currentUser.avatar) {
-                                generateAvatar(currentUser);
-                            }
-                            
+                            if (!currentUser.avatar) generateAvatar(currentUser);
                             if (!currentUser.skull) {
-                                currentUser.skull = {
-                                    color: 'white',
-                                    eyeColor: 'red',
-                                    outfit: 'none'
-                                };
+                                currentUser.skull = { color: 'white', eyeColor: 'red', outfit: 'none' };
                             }
                             
                             saveUserToFirebase(currentUser).then(() => {
@@ -2019,7 +1416,7 @@
                                 listenUserChanges(currentUser.id);
                                 setupInboxListener();
                                 loadAvatarPreview();
-                                loadFriends();
+                                startOnlineTracking();
                             });
                         } else {
                             checkUserBanned(storedId).then(isBanned => {
@@ -2055,11 +1452,7 @@
                     ip: fakeIp,
                     firstSeen: new Date().toLocaleString(),
                     lastSeen: new Date().toLocaleString(),
-                    skull: {
-                        color: 'white',
-                        eyeColor: 'red',
-                        outfit: 'none'
-                    }
+                    skull: { color: 'white', eyeColor: 'red', outfit: 'none' }
                 };
 
                 generateAvatar(newUser);
@@ -2072,7 +1465,7 @@
                     listenUserChanges(newUser.id);
                     setupInboxListener();
                     loadAvatarPreview();
-                    loadFriends();
+                    startOnlineTracking();
                 });
             }
 
@@ -2089,14 +1482,12 @@
             function changeUserName(newName) {
                 if (!currentUser) return;
                 currentUser.name = newName;
-                if (currentUser.avatar) {
-                    currentUser.avatar.letter = newName.charAt(0).toUpperCase();
-                }
+                if (currentUser.avatar) currentUser.avatar.letter = newName.charAt(0).toUpperCase();
                 currentUser.lastSeen = new Date().toLocaleString();
                 saveUserToFirebase(currentUser).then(() => {
                     updateDisplayName(newName);
                     updateDisplayAvatar(currentUser);
-                    alert('Имя успешно изменено!');
+                    alert('Имя изменено!');
                 });
             }
 
@@ -2105,7 +1496,7 @@
                 currentUser.password = newPassword;
                 currentUser.lastSeen = new Date().toLocaleString();
                 saveUserToFirebase(currentUser).then(() => {
-                    alert('Пароль успешно изменен!');
+                    alert('Пароль изменен!');
                 });
             }
 
@@ -2114,85 +1505,83 @@
             }
 
             function loadAvatarPreview() {
-                if (!currentUser || !currentUser.avatar) return;
-                
+                if (!currentUser?.avatar) return;
                 const preview = document.getElementById('avatarPreview');
                 preview.style.background = currentUser.avatar.color;
                 preview.textContent = currentUser.avatar.icon || currentUser.avatar.letter;
-                
-                document.querySelectorAll('#avatarColors .color-option').forEach(opt => {
-                    if (opt.style.backgroundColor === currentUser.avatar.color) {
-                        opt.classList.add('selected');
-                    } else {
-                        opt.classList.remove('selected');
-                    }
-                });
-                
-                document.querySelectorAll('#avatarIcons .icon-option').forEach(opt => {
-                    if (opt.textContent === currentUser.avatar.icon) {
-                        opt.classList.add('selected');
-                    } else {
-                        opt.classList.remove('selected');
-                    }
-                });
             }
 
-            // ========== 10. Друзья ==========
-            function loadFriends() {
+            // Онлайн-статус
+            function startOnlineTracking() {
                 if (!currentUser) return;
-                database.ref('friends/' + currentUser.id).on('value', snapshot => {
-                    renderFriendsList(snapshot.val());
-                });
-            }
-
-            function renderFriendsList(friendsObj) {
-                const container = document.getElementById('friendsList');
-                if (!container) return;
                 
-                if (!friendsObj || Object.keys(friendsObj).length === 0) {
-                    container.innerHTML = '<div style="color: #8f84b0; text-align: center;">У вас пока нет друзей</div>';
-                    return;
-                }
-
-                const friendIds = Object.keys(friendsObj);
+                // Обновляем статус каждые 30 секунд
+                setInterval(() => {
+                    currentUser.lastSeen = new Date().toLocaleString();
+                    saveUserToFirebase(currentUser);
+                }, 30000);
                 
-                getUsersRef().once('value', snapshot => {
-                    const allUsers = snapshot.val() || {};
-                    let html = '';
+                // Слушаем изменения всех пользователей для онлайна
+                getUsersRef().on('value', snapshot => {
+                    const users = snapshot.val() || {};
+                    const onlineUsers = [];
                     
-                    friendIds.forEach(id => {
-                        const friend = allUsers[id];
-                        if (friend) {
-                            if (!friend.avatar) {
-                                generateAvatar(friend);
-                            }
-                            html += `
-                                <div class="friend-item">
-                                    <span>${friend.name}</span>
-                                    <div>
-                                        <button class="pm-btn-small" onclick="window.openPrivateChat('${friend.id}', '${friend.name}')">✉️</button>
-                                    </div>
-                                </div>
-                            `;
+                    Object.values(users).forEach(user => {
+                        if (user.id === currentUser.id) return; // пропускаем себя
+                        
+                        // Считаем онлайн, если lastSeen был менее 2 минут назад
+                        const lastSeen = new Date(user.lastSeen).getTime();
+                        const now = new Date().getTime();
+                        const isOnline = (now - lastSeen) < 120000; // 2 минуты
+                        
+                        if (isOnline) {
+                            if (!user.avatar) generateAvatar(user);
+                            onlineUsers.push(user);
                         }
                     });
                     
-                    container.innerHTML = html;
+                    updateOnlineMenu(onlineUsers);
                 });
             }
 
-            // ========== 11. Профиль пользователя ==========
+            function updateOnlineMenu(users) {
+                const container = document.getElementById('onlineList');
+                const countEl = document.getElementById('onlineCount');
+                
+                countEl.textContent = users.length;
+                
+                if (users.length === 0) {
+                    container.innerHTML = '<div style="text-align: center; color: #8f84b0; padding: 20px;">👀 Нет пользователей онлайн</div>';
+                    return;
+                }
+                
+                let html = '';
+                users.forEach(user => {
+                    html += `
+                        <div class="online-user" onclick="window.openPrivateChat('${user.id}', '${user.name}')">
+                            <div class="online-avatar" style="background: ${user.avatar.color};">${user.avatar.icon || user.avatar.letter}</div>
+                            <div class="online-info">
+                                <div class="online-name">${user.name}</div>
+                                <div class="online-status">В сети</div>
+                            </div>
+                            <div class="online-actions">
+                                <button class="online-pm-btn" onclick="event.stopPropagation(); window.openPrivateChat('${user.id}', '${user.name}')">✉️</button>
+                            </div>
+                        </div>
+                    `;
+                });
+                
+                container.innerHTML = html;
+            }
+
+            // Профиль
             function showProfile(userId) {
                 getUserRef(userId).once('value', snapshot => {
                     const user = snapshot.val();
                     if (!user) return;
-                    
-                    if (!user.avatar) {
-                        generateAvatar(user);
-                    }
+                    if (!user.avatar) generateAvatar(user);
                     
                     const isCurrent = currentUser && user.id === currentUser.id;
-                    
                     const modal = document.getElementById('profileModal');
                     const content = document.getElementById('profileContent');
                     
@@ -2222,27 +1611,24 @@
                 });
             }
 
-            // ========== 12. Чаты ==========
+            // Чаты
             function sendGlobalMessage(text) {
                 if (!currentUser || !text.trim()) return;
-                const message = {
+                database.ref('globalChat').push({
                     userId: currentUser.id,
                     userName: currentUser.name,
                     userAvatar: currentUser.avatar,
                     text: text,
                     timestamp: Date.now(),
                     timeStr: new Date().toLocaleTimeString()
-                };
-                database.ref('globalChat').push(message);
+                });
             }
 
             function subscribeToGlobalChat(callback) {
                 const chatRef = database.ref('globalChat').limitToLast(50);
                 chatRef.on('value', snapshot => {
                     const messages = [];
-                    snapshot.forEach(child => {
-                        messages.push({ id: child.key, ...child.val() });
-                    });
+                    snapshot.forEach(child => messages.push({ id: child.key, ...child.val() }));
                     callback(messages.reverse());
                 });
                 return () => chatRef.off();
@@ -2250,10 +1636,8 @@
 
             function sendPrivateMessage(toUserId, text) {
                 if (!currentUser || !toUserId || !text.trim()) return;
-                
                 const chatId = [currentUser.id, toUserId].sort().join('_');
-                
-                const message = {
+                database.ref('privateChats/' + chatId).push({
                     fromUserId: currentUser.id,
                     fromUserName: currentUser.name,
                     fromUserAvatar: currentUser.avatar,
@@ -2262,14 +1646,11 @@
                     timestamp: Date.now(),
                     timeStr: new Date().toLocaleTimeString(),
                     read: false
-                };
-                
-                return database.ref('privateChats/' + chatId).push(message);
+                });
             }
 
             function markMessagesAsRead(otherUserId) {
                 if (!currentUser) return;
-                
                 const chatId = [currentUser.id, otherUserId].sort().join('_');
                 const chatRef = database.ref('privateChats/' + chatId);
                 
@@ -2281,27 +1662,20 @@
                             updates[child.key + '/read'] = true;
                         }
                     });
-                    
-                    if (Object.keys(updates).length > 0) {
-                        chatRef.update(updates);
-                    }
+                    if (Object.keys(updates).length > 0) chatRef.update(updates);
                 });
             }
 
             function subscribeToPrivateChat(otherUserId, callback) {
                 if (!currentUser || !otherUserId) return;
-                
                 const chatId = [currentUser.id, otherUserId].sort().join('_');
                 const chatRef = database.ref('privateChats/' + chatId).limitToLast(50);
                 
                 chatRef.on('value', snapshot => {
                     const messages = [];
-                    snapshot.forEach(child => {
-                        messages.push({ id: child.key, ...child.val() });
-                    });
+                    snapshot.forEach(child => messages.push({ id: child.key, ...child.val() }));
                     callback(messages);
                 });
-                
                 return () => chatRef.off();
             }
 
@@ -2314,21 +1688,16 @@
                 }
                 
                 currentPMUser = { id: userId, name: userName };
-                
                 markMessagesAsRead(userId);
                 
                 getUserRef(userId).once('value', snapshot => {
                     const otherUser = snapshot.val();
                     if (!otherUser) return;
                     
-                    if (!otherUser.avatar) {
-                        generateAvatar(otherUser);
-                    }
+                    if (!otherUser.avatar) generateAvatar(otherUser);
                     
-                    const pmAvatar = document.getElementById('pmAvatar');
-                    pmAvatar.style.background = otherUser.avatar.color;
-                    pmAvatar.textContent = otherUser.avatar.icon || otherUser.avatar.letter;
-                    
+                    document.getElementById('pmAvatar').style.background = otherUser.avatar.color;
+                    document.getElementById('pmAvatar').textContent = otherUser.avatar.icon || otherUser.avatar.letter;
                     document.getElementById('pmModal').classList.add('active');
                     document.getElementById('overlay').classList.add('active');
                     document.getElementById('pmUserName').textContent = userName;
@@ -2337,53 +1706,35 @@
                     pmListener = subscribeToPrivateChat(userId, (messages) => {
                         const container = document.getElementById('pmMessages');
                         container.innerHTML = '';
-                        
-                        messages.sort((a, b) => a.timestamp - b.timestamp);
-                        
-                        messages.forEach(msg => {
+                        messages.sort((a, b) => a.timestamp - b.timestamp).forEach(msg => {
                             const isOwn = msg.fromUserId === currentUser.id;
-                            const msgDiv = document.createElement('div');
-                            msgDiv.className = `message ${isOwn ? 'own-message' : ''}`;
-                            
-                            const senderAvatar = isOwn ? currentUser.avatar : otherUser.avatar;
-                            
-                            msgDiv.innerHTML = `
-                                <div class="message-avatar" style="background: ${senderAvatar.color};" onclick="window.openProfile('${isOwn ? currentUser.id : userId}')">${senderAvatar.icon || senderAvatar.letter}</div>
-                                <div class="message-content">
-                                    <div class="message-header">
-                                        <span class="message-sender" onclick="window.openProfile('${isOwn ? currentUser.id : userId}')">${isOwn ? 'Вы' : msg.fromUserName}</span>
-                                        <span class="message-time">${msg.timeStr}</span>
+                            container.innerHTML += `
+                                <div class="message ${isOwn ? 'own-message' : ''}">
+                                    <div class="message-content">
+                                        <div><b>${isOwn ? 'Вы' : msg.fromUserName}</b> ${msg.timeStr}</div>
+                                        <div>${msg.text}</div>
                                     </div>
-                                    <div class="message-text">${msg.text}</div>
                                 </div>
                             `;
-                            container.appendChild(msgDiv);
                         });
-                        
                         container.scrollTop = container.scrollHeight;
                     });
                 });
             }
 
             function closePrivateChat() {
-                if (pmListener) {
-                    pmListener();
-                    pmListener = null;
-                }
+                if (pmListener) pmListener();
                 document.getElementById('pmModal').classList.remove('active');
                 document.getElementById('overlay').classList.remove('active');
                 currentPMUser = null;
             }
 
-            // ========== 13. Входящие ==========
+            // Входящие
             function setupInboxListener() {
                 if (!currentUser) return;
                 
                 const allChatsRef = database.ref('privateChats');
-                
-                if (inboxListener) {
-                    allChatsRef.off('value', inboxListener);
-                }
+                if (inboxListener) allChatsRef.off('value', inboxListener);
                 
                 inboxListener = allChatsRef.on('value', snapshot => {
                     const chats = snapshot.val() || {};
@@ -2401,560 +1752,11 @@
                     chatEntries.forEach(([chatId, messages]) => {
                         const [id1, id2] = chatId.split('_');
                         const otherId = id1 === currentUser.id ? id2 : id1;
-                        
                         const messagesArray = Object.values(messages);
-                        const userMessages = messagesArray.filter(msg => 
-                            msg.toUserId === currentUser.id
-                        );
+                        const userMessages = messagesArray.filter(msg => msg.toUserId === currentUser.id);
                         
                         if (userMessages.length > 0) {
                             userMessages.sort((a, b) => b.timestamp - a.timestamp);
                             const lastMsg = userMessages[0];
                             const unreadInChat = userMessages.filter(msg => !msg.read).length;
-                            
-                            if (unreadInChat > 0) {
-                                totalUnread += unreadInChat;
-                            }
-                            
-                            getUserRef(otherId).once('value', userSnapshot => {
-                                const otherUser = userSnapshot.val();
-                                if (otherUser) {
-                                    if (!otherUser.avatar) {
-                                        generateAvatar(otherUser);
-                                    }
-                                    
-                                    inboxItems.push({
-                                        userId: otherId,
-                                        userName: otherUser.name,
-                                        userAvatar: otherUser.avatar,
-                                        lastMessage: lastMsg.text,
-                                        lastTime: lastMsg.timeStr,
-                                        unread: unreadInChat
-                                    });
-                                }
-                                
-                                processedCount++;
-                                if (processedCount === chatEntries.length) {
-                                    renderInbox(inboxItems);
-                                    updateUnreadBadge(totalUnread);
-                                }
-                            });
-                        } else {
-                            processedCount++;
-                            if (processedCount === chatEntries.length) {
-                                renderInbox(inboxItems);
-                                updateUnreadBadge(totalUnread);
-                            }
-                        }
-                    });
-                });
-            }
-
-            function renderInbox(items) {
-                const container = document.getElementById('inboxList');
-                if (!container) return;
-                
-                if (items.length === 0) {
-                    container.innerHTML = '<div style="color: #8f84b0; text-align: center; padding: 30px;">✉️ Нет входящих сообщений</div>';
-                    return;
-                }
-                
-                items.sort((a, b) => b.unread - a.unread);
-                
-                let html = '';
-                items.forEach(item => {
-                    html += `
-                        <div class="inbox-item ${item.unread > 0 ? 'unread' : ''}" data-user-id="${item.userId}" data-user-name="${item.userName}">
-                            <div class="inbox-avatar" style="background: ${item.userAvatar.color};">${item.userAvatar.icon || item.userAvatar.letter}</div>
-                            <div class="inbox-info">
-                                <h4>${item.userName}</h4>
-                                <p>${item.lastMessage}</p>
-                                <small>${item.lastTime}</small>
-                            </div>
-                            ${item.unread > 0 ? `<div class="inbox-badge">${item.unread}</div>` : ''}
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
-                
-                container.querySelectorAll('.inbox-item').forEach(item => {
-                    item.addEventListener('click', () => {
-                        const userId = item.dataset.userId;
-                        const userName = item.dataset.userName;
-                        openPrivateChat(userId, userName);
-                        markMessagesAsRead(userId);
-                    });
-                });
-            }
-
-            function updateUnreadBadge(count) {
-                unreadCount = count;
-                const inboxTab = document.getElementById('inboxTab');
-                
-                const oldBadge = inboxTab.querySelector('.tab-badge');
-                if (oldBadge) oldBadge.remove();
-                
-                if (count > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'tab-badge';
-                    badge.textContent = count > 99 ? '99+' : count;
-                    inboxTab.appendChild(badge);
-                }
-            }
-
-            // ========== 14. Поиск пользователей ==========
-            function searchUsers(searchTerm) {
-                return getUsersRef().once('value').then(snapshot => {
-                    const users = snapshot.val() || {};
-                    return Object.values(users).filter(user => 
-                        user.id !== currentUser?.id && 
-                        user.name.toLowerCase().includes(searchTerm.toLowerCase())
-                    );
-                });
-            }
-
-            function renderSearchResults(searchTerm = '') {
-                const container = document.getElementById('searchResults');
-                if (!container) return;
-                
-                if (!searchTerm) {
-                    container.innerHTML = '';
-                    return;
-                }
-                
-                searchUsers(searchTerm).then(users => {
-                    if (users.length === 0) {
-                        container.innerHTML = '<div style="color: #8f84b0; text-align: center;">Ничего не найдено</div>';
-                        return;
-                    }
-                    
-                    let html = '';
-                    users.forEach(user => {
-                        if (!user.avatar) {
-                            generateAvatar(user);
-                        }
-                        
-                        html += `
-                            <div class="user-card">
-                                <div class="card-avatar" style="background: ${user.avatar.color};" onclick="window.openProfile('${user.id}')">${user.avatar.icon || user.avatar.letter}</div>
-                                <div class="card-info">
-                                    <h4 onclick="window.openProfile('${user.id}')">${user.name}</h4>
-                                    <p>Был(а): ${user.lastSeen || 'неизвестно'}</p>
-                                </div>
-                                <div class="card-actions">
-                                    <button class="pm-btn-small" onclick="window.openPrivateChat('${user.id}', '${user.name}')">✉️</button>
-                                </div>
-                            </div>
-                        `;
-                    });
-                    
-                    container.innerHTML = html;
-                });
-            }
-
-            // ========== 15. Админка ==========
-            function renderUsersList(searchTerm = '') {
-                const container = document.getElementById('usersListContainer');
-                if (!container) return;
-
-                getUsersRef().once('value', snapshot => {
-                    const usersData = snapshot.val();
-                    let usersArray = usersData ? Object.values(usersData) : [];
-                    
-                    getBannedRef().once('value', bannedSnapshot => {
-                        const bannedData = bannedSnapshot.val();
-                        const bannedSet = new Set(bannedData ? Object.keys(bannedData) : []);
-
-                        if (searchTerm) {
-                            usersArray = usersArray.filter(u => 
-                                u.name.toLowerCase().includes(searchTerm.toLowerCase())
-                            );
-                        }
-
-                        if (usersArray.length === 0) {
-                            container.innerHTML = '<div class="empty-message">👀 Никого не найдено</div>';
-                            return;
-                        }
-
-                        usersArray.sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || ''));
-
-                        let html = `<table class="users-table">
-                            <thead><tr><th>Аватар</th><th>Имя</th><th>Пароль</th><th>IP</th><th>Действия</th></tr></thead>
-                            <tbody>`;
-
-                        usersArray.forEach(u => {
-                            if (!u.avatar) {
-                                generateAvatar(u);
-                            }
-                            
-                            const isCurrent = currentUser && u.id === currentUser.id;
-                            const isBanned = bannedSet.has(u.id);
-                            
-                            html += `<tr>
-                                <td><div class="table-avatar" style="background: ${u.avatar.color};">${u.avatar.icon || u.avatar.letter}</div></td>
-                                <td>${u.name} ${isCurrent ? '👑' : ''}</td>
-                                <td>${u.password ? '••••' : '(нет)'}</td>
-                                <td>${u.ip || '?'}</td>
-                                <td>
-                                    ${!isCurrent ? 
-                                        `<button class="action-btn ${isBanned ? 'blocked' : ''}" onclick="window.banUser('${u.id}', this)">${isBanned ? '🔒 Разблокировать' : '🚫 Блокировать'}</button>
-                                         <button class="action-btn pm-btn" onclick="window.openPrivateChat('${u.id}', '${u.name}')">✉️ ЛС</button>` 
-                                        : '<span>⚡ это вы</span>'}
-                                </td>
-                            </tr>`;
-                        });
-
-                        html += '</tbody></table>';
-                        container.innerHTML = html;
-                    });
-                });
-            }
-
-            // Функция бана/разбана (глобальная)
-            window.banUser = function(userId, btn) {
-                const isBlocked = btn.classList.contains('blocked');
-                
-                if (isBlocked) {
-                    unbanUser(userId).then(() => {
-                        renderUsersList(document.getElementById('userSearch').value);
-                    });
-                } else {
-                    banUser(userId).then(() => {
-                        renderUsersList(document.getElementById('userSearch').value);
-                        
-                        if (currentUser && userId === currentUser.id) {
-                            localStorage.removeItem(currentUserIdKey);
-                            window.location.reload();
-                        }
-                    });
-                }
-            };
-
-            // ========== 16. Инициализация ==========
-            window.openProfile = showProfile;
-            window.openPrivateChat = openPrivateChat;
-
-            // Запуск
-            generateBackground();
-            initCurrentUser();
-            setupSkullAnimation();
-            setupSkullEasterEgg();
-
-            // Элементы интерфейса
-            const settingsBtn = document.getElementById('settingsBtn');
-            const settingsMenu = document.getElementById('settingsMenu');
-            const overlay = document.getElementById('overlay');
-            const closeMenu = document.getElementById('closeMenu');
-            const tabs = document.querySelectorAll('.tab');
-            const panels = document.querySelectorAll('.tab-panel');
-            const changeNameBtn = document.getElementById('changeNameBtn');
-            const changePasswordBtn = document.getElementById('changePasswordBtn');
-            const newNameInput = document.getElementById('newNameInput');
-            const newPasswordInput = document.getElementById('newPasswordInput');
-            const userInfo = document.getElementById('userInfo');
-            
-            // Поиск
-            const searchHeaderBtn = document.getElementById('searchHeaderBtn');
-            const searchModal = document.getElementById('searchModal');
-            const searchOverlay = document.getElementById('searchOverlay');
-            const closeSearch = document.getElementById('closeSearch');
-            const userSearchField = document.getElementById('userSearchField');
-            
-            // Чат
-            const globalChatInput = document.getElementById('globalChatInput');
-            const globalChatSend = document.getElementById('globalChatSend');
-            const globalChatMessages = document.getElementById('globalChatMessages');
-            
-            // Админка
-            const userSearch = document.getElementById('userSearch');
-            
-            // ЛС
-            const closePmBtn = document.getElementById('closePmBtn');
-            const pmInput = document.getElementById('pmInput');
-            const pmSendBtn = document.getElementById('pmSendBtn');
-            const pmUserName = document.getElementById('pmUserName');
-            const pmModal = document.getElementById('pmModal');
-            
-            // Профиль
-            const closeProfile = document.getElementById('closeProfile');
-            const profileModal = document.getElementById('profileModal');
-
-            // Аватар
-            const avatarColorsDiv = document.getElementById('avatarColors');
-            const avatarIconsDiv = document.getElementById('avatarIcons');
-            const saveAvatarBtn = document.getElementById('saveAvatarBtn');
-            
-            // Скелет
-            const saveSkullBtn = document.getElementById('saveSkullBtn');
-            const skullColorsDiv = document.getElementById('skullColors');
-            const eyeColorsDiv = document.getElementById('eyeColors');
-            const outfitsDiv = document.getElementById('outfits');
-            
-            let selectedSkullColor = 'white';
-            let selectedEyeColor = 'red';
-            let selectedOutfit = 'none';
-            let selectedAvatarColor = '#FF6B6B';
-            let selectedAvatarIcon = '😊';
-
-            // Открытие/закрытие настроек
-            settingsBtn.addEventListener('click', () => {
-                settingsMenu.classList.add('active');
-                overlay.classList.add('active');
-            });
-            
-            closeMenu.addEventListener('click', () => {
-                settingsMenu.classList.remove('active');
-                overlay.classList.remove('active');
-            });
-            
-            overlay.addEventListener('click', () => {
-                settingsMenu.classList.remove('active');
-                searchModal.classList.remove('active');
-                profileModal.classList.remove('active');
-                pmModal.classList.remove('active');
-                if (pmListener) {
-                    pmListener();
-                    pmListener = null;
-                }
-                overlay.classList.remove('active');
-            });
-
-            // Профиль (клик по шапке)
-            userInfo.addEventListener('click', () => {
-                if (currentUser) {
-                    showProfile(currentUser.id);
-                }
-            });
-
-            // Поиск
-            searchHeaderBtn.addEventListener('click', () => {
-                searchModal.classList.add('active');
-                searchOverlay.classList.add('active');
-                userSearchField.focus();
-                renderSearchResults('');
-            });
-            
-            closeSearch.addEventListener('click', () => {
-                searchModal.classList.remove('active');
-                searchOverlay.classList.remove('active');
-                userSearchField.value = '';
-            });
-            
-            searchOverlay.addEventListener('click', () => {
-                searchModal.classList.remove('active');
-                searchOverlay.classList.remove('active');
-                userSearchField.value = '';
-            });
-
-            userSearchField.addEventListener('input', (e) => {
-                renderSearchResults(e.target.value);
-            });
-
-            // Переключение вкладок
-            tabs.forEach(tab => {
-                tab.addEventListener('click', () => {
-                    const targetId = tab.dataset.tab;
-                    
-                    if (targetId === 'tab4') { // Админка
-                        if (!adminAccessGranted) {
-                            const pwd = prompt('Введите пароль администратора:');
-                            if (pwd === ADMIN_PASSWORD) {
-                                adminAccessGranted = true;
-                            } else {
-                                alert('❌ Неверный пароль!');
-                                return;
-                            }
-                        }
-                    }
-                    
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    panels.forEach(p => p.classList.remove('active'));
-                    document.getElementById(targetId).classList.add('active');
-                    
-                    if (targetId === 'tab4') {
-                        renderUsersList(userSearch.value);
-                    }
-                });
-            });
-
-            // Поиск в админке
-            userSearch.addEventListener('input', (e) => {
-                renderUsersList(e.target.value);
-            });
-
-            // Смена имени
-            changeNameBtn.addEventListener('click', () => {
-                const newName = newNameInput.value.trim();
-                if (!newName) {
-                    alert('Введите имя!');
-                    return;
-                }
-                changeUserName(newName);
-                newNameInput.value = '';
-            });
-
-            // Смена пароля
-            changePasswordBtn.addEventListener('click', () => {
-                const newPassword = newPasswordInput.value.trim();
-                if (!newPassword) {
-                    alert('Введите пароль!');
-                    return;
-                }
-                changeUserPassword(newPassword);
-                newPasswordInput.value = '';
-            });
-
-            // Выбор цвета аватара
-            avatarColorsDiv.querySelectorAll('.color-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    avatarColorsDiv.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedAvatarColor = opt.style.backgroundColor;
-                    
-                    const preview = document.getElementById('avatarPreview');
-                    preview.style.background = selectedAvatarColor;
-                });
-            });
-
-            // Выбор иконки аватара
-            avatarIconsDiv.querySelectorAll('.icon-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    avatarIconsDiv.querySelectorAll('.icon-option').forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedAvatarIcon = opt.textContent;
-                    
-                    const preview = document.getElementById('avatarPreview');
-                    preview.textContent = selectedAvatarIcon;
-                });
-            });
-
-            // Сохранение аватара
-            saveAvatarBtn.addEventListener('click', () => {
-                if (currentUser) {
-                    updateAvatar(currentUser, selectedAvatarColor, selectedAvatarIcon);
-                    alert('Аватар сохранен!');
-                }
-            });
-
-            // Выбор цвета скелета
-            skullColorsDiv.querySelectorAll('.color-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    skullColorsDiv.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedSkullColor = opt.dataset.color;
-                });
-            });
-
-            // Выбор цвета глаз
-            eyeColorsDiv.querySelectorAll('.color-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    eyeColorsDiv.querySelectorAll('.color-option').forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedEyeColor = opt.dataset.color;
-                });
-            });
-
-            // Выбор костюма
-            outfitsDiv.querySelectorAll('.outfit-option').forEach(opt => {
-                opt.addEventListener('click', () => {
-                    outfitsDiv.querySelectorAll('.outfit-option').forEach(o => o.classList.remove('selected'));
-                    opt.classList.add('selected');
-                    selectedOutfit = opt.dataset.outfit;
-                });
-            });
-
-            // Сохранение скелета
-            saveSkullBtn.addEventListener('click', () => {
-                if (currentUser) {
-                    currentUser.skull = {
-                        color: selectedSkullColor,
-                        eyeColor: selectedEyeColor,
-                        outfit: selectedOutfit
-                    };
-                    saveUserToFirebase(currentUser).then(() => {
-                        customizeSkull(selectedSkullColor, selectedEyeColor, selectedOutfit);
-                        alert('Облик скелета сохранен!');
-                    });
-                }
-            });
-
-            // Общий чат
-            let unsubscribeGlobal = null;
-
-            document.querySelector('[data-tab="tab6"]').addEventListener('click', () => {
-                if (unsubscribeGlobal) unsubscribeGlobal();
-                
-                unsubscribeGlobal = subscribeToGlobalChat((messages) => {
-                    globalChatMessages.innerHTML = '';
-                    messages.forEach(msg => {
-                        const isOwn = msg.userId === currentUser?.id;
-                        const msgDiv = document.createElement('div');
-                        msgDiv.className = `message ${isOwn ? 'own-message' : ''}`;
-                        
-                        const avatar = msg.userAvatar || { color: '#888', icon: '😊' };
-                        
-                        msgDiv.innerHTML = `
-                            <div class="message-avatar" style="background: ${avatar.color};" onclick="window.openProfile('${msg.userId}')">${avatar.icon || (msg.userName ? msg.userName.charAt(0).toUpperCase() : '?')}</div>
-                            <div class="message-content">
-                                <div class="message-header">
-                                    <span class="message-sender" onclick="window.openProfile('${msg.userId}')">${msg.userName}</span>
-                                    <span class="message-time">${msg.timeStr}</span>
-                                </div>
-                                <div class="message-text">${msg.text}</div>
-                            </div>
-                        `;
-                        globalChatMessages.appendChild(msgDiv);
-                    });
-                    globalChatMessages.scrollTop = globalChatMessages.scrollHeight;
-                });
-            });
-
-            globalChatSend.addEventListener('click', () => {
-                const text = globalChatInput.value.trim();
-                if (text) {
-                    sendGlobalMessage(text);
-                    globalChatInput.value = '';
-                }
-            });
-
-            globalChatInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    globalChatSend.click();
-                }
-            });
-
-            // Личные сообщения
-            closePmBtn.addEventListener('click', closePrivateChat);
-
-            pmSendBtn.addEventListener('click', () => {
-                if (!currentPMUser) return;
-                const text = pmInput.value.trim();
-                if (text) {
-                    sendPrivateMessage(currentPMUser.id, text);
-                    pmInput.value = '';
-                }
-            });
-
-            pmInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    pmSendBtn.click();
-                }
-            });
-
-            pmUserName.addEventListener('click', () => {
-                if (currentPMUser) {
-                    showProfile(currentPMUser.id);
-                }
-            });
-
-            // Закрытие профиля
-            closeProfile.addEventListener('click', () => {
-                profileModal.classList.remove('active');
-                overlay.classList.remove('active');
-            });
-        })();
-    </script>
-</body>
-    </html>
+                            totalUnread += unreadInChat;
