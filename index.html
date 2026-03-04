@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Защита</title>
+    <title>Ma2DUNGEON · Чат</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* Стили без изменений (полностью сохранены) */
+        /* Базовые стили (сохранены) */
         * {
             margin: 0;
             padding: 0;
@@ -151,8 +151,8 @@
             left: 50%;
             transform: translate(-50%, -50%);
             width: 90%;
-            max-width: 750px;
-            max-height: 80vh;
+            max-width: 900px;
+            max-height: 85vh;
             overflow-y: auto;
             background: #1e2337;
             border: 3px solid #6d5aa3;
@@ -203,17 +203,18 @@
 
         .tabs {
             display: flex;
-            gap: 15px;
+            gap: 10px;
             margin-bottom: 25px;
             border-bottom: 2px solid #47407c;
             padding-bottom: 15px;
+            flex-wrap: wrap;
         }
         .tab {
             background: #2b2e48;
-            padding: 12px 25px;
+            padding: 10px 20px;
             border-radius: 40px;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.1rem;
             cursor: pointer;
             border: 2px solid #4f4580;
             transition: 0.2s;
@@ -236,6 +237,7 @@
             display: block;
         }
 
+        /* Панель смены имени */
         .change-name-panel {
             display: flex;
             flex-direction: column;
@@ -268,6 +270,94 @@
             transform: translateY(3px);
         }
 
+        /* Общий чат */
+        .chat-container {
+            background: #14182b;
+            border-radius: 30px;
+            padding: 20px;
+            border: 2px solid #4d4382;
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .message {
+            background: #262b44;
+            padding: 10px 15px;
+            border-radius: 20px;
+            max-width: 80%;
+            align-self: flex-start;
+            border: 1px solid #5b4e93;
+        }
+        .message.own-message {
+            background: #3f3c6b;
+            align-self: flex-end;
+            border-color: #a285ff;
+        }
+        .message-header {
+            font-size: 0.85rem;
+            color: #b1a6e0;
+            margin-bottom: 5px;
+            display: flex;
+            gap: 10px;
+        }
+        .message-sender {
+            font-weight: bold;
+            color: #d7c9ff;
+        }
+        .message-time {
+            color: #8f84b0;
+        }
+        .message-text {
+            color: white;
+            word-wrap: break-word;
+        }
+        .chat-input-area {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .chat-input-area input {
+            flex: 1;
+            background: #0b0f21;
+            border: 3px solid #5a4f8f;
+            padding: 15px 20px;
+            border-radius: 60px;
+            color: white;
+            outline: none;
+        }
+        .chat-input-area button {
+            background: #594e94;
+            border: none;
+            padding: 0 25px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
+            border-bottom: 3px solid #2e274b;
+        }
+
+        /* Админ панель */
+        .admin-controls {
+            margin-bottom: 20px;
+        }
+        .search-input {
+            width: 100%;
+            background: #0b0f21;
+            border: 3px solid #5a4f8f;
+            padding: 15px 20px;
+            border-radius: 60px;
+            color: white;
+            outline: none;
+            margin-bottom: 20px;
+        }
         .users-table {
             width: 100%;
             border-collapse: collapse;
@@ -290,12 +380,11 @@
             text-align: center;
             border-bottom: 1px solid #3a3462;
             color: #cfc5f5;
-            word-break: break-word;
         }
         .users-table tr:last-child td {
             border-bottom: none;
         }
-        .block-btn {
+        .action-btn {
             background: #b1536b;
             border: none;
             color: white;
@@ -306,26 +395,102 @@
             border-bottom: 3px solid #71283b;
             font-size: 0.9rem;
             transition: 0.1s;
+            margin: 2px;
         }
-        .block-btn:active {
+        .action-btn:active {
             border-bottom-width: 1px;
             transform: translateY(2px);
         }
-        .block-btn.blocked {
+        .action-btn.blocked {
             background: #3f3f6b;
             border-bottom-color: #20203b;
-            cursor: default;
-            opacity: 0.6;
         }
-        .block-btn:not(.blocked):hover {
-            background: #c45f7a;
+        .action-btn.pm-btn {
+            background: #4f5b99;
+            border-bottom-color: #2d3563;
+        }
+        .action-btn.pm-btn:hover {
+            background: #6170b5;
         }
 
-        .empty-message {
-            text-align: center;
-            padding: 30px;
-            font-size: 1.3rem;
-            color: #a096c9;
+        /* Модальное окно личных сообщений */
+        .pm-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            height: 70vh;
+            background: #1e2337;
+            border: 3px solid #9d86e0;
+            border-radius: 40px;
+            padding: 20px;
+            z-index: 2000;
+            display: flex;
+            flex-direction: column;
+            color: white;
+            box-shadow: 0 30px 60px black;
+        }
+        .pm-modal.hidden {
+            display: none;
+        }
+        .pm-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #5b4e93;
+            margin-bottom: 15px;
+        }
+        .pm-header h3 {
+            color: #d3c2ff;
+        }
+        .close-pm {
+            font-size: 2rem;
+            cursor: pointer;
+            color: #b7a4ff;
+            background: #2f2b4a;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #7361b0;
+        }
+        .pm-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+            background: #14182b;
+            border-radius: 30px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .pm-input-area {
+            display: flex;
+            gap: 10px;
+        }
+        .pm-input-area input {
+            flex: 1;
+            background: #0b0f21;
+            border: 3px solid #5a4f8f;
+            padding: 15px 20px;
+            border-radius: 60px;
+            color: white;
+            outline: none;
+        }
+        .pm-input-area button {
+            background: #594e94;
+            border: none;
+            padding: 0 25px;
+            border-radius: 60px;
+            color: white;
+            font-weight: bold;
+            cursor: pointer;
         }
 
         .overlay {
@@ -338,6 +503,9 @@
         }
         .overlay.active {
             display: block;
+        }
+        .overlay.dark {
+            z-index: 1999;
         }
 
         @media (max-width: 700px) {
@@ -353,7 +521,22 @@
     </style>
 </head>
 <body>
+    <!-- Затемнения -->
     <div class="overlay" id="overlay"></div>
+    <div class="overlay dark" id="pmOverlay"></div>
+
+    <!-- Модальное окно личных сообщений -->
+    <div class="pm-modal hidden" id="pmModal">
+        <div class="pm-header">
+            <h3 id="pmUserName">Чат с пользователем</h3>
+            <div class="close-pm" id="closePmBtn">✕</div>
+        </div>
+        <div class="pm-messages" id="pmMessages"></div>
+        <div class="pm-input-area">
+            <input type="text" id="pmInput" placeholder="Введите сообщение...">
+            <button id="pmSendBtn">➤</button>
+        </div>
+    </div>
 
     <!-- Меню настроек -->
     <div class="settings-menu" id="settingsMenu">
@@ -362,9 +545,11 @@
         
         <div class="tabs">
             <div class="tab active" data-tab="tab1">👤 Сменить имя</div>
-            <div class="tab" data-tab="tab2" id="adminTab">👑 Админ панель</div>
+            <div class="tab" data-tab="tab2">👑 Админ панель</div>
+            <div class="tab" data-tab="tab3">💬 Общий чат</div>
         </div>
 
+        <!-- Вкладка смены имени -->
         <div class="tab-panel active" id="tab1">
             <div class="change-name-panel">
                 <input type="text" id="newNameInput" placeholder="Введите новое имя" autocomplete="off">
@@ -372,9 +557,25 @@
             </div>
         </div>
 
+        <!-- Вкладка админ панели -->
         <div class="tab-panel" id="tab2">
-            <h3 style="margin-bottom:15px;">📋 Все, кто заходил</h3>
+            <h3 style="margin-bottom:15px;">📋 Все пользователи</h3>
+            <div class="admin-controls">
+                <input type="text" class="search-input" id="userSearch" placeholder="🔍 Поиск по имени...">
+            </div>
             <div id="usersListContainer"></div>
+        </div>
+
+        <!-- Вкладка общего чата -->
+        <div class="tab-panel" id="tab3">
+            <h3 style="margin-bottom:15px;">💬 Общий чат</h3>
+            <div class="chat-container">
+                <div class="chat-messages" id="globalChatMessages"></div>
+                <div class="chat-input-area">
+                    <input type="text" id="globalChatInput" placeholder="Введите сообщение...">
+                    <button id="globalChatSend">➤</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -405,11 +606,16 @@
             const database = firebase.database();
 
             // ========== 2. Глобальные переменные ==========
-            let currentUser = null;               // { id, name, password, ip, firstSeen, lastSeen }
+            let currentUser = null;
             const currentUserIdKey = 'ma2dungeon_currentId';
-            const ADMIN_PASSWORD = 'ADMINHACKER';  // пароль для входа в админку
+            const ADMIN_PASSWORD = 'ADMINHACKER';
+            let adminAccessGranted = false;
+            
+            // Для личных сообщений
+            let currentPMUser = null; // кому пишем
+            let pmListener = null;     // слушатель сообщений
 
-            // ========== 3. Работа с Firebase ==========
+            // ========== 3. Работа с Firebase (пользователи) ==========
             function generateUserId() {
                 return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
@@ -458,15 +664,13 @@
                 return database.ref('banned/' + userId).once('value').then(snapshot => snapshot.exists());
             }
 
-            // ========== 4. Инициализация / вход с паролем ==========
+            // ========== 4. Инициализация пользователя ==========
             function initCurrentUser() {
                 const storedId = localStorage.getItem(currentUserIdKey);
                 
                 if (storedId) {
-                    // Пробуем найти пользователя в Firebase по ID
                     getUserRef(storedId).once('value').then(snapshot => {
                         if (snapshot.exists()) {
-                            // Пользователь есть в активных — всё ок, пароль уже был сохранён
                             currentUser = snapshot.val();
                             currentUser.lastSeen = new Date().toLocaleString();
                             saveUserToFirebase(currentUser).then(() => {
@@ -474,49 +678,41 @@
                                 listenUserChanges(currentUser.id);
                             });
                         } else {
-                            // Пользователя нет в активных — проверим banned
                             checkUserBanned(storedId).then(isBanned => {
                                 if (isBanned) {
                                     alert('❌ Вы заблокированы. Доступ запрещён.');
                                     localStorage.removeItem(currentUserIdKey);
                                     window.location.reload();
                                 } else {
-                                    // нет ни в users, ни в banned — создаём заново
                                     createNewUser();
                                 }
                             });
                         }
                     });
                 } else {
-                    // Нет сохранённого ID — создаём нового пользователя
                     createNewUser();
                 }
             }
 
-            // Создание нового пользователя (с запросом имени и пароля)
             function createNewUser() {
                 let name = prompt('Добро пожаловать в Ma2DUNGEON!\nКак нам тебя называть?', 'Искатель приключений');
                 if (name === null) name = 'Отважный путник';
                 if (name.trim() === '') name = 'Безымянный герой';
 
-                // Запрашиваем пароль
-                let password = prompt('Придумайте пароль для вашего аккаунта (он сохранится в базе):', '');
-                if (password === null) password = ''; // если нажал "Отмена" — пустой пароль
-                // (можно разрешить пустой, но для примера оставим как есть)
+                let password = prompt('Придумайте пароль для вашего аккаунта:', '');
+                if (password === null) password = '';
 
-                // Имитация IP
                 const fakeIp = '127.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255);
                 
                 const newUser = {
                     id: generateUserId(),
                     name: name,
-                    password: password,          // сохраняем пароль в базе
+                    password: password,
                     ip: fakeIp,
                     firstSeen: new Date().toLocaleString(),
                     lastSeen: new Date().toLocaleString()
                 };
 
-                // Сохраняем в Firebase
                 saveUserToFirebase(newUser).then(() => {
                     currentUser = newUser;
                     localStorage.setItem(currentUserIdKey, newUser.id);
@@ -525,7 +721,6 @@
                 });
             }
 
-            // Слушаем блокировку
             function listenUserChanges(userId) {
                 database.ref('banned/' + userId).on('value', snapshot => {
                     if (snapshot.exists()) {
@@ -536,14 +731,12 @@
                 });
             }
 
-            // Смена имени (пароль остаётся тот же)
             function changeUserName(newName) {
                 if (!currentUser) return;
                 currentUser.name = newName;
                 currentUser.lastSeen = new Date().toLocaleString();
                 saveUserToFirebase(currentUser).then(() => {
                     updateDisplayName(newName);
-                    renderUsersList(); // если открыта админка
                 });
             }
 
@@ -554,47 +747,100 @@
                 }
             }
 
-            // ========== 5. Админка: проверка пароля ==========
-            let adminAccessGranted = false; // флаг, дал ли пользователь правильный пароль
-
-            function requestAdminPassword(callbackSuccess) {
-                if (adminAccessGranted) {
-                    callbackSuccess(); // уже вводили верно в этой сессии
-                    return;
-                }
-                const pwd = prompt('Введите пароль администратора:');
-                if (pwd === ADMIN_PASSWORD) {
-                    adminAccessGranted = true;
-                    callbackSuccess();
-                } else {
-                    alert('❌ Неверный пароль! Доступ запрещён.');
-                    // переключаем обратно на вкладку "Сменить имя"
-                    document.querySelector('.tab[data-tab="tab1"]').click();
-                }
+            // ========== 5. Работа с чатами ==========
+            
+            // Отправка сообщения в общий чат
+            function sendGlobalMessage(text) {
+                if (!currentUser || !text.trim()) return;
+                const message = {
+                    userId: currentUser.id,
+                    userName: currentUser.name,
+                    text: text,
+                    timestamp: Date.now(),
+                    timeStr: new Date().toLocaleTimeString()
+                };
+                database.ref('globalChat').push(message);
             }
 
-            // ========== 6. Рендер списка пользователей (из Firebase) ==========
-            function renderUsersList() {
+            // Подписка на общий чат
+            function subscribeToGlobalChat(callback) {
+                const chatRef = database.ref('globalChat').limitToLast(50);
+                chatRef.on('value', snapshot => {
+                    const messages = [];
+                    snapshot.forEach(child => {
+                        messages.push({ id: child.key, ...child.val() });
+                    });
+                    callback(messages.reverse()); // новые сверху
+                });
+                return () => chatRef.off(); // функция отписки
+            }
+
+            // Отправка личного сообщения
+            function sendPrivateMessage(toUserId, text) {
+                if (!currentUser || !toUserId || !text.trim()) return;
+                
+                // Создаем уникальный ID диалога (сортируем ID, чтобы он был одинаков для обоих)
+                const chatId = [currentUser.id, toUserId].sort().join('_');
+                
+                const message = {
+                    fromUserId: currentUser.id,
+                    fromUserName: currentUser.name,
+                    toUserId: toUserId,
+                    text: text,
+                    timestamp: Date.now(),
+                    timeStr: new Date().toLocaleTimeString()
+                };
+                
+                return database.ref('privateChats/' + chatId).push(message);
+            }
+
+            // Подписка на личные сообщения
+            function subscribeToPrivateChat(otherUserId, callback) {
+                if (!currentUser || !otherUserId) return;
+                
+                const chatId = [currentUser.id, otherUserId].sort().join('_');
+                const chatRef = database.ref('privateChats/' + chatId).limitToLast(50);
+                
+                chatRef.on('value', snapshot => {
+                    const messages = [];
+                    snapshot.forEach(child => {
+                        messages.push({ id: child.key, ...child.val() });
+                    });
+                    callback(messages);
+                });
+                
+                return () => chatRef.off();
+            }
+
+            // ========== 6. Админка: рендер списка пользователей ==========
+            function renderUsersList(searchTerm = '') {
                 const container = document.getElementById('usersListContainer');
                 if (!container) return;
 
                 getUsersRef().once('value', snapshot => {
                     const usersData = snapshot.val();
-                    const usersArray = usersData ? Object.values(usersData) : [];
+                    let usersArray = usersData ? Object.values(usersData) : [];
                     
                     getBannedRef().once('value', bannedSnapshot => {
                         const bannedData = bannedSnapshot.val();
                         const bannedSet = new Set(bannedData ? Object.keys(bannedData) : []);
 
+                        // Фильтрация по поиску
+                        if (searchTerm) {
+                            usersArray = usersArray.filter(u => 
+                                u.name.toLowerCase().includes(searchTerm.toLowerCase())
+                            );
+                        }
+
                         if (usersArray.length === 0) {
-                            container.innerHTML = '<div class="empty-message">👀 Пока никто не заходил</div>';
+                            container.innerHTML = '<div class="empty-message">👀 Никого не найдено</div>';
                             return;
                         }
 
                         usersArray.sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || ''));
 
                         let html = `<table class="users-table">
-                            <thead><tr><th>Имя</th><th>Пароль</th><th>IP</th><th>Последний вход</th><th>Действие</th></tr></thead>
+                            <thead><tr><th>Имя</th><th>Пароль</th><th>IP</th><th>Последний вход</th><th>Действия</th></tr></thead>
                             <tbody>`;
 
                         usersArray.forEach(u => {
@@ -608,7 +854,8 @@
                                 <td>${u.lastSeen || '—'}</td>
                                 <td>
                                     ${ !isCurrent ? 
-                                        `<button class="block-btn ${isBanned ? 'blocked' : ''}" data-user-id="${u.id}">${isBanned ? '🔒 Разблокировать' : '🚫 Блокировать'}</button>` 
+                                        `<button class="action-btn ${isBanned ? 'blocked' : ''}" data-user-id="${u.id}" data-action="block">${isBanned ? '🔒 Разблокировать' : '🚫 Блокировать'}</button>
+                                         <button class="action-btn pm-btn" data-user-id="${u.id}" data-user-name="${u.name}" data-action="pm">✉️ ЛС</button>` 
                                         : '<span style="color:#b5a5e0;">⚡ это вы</span>'}
                                 </td>
                             </tr>`;
@@ -617,29 +864,92 @@
                         html += '</tbody></table>';
                         container.innerHTML = html;
 
-                        container.querySelectorAll('.block-btn').forEach(btn => {
+                        // Обработчики кнопок
+                        container.querySelectorAll('[data-action="block"]').forEach(btn => {
                             btn.addEventListener('click', (e) => {
                                 e.stopPropagation();
                                 const userId = btn.dataset.userId;
-                                if (!userId) return;
-
                                 const currentlyBlocked = btn.classList.contains('blocked');
                                 
                                 if (currentlyBlocked) {
-                                    unbanUser(userId).then(() => renderUsersList());
+                                    unbanUser(userId).then(() => renderUsersList(document.getElementById('userSearch').value));
                                 } else {
-                                    banUser(userId).then(() => renderUsersList());
+                                    banUser(userId).then(() => renderUsersList(document.getElementById('userSearch').value));
                                 }
+                            });
+                        });
+
+                        container.querySelectorAll('[data-action="pm"]').forEach(btn => {
+                            btn.addEventListener('click', (e) => {
+                                e.stopPropagation();
+                                const userId = btn.dataset.userId;
+                                const userName = btn.dataset.userName;
+                                openPrivateChat(userId, userName);
                             });
                         });
                     });
                 });
             }
 
-            // ========== 7. Инициализация ==========
+            // ========== 7. Личные сообщения (модальное окно) ==========
+            function openPrivateChat(userId, userName) {
+                if (!currentUser) return;
+                
+                // Закрываем предыдущий слушатель
+                if (pmListener) {
+                    pmListener();
+                    pmListener = null;
+                }
+                
+                currentPMUser = { id: userId, name: userName };
+                
+                // Показываем модалку
+                document.getElementById('pmModal').classList.remove('hidden');
+                document.getElementById('pmOverlay').classList.add('active');
+                document.getElementById('pmUserName').textContent = `Чат с ${userName}`;
+                document.getElementById('pmMessages').innerHTML = '';
+                
+                // Подписываемся на сообщения
+                pmListener = subscribeToPrivateChat(userId, (messages) => {
+                    const container = document.getElementById('pmMessages');
+                    container.innerHTML = '';
+                    
+                    // Сортируем по времени (старые сверху)
+                    messages.sort((a, b) => a.timestamp - b.timestamp);
+                    
+                    messages.forEach(msg => {
+                        const isOwn = msg.fromUserId === currentUser.id;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `message ${isOwn ? 'own-message' : ''}`;
+                        msgDiv.innerHTML = `
+                            <div class="message-header">
+                                <span class="message-sender">${isOwn ? 'Вы' : msg.fromUserName}</span>
+                                <span class="message-time">${msg.timeStr}</span>
+                            </div>
+                            <div class="message-text">${msg.text}</div>
+                        `;
+                        container.appendChild(msgDiv);
+                    });
+                    
+                    // Скролл вниз
+                    container.scrollTop = container.scrollHeight;
+                });
+            }
+
+            function closePrivateChat() {
+                if (pmListener) {
+                    pmListener();
+                    pmListener = null;
+                }
+                document.getElementById('pmModal').classList.add('hidden');
+                document.getElementById('pmOverlay').classList.remove('active');
+                currentPMUser = null;
+            }
+
+            // ========== 8. Инициализация ==========
             initCurrentUser();
 
-            // ========== 8. Интерфейс ==========
+            // ========== 9. Интерфейс ==========
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsMenu = document.getElementById('settingsMenu');
             const overlay = document.getElementById('overlay');
@@ -649,12 +959,26 @@
             const changeNameBtn = document.getElementById('changeNameBtn');
             const newNameInput = document.getElementById('newNameInput');
             const userNameDisplay = document.getElementById('userNameDisplay');
-            const adminTab = document.getElementById('adminTab');
+            
+            // Элементы чата
+            const globalChatInput = document.getElementById('globalChatInput');
+            const globalChatSend = document.getElementById('globalChatSend');
+            const globalChatMessages = document.getElementById('globalChatMessages');
+            
+            // Элементы админки
+            const userSearch = document.getElementById('userSearch');
+            
+            // Элементы ЛС
+            const pmModal = document.getElementById('pmModal');
+            const pmOverlay = document.getElementById('pmOverlay');
+            const closePmBtn = document.getElementById('closePmBtn');
+            const pmInput = document.getElementById('pmInput');
+            const pmSendBtn = document.getElementById('pmSendBtn');
 
+            // Открытие/закрытие настроек
             function openSettings() {
                 settingsMenu.classList.add('active');
                 overlay.classList.add('active');
-                // не рендерим админку сразу, только если перейдут на вкладку
             }
             function closeSettings() {
                 settingsMenu.classList.remove('active');
@@ -670,27 +994,37 @@
                 tab.addEventListener('click', () => {
                     const targetId = tab.dataset.tab;
                     
-                    // Если пытаются открыть админку (tab2)
+                    if (targetId === 'tab2') { // Админка
+                        // Запрос пароля админа
+                        if (!adminAccessGranted) {
+                            const pwd = prompt('Введите пароль администратора:');
+                            if (pwd === ADMIN_PASSWORD) {
+                                adminAccessGranted = true;
+                            } else {
+                                alert('❌ Неверный пароль!');
+                                return;
+                            }
+                        }
+                    }
+                    
+                    tabs.forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    panels.forEach(p => p.classList.remove('active'));
+                    document.getElementById(targetId).classList.add('active');
+                    
+                    // Если открыли админку — рендерим список
                     if (targetId === 'tab2') {
-                        // Запрашиваем пароль админа
-                        requestAdminPassword(() => {
-                            // пароль верный — переключаем вкладку и рендерим
-                            tabs.forEach(t => t.classList.remove('active'));
-                            tab.classList.add('active');
-                            panels.forEach(p => p.classList.remove('active'));
-                            document.getElementById(targetId).classList.add('active');
-                            renderUsersList();
-                        });
-                    } else {
-                        // обычная вкладка (смена имени)
-                        tabs.forEach(t => t.classList.remove('active'));
-                        tab.classList.add('active');
-                        panels.forEach(p => p.classList.remove('active'));
-                        document.getElementById(targetId).classList.add('active');
+                        renderUsersList(userSearch.value);
                     }
                 });
             });
 
+            // Поиск в админке
+            userSearch.addEventListener('input', (e) => {
+                renderUsersList(e.target.value);
+            });
+
+            // Смена имени
             changeNameBtn.addEventListener('click', () => {
                 const newName = newNameInput.value.trim();
                 if (!newName) {
@@ -707,6 +1041,65 @@
                     newName = newName.trim();
                     if (newName === '') newName = 'Безымянный герой';
                     changeUserName(newName);
+                }
+            });
+
+            // ========== 10. Общий чат ==========
+            let unsubscribeGlobal = null;
+
+            // Подписка при открытии вкладки
+            document.querySelector('[data-tab="tab3"]').addEventListener('click', () => {
+                if (unsubscribeGlobal) unsubscribeGlobal();
+                
+                unsubscribeGlobal = subscribeToGlobalChat((messages) => {
+                    globalChatMessages.innerHTML = '';
+                    messages.forEach(msg => {
+                        const isOwn = msg.userId === currentUser?.id;
+                        const msgDiv = document.createElement('div');
+                        msgDiv.className = `message ${isOwn ? 'own-message' : ''}`;
+                        msgDiv.innerHTML = `
+                            <div class="message-header">
+                                <span class="message-sender">${msg.userName}</span>
+                                <span class="message-time">${msg.timeStr}</span>
+                            </div>
+                            <div class="message-text">${msg.text}</div>
+                        `;
+                        globalChatMessages.appendChild(msgDiv);
+                    });
+                    globalChatMessages.scrollTop = globalChatMessages.scrollHeight;
+                });
+            });
+
+            globalChatSend.addEventListener('click', () => {
+                const text = globalChatInput.value.trim();
+                if (text) {
+                    sendGlobalMessage(text);
+                    globalChatInput.value = '';
+                }
+            });
+
+            globalChatInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    globalChatSend.click();
+                }
+            });
+
+            // ========== 11. Личные сообщения ==========
+            closePmBtn.addEventListener('click', closePrivateChat);
+            pmOverlay.addEventListener('click', closePrivateChat);
+
+            pmSendBtn.addEventListener('click', () => {
+                if (!currentPMUser) return;
+                const text = pmInput.value.trim();
+                if (text) {
+                    sendPrivateMessage(currentPMUser.id, text);
+                    pmInput.value = '';
+                }
+            });
+
+            pmInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    pmSendBtn.click();
                 }
             });
         })();
