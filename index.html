@@ -734,7 +734,7 @@
             transform: translateY(3px);
         }
 
-        /* Остальные стили (без изменений) */
+        /* Остальные стили */
         .change-name-panel {
             display: flex;
             flex-direction: column;
@@ -1079,10 +1079,13 @@
             border-radius: 40px;
             padding: 20px;
             z-index: 2000;
-            display: flex;
+            display: none;
             flex-direction: column;
             color: white;
             backdrop-filter: blur(10px);
+        }
+        .pm-modal.active {
+            display: flex;
         }
 
         .overlay {
@@ -1145,7 +1148,7 @@
     </div>
 
     <!-- Модальное окно личных сообщений -->
-    <div class="pm-modal hidden" id="pmModal">
+    <div class="pm-modal" id="pmModal">
         <div class="pm-header">
             <div class="pm-header-avatar" id="pmAvatar">😊</div>
             <h3 id="pmUserName" style="cursor: pointer;">Чат с пользователем</h3>
@@ -1526,7 +1529,7 @@
 
             function adjustColor(color, amount) {
                 // Простая функция затемнения/осветления цвета
-                return color; // В реальном проекте нужна нормальная обработка
+                return color;
             }
 
             // ========== 6. Аватарки ==========
@@ -1619,7 +1622,15 @@
                                 loadAvatarPreview();
                             });
                         } else {
-                            createNewUser();
+                            checkUserBanned(storedId).then(isBanned => {
+                                if (isBanned) {
+                                    alert('❌ Вы заблокированы.');
+                                    localStorage.removeItem(currentUserIdKey);
+                                    window.location.reload();
+                                } else {
+                                    createNewUser();
+                                }
+                            });
                         }
                     });
                 } else {
@@ -1698,7 +1709,7 @@
                 preview.style.background = currentUser.avatar.color;
                 preview.textContent = currentUser.avatar.icon || currentUser.avatar.letter;
                 
-                document.querySelectorAll('.color-option').forEach(opt => {
+                document.querySelectorAll('.avatar-colors .color-option').forEach(opt => {
                     if (opt.style.backgroundColor === currentUser.avatar.color) {
                         opt.classList.add('selected');
                     } else {
@@ -1863,7 +1874,7 @@
                     pmAvatar.style.background = otherUser.avatar.color;
                     pmAvatar.textContent = otherUser.avatar.icon || otherUser.avatar.letter;
                     
-                    document.getElementById('pmModal').classList.remove('hidden');
+                    document.getElementById('pmModal').classList.add('active');
                     document.getElementById('overlay').classList.add('active');
                     document.getElementById('pmUserName').textContent = userName;
                     document.getElementById('pmMessages').innerHTML = '';
@@ -1904,7 +1915,7 @@
                     pmListener();
                     pmListener = null;
                 }
-                document.getElementById('pmModal').classList.add('hidden');
+                document.getElementById('pmModal').classList.remove('active');
                 document.getElementById('overlay').classList.remove('active');
                 currentPMUser = null;
             }
@@ -2035,7 +2046,57 @@
                 }
             }
 
-            // ========== 12. Инициализация ==========
+            // ========== 12. Поиск пользователей (упрощенная версия) ==========
+            function searchUsers(searchTerm) {
+                return getUsersRef().once('value').then(snapshot => {
+                    const users = snapshot.val() || {};
+                    return Object.values(users).filter(user => 
+                        user.id !== currentUser?.id && 
+                        user.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    );
+                });
+            }
+
+            function renderSearchResults(searchTerm = '') {
+                const container = document.getElementById('searchResults');
+                if (!container) return;
+                
+                if (!searchTerm) {
+                    container.innerHTML = '';
+                    return;
+                }
+                
+                searchUsers(searchTerm).then(users => {
+                    if (users.length === 0) {
+                        container.innerHTML = '<div style="color: #8f84b0; text-align: center;">Ничего не найдено</div>';
+                        return;
+                    }
+                    
+                    let html = '';
+                    users.forEach(user => {
+                        if (!user.avatar) {
+                            generateAvatar(user);
+                        }
+                        
+                        html += `
+                            <div class="user-card">
+                                <div class="card-avatar" style="background: ${user.avatar.color};" onclick="window.openProfile('${user.id}')">${user.avatar.icon || user.avatar.letter}</div>
+                                <div class="card-info">
+                                    <h4 onclick="window.openProfile('${user.id}')">${user.name}</h4>
+                                    <p>Был(а): ${user.lastSeen || 'неизвестно'}</p>
+                                </div>
+                                <div class="card-actions">
+                                    <button class="pm-btn-small" onclick="window.openPrivateChat('${user.id}', '${user.name}')">✉️</button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    container.innerHTML = html;
+                });
+            }
+
+            // ========== 13. Инициализация ==========
             window.openProfile = showProfile;
             window.openPrivateChat = openPrivateChat;
 
@@ -2075,6 +2136,7 @@
             const pmInput = document.getElementById('pmInput');
             const pmSendBtn = document.getElementById('pmSendBtn');
             const pmUserName = document.getElementById('pmUserName');
+            const pmModal = document.getElementById('pmModal');
             
             // Профиль
             const closeProfile = document.getElementById('closeProfile');
@@ -2094,8 +2156,8 @@
             let selectedSkullColor = 'white';
             let selectedEyeColor = 'red';
             let selectedOutfit = 'none';
-            let selectedAvatarColor = currentUser?.avatar?.color || '#FF6B6B';
-            let selectedAvatarIcon = currentUser?.avatar?.icon || '😊';
+            let selectedAvatarColor = '#FF6B6B';
+            let selectedAvatarIcon = '😊';
 
             // Открытие/закрытие настроек
             settingsBtn.addEventListener('click', () => {
@@ -2112,7 +2174,11 @@
                 settingsMenu.classList.remove('active');
                 searchModal.classList.remove('active');
                 profileModal.classList.remove('active');
-                document.getElementById('pmModal').classList.add('hidden');
+                pmModal.classList.remove('active');
+                if (pmListener) {
+                    pmListener();
+                    pmListener = null;
+                }
                 overlay.classList.remove('active');
             });
 
@@ -2128,7 +2194,7 @@
                 searchModal.classList.add('active');
                 searchOverlay.classList.add('active');
                 userSearchField.focus();
-                // Здесь можно добавить рендер результатов
+                renderSearchResults('');
             });
             
             closeSearch.addEventListener('click', () => {
@@ -2141,6 +2207,10 @@
                 searchModal.classList.remove('active');
                 searchOverlay.classList.remove('active');
                 userSearchField.value = '';
+            });
+
+            userSearchField.addEventListener('input', (e) => {
+                renderSearchResults(e.target.value);
             });
 
             // Переключение вкладок
@@ -2336,4 +2406,4 @@
         })();
     </script>
 </body>
-    </html>
+                            </html>
