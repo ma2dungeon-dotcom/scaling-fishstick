@@ -24,7 +24,7 @@
             overflow-x: hidden;
         }
 
-        /* Анимированный неоновый фон с кубиками */
+        /* Улучшенный неоновый фон с кубиками и частицами */
         .neon-background {
             position: fixed;
             top: 0;
@@ -32,7 +32,7 @@
             width: 100%;
             height: 100%;
             z-index: -1;
-            background: linear-gradient(145deg, #0a0a1a 0%, #1a1030 50%, #0d0b1a 100%);
+            background: radial-gradient(ellipse at 50% 50%, #1a1030 0%, #0a0a1a 100%);
             overflow: hidden;
         }
 
@@ -44,11 +44,12 @@
 
         .cube {
             position: absolute;
-            background: rgba(180, 130, 255, 0.1);
-            border: 2px solid rgba(170, 136, 255, 0.3);
-            box-shadow: 0 0 20px rgba(170, 136, 255, 0.3), inset 0 0 10px rgba(255, 255, 255, 0.2);
+            background: rgba(180, 130, 255, 0.15);
+            border: 2px solid rgba(170, 136, 255, 0.4);
+            box-shadow: 0 0 30px rgba(170, 136, 255, 0.4), inset 0 0 20px rgba(255, 255, 255, 0.3);
             transform-style: preserve-3d;
             animation: float-cube linear infinite;
+            backdrop-filter: blur(2px);
         }
 
         .cube::before {
@@ -58,23 +59,34 @@
             left: -2px;
             right: -2px;
             bottom: -2px;
-            background: linear-gradient(45deg, transparent 30%, rgba(170, 136, 255, 0.2) 50%, transparent 70%);
-            animation: shine 3s linear infinite;
+            background: linear-gradient(45deg, transparent 30%, rgba(255, 107, 107, 0.3) 50%, transparent 70%);
+            animation: shine 4s linear infinite;
+        }
+
+        .cube::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.3), transparent);
+            pointer-events: none;
         }
 
         @keyframes float-cube {
             0% {
-                transform: rotateX(0deg) rotateY(0deg) translateZ(0);
+                transform: rotateX(0deg) rotateY(0deg) translateZ(0) translateY(100vh);
                 opacity: 0;
             }
             10% {
-                opacity: 0.5;
+                opacity: 0.8;
             }
             90% {
-                opacity: 0.5;
+                opacity: 0.8;
             }
             100% {
-                transform: rotateX(360deg) rotateY(180deg) translateZ(100px);
+                transform: rotateX(360deg) rotateY(180deg) translateZ(100px) translateY(-100vh);
                 opacity: 0;
             }
         }
@@ -86,42 +98,59 @@
 
         .particle {
             position: absolute;
-            background: rgba(200, 160, 255, 0.3);
+            background: radial-gradient(circle, rgba(255,107,107,0.6) 0%, rgba(181,149,255,0.6) 100%);
             border-radius: 50%;
             filter: blur(3px);
             animation: float-particle linear infinite;
+            box-shadow: 0 0 20px currentColor;
         }
 
         @keyframes float-particle {
             0% {
-                transform: translateY(100vh) scale(1);
+                transform: translateY(100vh) scale(1) rotate(0deg);
                 opacity: 0;
             }
-            10% {
-                opacity: 0.5;
+            20% {
+                opacity: 0.8;
             }
-            90% {
-                opacity: 0.5;
+            80% {
+                opacity: 0.8;
             }
             100% {
-                transform: translateY(-100vh) scale(0.5);
+                transform: translateY(-100vh) scale(0.5) rotate(360deg);
                 opacity: 0;
             }
+        }
+
+        .glow-spot {
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, rgba(181,149,255,0.3) 0%, transparent 70%);
+            border-radius: 50%;
+            filter: blur(50px);
+            animation: glowPulse 5s ease-in-out infinite;
+        }
+
+        @keyframes glowPulse {
+            0%, 100% { opacity: 0.3; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); }
         }
 
         .neon-line {
             position: absolute;
-            background: linear-gradient(90deg, transparent, #b595ff, #ff6b6b, #b595ff, transparent);
-            height: 2px;
+            background: linear-gradient(90deg, transparent, #ff6b6b, #b595ff, #ff6b6b, transparent);
+            height: 3px;
             width: 100%;
-            filter: blur(3px);
-            animation: move-line 8s linear infinite;
-            opacity: 0.3;
+            filter: blur(4px);
+            animation: move-line 10s linear infinite;
+            opacity: 0.4;
+            box-shadow: 0 0 30px #ff6b6b;
         }
 
         @keyframes move-line {
-            0% { transform: translateX(-100%); }
-            100% { transform: translateX(100%); }
+            0% { transform: translateX(-100%) rotate(0deg); }
+            100% { transform: translateX(100%) rotate(360deg); }
         }
 
         .header {
@@ -133,24 +162,71 @@
             align-items: center;
             justify-content: space-between;
             border-bottom: 2px solid #b595ff;
-            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), 0 0 30px #b595ff;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 50px #b595ff;
             position: relative;
             flex-wrap: wrap;
             z-index: 20;
+            animation: headerGlow 3s ease-in-out infinite;
         }
 
+        @keyframes headerGlow {
+            0%, 100% { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 50px #b595ff; }
+            50% { box-shadow: 0 8px 30px rgba(0, 0, 0, 0.6), 0 0 80px #ff6b6b; }
+        }
+
+        /* Улучшенный логотип */
         .site-title {
-            font-size: 1.9rem;
+            font-size: 2.2rem;
             font-weight: 800;
-            letter-spacing: 2px;
-            background: linear-gradient(135deg, #ff6b6b, #b595ff);
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #ff6b6b, #b595ff, #ff6b6b);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
-            text-shadow: 0 0 20px #ff6b6b;
+            text-shadow: 0 0 30px #ff6b6b, 0 0 60px #b595ff;
             border-right: 2px solid #b595ff;
             padding-right: 20px;
             min-width: fit-content;
+            position: relative;
+            animation: titleGlow 2s ease-in-out infinite;
+        }
+
+        .site-title::before {
+            content: '💀';
+            position: absolute;
+            left: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            animation: skullSpin 4s linear infinite;
+            filter: drop-shadow(0 0 20px #ff6b6b);
+        }
+
+        .site-title::after {
+            content: '⚔️';
+            position: absolute;
+            right: -40px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            animation: swordSpin 4s linear infinite;
+            filter: drop-shadow(0 0 20px #b595ff);
+        }
+
+        @keyframes skullSpin {
+            0%, 100% { transform: translateY(-50%) rotate(0deg); }
+            25% { transform: translateY(-50%) rotate(10deg); }
+            75% { transform: translateY(-50%) rotate(-10deg); }
+        }
+
+        @keyframes swordSpin {
+            0%, 100% { transform: translateY(-50%) rotate(0deg) scale(1); }
+            50% { transform: translateY(-50%) rotate(20deg) scale(1.2); }
+        }
+
+        @keyframes titleGlow {
+            0%, 100% { text-shadow: 0 0 30px #ff6b6b, 0 0 60px #b595ff; }
+            50% { text-shadow: 0 0 50px #ff6b6b, 0 0 90px #b595ff; }
         }
 
         .user-info {
@@ -164,15 +240,23 @@
             padding: 0.4rem 1.5rem 0.4rem 0.8rem;
             border-radius: 60px;
             border: 2px solid #b595ff;
-            box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #b595ff;
+            box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #b595ff, 0 0 30px rgba(181,149,255,0.5);
             cursor: pointer;
             transition: 0.2s;
             backdrop-filter: blur(5px);
+            animation: userInfoPulse 3s ease-in-out infinite;
         }
+
+        @keyframes userInfoPulse {
+            0%, 100% { box-shadow: inset 0 2px 5px #0b0b15, 0 4px 15px #b595ff, 0 0 30px rgba(181,149,255,0.5); }
+            50% { box-shadow: inset 0 2px 5px #0b0b15, 0 4px 25px #ff6b6b, 0 0 50px rgba(255,107,107,0.5); }
+        }
+
         .user-info:hover {
             background: #3e4063;
             border-color: #ff6b6b;
-            box-shadow: 0 0 25px #ff6b6b;
+            box-shadow: 0 0 40px #ff6b6b;
+            transform: translateX(-50%) scale(1.05);
         }
 
         .header-avatar {
@@ -186,7 +270,13 @@
             font-size: 1.2rem;
             color: white;
             border: 2px solid #b595ff;
-            box-shadow: 0 0 15px #aa88ff;
+            box-shadow: 0 0 20px #aa88ff;
+            animation: avatarPulse 2s ease-in-out infinite;
+        }
+
+        @keyframes avatarPulse {
+            0%, 100% { box-shadow: 0 0 20px #aa88ff; }
+            50% { box-shadow: 0 0 40px #ff6b6b; }
         }
 
         .user-name-center {
@@ -195,6 +285,7 @@
             color: #f2e9ff;
             letter-spacing: 0.5px;
             white-space: nowrap;
+            text-shadow: 0 0 10px #b595ff;
         }
 
         .header-actions {
@@ -213,17 +304,38 @@
             border-radius: 40px;
             cursor: pointer;
             transition: 0.2s;
-            box-shadow: 0 0 20px #b595ff;
+            box-shadow: 0 0 30px #b595ff;
             display: flex;
             align-items: center;
             gap: 8px;
             backdrop-filter: blur(5px);
+            position: relative;
+            overflow: hidden;
         }
+
+        .search-header-btn::before, .settings-btn::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            transform: rotate(45deg);
+            animation: btnShine 3s linear infinite;
+        }
+
+        @keyframes btnShine {
+            0% { transform: translateX(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) rotate(45deg); }
+        }
+
         .search-header-btn:hover, .settings-btn:hover {
             background: #313a57;
             border-color: #ff6b6b;
             color: #f0eaff;
-            box-shadow: 0 0 30px #ff6b6b;
+            box-shadow: 0 0 50px #ff6b6b;
+            transform: scale(1.05);
         }
 
         .content {
@@ -239,20 +351,28 @@
             z-index: 1;
         }
 
-        /* Реалистичная голова скелета */
+        /* Супер-реалистичная голова скелета */
         .skull-container {
             position: relative;
-            width: 500px;
-            height: 500px;
+            width: 600px;
+            height: 600px;
             margin: 0 auto 30px;
-            perspective: 1000px;
-            filter: drop-shadow(0 0 50px rgba(255, 107, 107, 0.5));
+            perspective: 1200px;
+            filter: drop-shadow(0 0 80px rgba(255, 107, 107, 0.6));
             cursor: pointer;
-            transition: filter 0.3s;
+            transition: all 0.3s;
+            animation: skullFloat 4s ease-in-out infinite;
+        }
+
+        @keyframes skullFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(1deg); }
+            75% { transform: translateY(10px) rotate(-1deg); }
         }
 
         .skull-container:hover {
-            filter: drop-shadow(0 0 80px rgba(181, 149, 255, 0.8));
+            filter: drop-shadow(0 0 120px rgba(181, 149, 255, 0.9));
+            transform: scale(1.02);
         }
 
         .skull {
@@ -268,25 +388,25 @@
         }
 
         .skull.easter-egg {
-            animation: skullGlow 0.5s ease-in-out;
+            animation: skullEasterGlow 0.5s ease-in-out;
         }
 
-        @keyframes skullGlow {
+        @keyframes skullEasterGlow {
             0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(2) drop-shadow(0 0 50px #ff6b6b); }
+            50% { filter: brightness(2) drop-shadow(0 0 100px #ff6b6b); }
         }
 
         @keyframes realisticShake {
             0% { transform: translate(0, 0) rotate(0deg) scale(1); }
-            10% { transform: translate(-12px, -8px) rotate(-4deg) scale(1.02); }
-            20% { transform: translate(10px, 12px) rotate(5deg) scale(1.03); }
-            30% { transform: translate(-15px, -5px) rotate(-6deg) scale(1.02); }
-            40% { transform: translate(14px, 10px) rotate(6deg) scale(1.04); }
-            50% { transform: translate(-10px, -12px) rotate(-5deg) scale(1.03); }
-            60% { transform: translate(8px, 8px) rotate(4deg) scale(1.02); }
-            70% { transform: translate(-6px, -4px) rotate(-3deg) scale(1.01); }
-            80% { transform: translate(4px, 2px) rotate(2deg) scale(1); }
-            90% { transform: translate(-2px, -1px) rotate(-1deg) scale(1); }
+            10% { transform: translate(-15px, -10px) rotate(-5deg) scale(1.03); }
+            20% { transform: translate(12px, 14px) rotate(6deg) scale(1.04); }
+            30% { transform: translate(-18px, -8px) rotate(-7deg) scale(1.03); }
+            40% { transform: translate(16px, 12px) rotate(7deg) scale(1.05); }
+            50% { transform: translate(-12px, -14px) rotate(-6deg) scale(1.04); }
+            60% { transform: translate(10px, 10px) rotate(5deg) scale(1.03); }
+            70% { transform: translate(-8px, -6px) rotate(-4deg) scale(1.02); }
+            80% { transform: translate(6px, 4px) rotate(3deg) scale(1.01); }
+            90% { transform: translate(-3px, -2px) rotate(-2deg) scale(1); }
             100% { transform: translate(0, 0) rotate(0deg) scale(1); }
         }
 
@@ -294,230 +414,365 @@
             position: relative;
             width: 100%;
             height: 100%;
-            transform: rotateX(10deg) rotateY(5deg);
+            transform: rotateX(15deg) rotateY(5deg);
             transform-style: preserve-3d;
         }
 
-        /* Основная часть черепа */
+        /* Основная часть черепа с улучшенной текстурой */
         .skull-main {
             position: absolute;
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 30% 30%, #f5f5f5, #d4d4d4, #a0a0a0);
+            background: 
+                radial-gradient(circle at 30% 30%, #f5f5f5, #e0e0e0, #b0b0b0, #8a8a8a);
             border-radius: 50% 50% 45% 45%;
             box-shadow: 
-                0 0 50px rgba(255, 107, 107, 0.3),
-                inset -30px -30px 50px rgba(0,0,0,0.6),
-                inset 30px 30px 50px rgba(255,255,255,0.6);
-            border: 3px solid rgba(181, 149, 255, 0.5);
+                0 0 80px rgba(255, 107, 107, 0.4),
+                inset -40px -40px 60px rgba(0,0,0,0.7),
+                inset 40px 40px 60px rgba(255,255,255,0.7),
+                0 20px 40px rgba(0,0,0,0.5);
+            border: 3px solid rgba(181, 149, 255, 0.7);
             overflow: hidden;
-            transform: translateZ(20px);
+            transform: translateZ(30px);
             transition: all 0.3s;
         }
 
-        /* Текстура кости */
+        /* Улучшенная текстура кости */
         .bone-texture {
             position: absolute;
             width: 100%;
             height: 100%;
             background-image: 
                 repeating-linear-gradient(45deg, 
-                    rgba(0,0,0,0.02) 0px, 
-                    rgba(0,0,0,0.02) 2px,
-                    rgba(255,255,255,0.05) 2px,
-                    rgba(255,255,255,0.05) 4px);
+                    rgba(0,0,0,0.03) 0px, 
+                    rgba(0,0,0,0.03) 3px,
+                    rgba(255,255,255,0.07) 3px,
+                    rgba(255,255,255,0.07) 6px),
+                radial-gradient(circle at 20% 30%, rgba(255,255,255,0.2) 0%, transparent 30%),
+                radial-gradient(circle at 80% 70%, rgba(0,0,0,0.1) 0%, transparent 30%);
             pointer-events: none;
+            mix-blend-mode: overlay;
         }
 
-        /* Трещины на черепе */
+        /* Реалистичные трещины */
         .crack {
             position: absolute;
-            background: rgba(0,0,0,0.2);
-            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            background: rgba(0,0,0,0.3);
+            box-shadow: 0 0 15px rgba(0,0,0,0.5);
             transform: rotate(var(--angle));
             width: var(--width);
             height: var(--height);
             left: var(--left);
             top: var(--top);
             border-radius: 50%;
-            filter: blur(1px);
+            filter: blur(2px);
+            z-index: 2;
         }
 
-        /* Глазницы с реалистичным свечением */
+        /* Детали черепа - надбровные дуги */
+        .brow-ridge {
+            position: absolute;
+            width: 130px;
+            height: 40px;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.2), transparent);
+            border-radius: 50%;
+            top: 100px;
+            filter: blur(3px);
+        }
+        
+        .brow-ridge.left {
+            left: 70px;
+            transform: rotate(-5deg);
+        }
+        
+        .brow-ridge.right {
+            right: 70px;
+            transform: rotate(5deg);
+        }
+
+        /* Улучшенные глазницы */
         .eye-socket {
             position: absolute;
-            width: 100px;
-            height: 120px;
+            width: 110px;
+            height: 130px;
             background: #0a0a1a;
             border-radius: 50%;
-            top: 130px;
+            top: 120px;
             box-shadow: 
-                inset 0 0 30px #000,
-                0 0 30px rgba(255, 107, 107, 0.5);
-            border: 3px solid #4a3a6a;
+                inset 0 0 40px #000,
+                0 0 40px rgba(255, 107, 107, 0.6);
+            border: 4px solid #4a3a6a;
             overflow: hidden;
-            transform: translateZ(30px);
+            transform: translateZ(40px);
+            z-index: 5;
         }
 
         .eye-socket.left {
-            left: 80px;
+            left: 75px;
         }
 
         .eye-socket.right {
-            right: 80px;
+            right: 75px;
+        }
+
+        .eye-socket::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: radial-gradient(circle at 40% 40%, rgba(255,107,107,0.8), transparent 70%);
+            animation: eyeGlowComplex 2s ease-in-out infinite;
+        }
+
+        @keyframes eyeGlowComplex {
+            0%, 100% { opacity: 0.7; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.2); filter: blur(2px); }
         }
 
         .eye-glow {
             width: 100%;
             height: 100%;
-            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000);
-            opacity: 0.8;
-            animation: eyePulse 2s ease-in-out infinite;
-            box-shadow: 0 0 40px #ff6b6b;
+            background: radial-gradient(circle at 30% 30%, #ff6b6b, #8b0000, #4a0000);
+            opacity: 0.9;
+            animation: eyePulseAdvanced 2.5s ease-in-out infinite;
+            box-shadow: 0 0 60px #ff6b6b;
+            mix-blend-mode: screen;
         }
 
-        @keyframes eyePulse {
-            0%, 100% { opacity: 0.7; transform: scale(1); }
-            50% { opacity: 1; transform: scale(1.1); box-shadow: 0 0 60px #ff6b6b; }
+        @keyframes eyePulseAdvanced {
+            0%, 100% { opacity: 0.8; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.15); filter: brightness(1.5); }
         }
 
-        /* Носовая полость */
+        /* Носовая полость с глубиной */
         .nose-cavity {
             position: absolute;
-            width: 30px;
-            height: 45px;
+            width: 35px;
+            height: 50px;
             background: #1a1030;
-            border-radius: 50%;
-            top: 200px;
-            left: 235px;
-            box-shadow: inset 0 0 15px #000;
-            border: 2px solid #5a4a7a;
-            transform: translateZ(25px);
+            border-radius: 40%;
+            top: 190px;
+            left: 282px;
+            box-shadow: inset 0 0 20px #000, 0 5px 15px rgba(0,0,0,0.5);
+            border: 3px solid #5a4a7a;
+            transform: translateZ(35px) rotateX(10deg);
+            z-index: 4;
         }
 
-        /* Челюсть */
+        .nose-cavity::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            left: 5px;
+            width: 10px;
+            height: 15px;
+            background: rgba(255,107,107,0.3);
+            border-radius: 50%;
+            filter: blur(3px);
+        }
+
+        /* Скуловые кости */
+        .cheekbone {
+            position: absolute;
+            width: 70px;
+            height: 40px;
+            background: radial-gradient(ellipse at 50% 50%, rgba(255,255,255,0.2), transparent);
+            border-radius: 50%;
+            bottom: 200px;
+            filter: blur(5px);
+            z-index: 3;
+        }
+        
+        .cheekbone.left {
+            left: 50px;
+            transform: rotate(-10deg);
+        }
+        
+        .cheekbone.right {
+            right: 50px;
+            transform: rotate(10deg);
+        }
+
+        /* Улучшенная челюсть */
         .jaw {
             position: absolute;
-            width: 85%;
-            height: 40%;
-            bottom: 40px;
-            left: 7.5%;
-            background: radial-gradient(circle at 30% 0%, #e0e0e0, #b0b0b0);
-            border-radius: 0 0 40% 40%;
-            box-shadow: inset -10px -10px 20px rgba(0,0,0,0.4), inset 10px 10px 20px rgba(255,255,255,0.4);
-            transform: translateZ(15px);
-            border-top: 3px solid #8a7aaa;
+            width: 88%;
+            height: 42%;
+            bottom: 30px;
+            left: 6%;
+            background: 
+                radial-gradient(circle at 30% 0%, #e0e0e0, #b0b0b0, #909090);
+            border-radius: 0 0 45% 45%;
+            box-shadow: 
+                inset -15px -15px 25px rgba(0,0,0,0.5),
+                inset 15px 15px 25px rgba(255,255,255,0.5),
+                0 10px 30px rgba(0,0,0,0.6);
+            transform: translateZ(25px) rotateX(5deg);
+            border-top: 4px solid #8a7aaa;
+            z-index: 2;
         }
 
-        /* Зубы */
+        /* Зубы с детализацией */
         .teeth {
             position: absolute;
-            width: 90%;
-            height: 30px;
-            bottom: 30px;
-            left: 5%;
+            width: 92%;
+            height: 45px;
+            bottom: 25px;
+            left: 4%;
             display: flex;
             justify-content: space-around;
-            transform: translateZ(35px);
+            transform: translateZ(50px);
+            z-index: 6;
         }
 
         .tooth {
-            width: 20px;
-            height: 35px;
-            background: #f5f5f5;
-            border-radius: 5px 5px 0 0;
-            border: 2px solid #b0b0b0;
-            border-bottom: none;
-            box-shadow: inset -2px -2px 5px rgba(0,0,0,0.2), inset 2px 2px 5px rgba(255,255,255,0.5);
+            width: 24px;
+            height: 45px;
+            background: linear-gradient(to bottom, #ffffff, #f0f0f0, #d0d0d0);
+            border-radius: 6px 6px 3px 3px;
+            border: 2px solid #a0a0a0;
+            border-bottom: 3px solid #808080;
+            box-shadow: 
+                inset -3px -3px 8px rgba(0,0,0,0.3),
+                inset 3px 3px 8px rgba(255,255,255,0.7),
+                2px 2px 5px rgba(0,0,0,0.3);
+            transform: rotateX(5deg);
         }
 
-        /* Аксессуары для кастомизации */
+        .tooth::before {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 8px;
+            height: 15px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+        }
+
+        /* Аксессуары */
         .accessory {
             position: absolute;
-            transform: translateZ(50px);
+            transform: translateZ(70px);
             pointer-events: none;
+            z-index: 20;
+            filter: drop-shadow(0 0 30px currentColor);
         }
 
         .crown {
-            width: 150px;
-            height: 80px;
-            background: linear-gradient(135deg, #ffd700, #ffa500);
-            top: -40px;
-            left: 175px;
+            width: 180px;
+            height: 100px;
+            background: linear-gradient(135deg, #ffd700, #ffa500, #ff8c00);
+            top: -60px;
+            left: 210px;
             clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 0 30px #ffd700;
+            box-shadow: 0 0 50px #ffd700;
+            animation: crownGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes crownGlow {
+            0%, 100% { filter: drop-shadow(0 0 30px #ffd700); }
+            50% { filter: drop-shadow(0 0 60px #ffa500); }
         }
 
         .wizard-hat {
-            width: 180px;
-            height: 150px;
-            background: linear-gradient(135deg, #4a2a6a, #2a1a3a);
-            top: -100px;
-            left: 160px;
+            width: 220px;
+            height: 180px;
+            background: linear-gradient(135deg, #6a4a9a, #3a2a5a);
+            top: -130px;
+            left: 190px;
             clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
             border-radius: 50% 50% 0 0;
-            box-shadow: 0 0 30px #b595ff;
+            box-shadow: 0 0 50px #b595ff;
+            animation: hatGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes hatGlow {
+            0%, 100% { filter: drop-shadow(0 0 30px #b595ff); }
+            50% { filter: drop-shadow(0 0 60px #6a4a9a); }
         }
 
         .warrior-helm {
-            width: 200px;
-            height: 100px;
-            background: linear-gradient(135deg, #c0c0c0, #808080);
-            top: -50px;
-            left: 150px;
+            width: 240px;
+            height: 120px;
+            background: linear-gradient(135deg, #c0c0c0, #808080, #606060);
+            top: -70px;
+            left: 180px;
             clip-path: polygon(25% 0%, 75% 0%, 100% 100%, 0% 100%);
-            box-shadow: 0 0 30px #c0c0c0;
+            box-shadow: 0 0 50px #c0c0c0;
+            animation: helmGlow 2.5s ease-in-out infinite;
+        }
+
+        @keyframes helmGlow {
+            0%, 100% { filter: drop-shadow(0 0 30px #c0c0c0); }
+            50% { filter: drop-shadow(0 0 60px #ffd700); }
         }
 
         .cape {
-            width: 300px;
-            height: 200px;
-            background: linear-gradient(135deg, #8b0000, #4a0000);
+            width: 350px;
+            height: 250px;
+            background: linear-gradient(135deg, #8b0000, #4a0000, #2a0000);
             top: 200px;
-            left: 100px;
+            left: 125px;
             clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
-            box-shadow: 0 0 30px #ff6b6b;
-            opacity: 0.7;
+            box-shadow: 0 0 50px #ff6b6b;
+            opacity: 0.8;
+            animation: capeFlow 4s ease-in-out infinite;
+            transform-origin: top;
         }
 
-        /* Тень */
+        @keyframes capeFlow {
+            0%, 100% { transform: rotate(0deg) scale(1); }
+            50% { transform: rotate(2deg) scale(1.02); }
+        }
+
+        /* Тень с эффектом */
         .skull-shadow {
             position: absolute;
-            width: 400px;
-            height: 60px;
-            background: radial-gradient(ellipse at center, rgba(181, 149, 255, 0.3) 0%, transparent 70%);
-            bottom: -40px;
-            left: 50px;
+            width: 450px;
+            height: 80px;
+            background: radial-gradient(ellipse at center, rgba(181, 149, 255, 0.5) 0%, transparent 80%);
+            bottom: -60px;
+            left: 75px;
             border-radius: 50%;
-            filter: blur(15px);
-            animation: shadowPulse 3s ease-in-out infinite;
+            filter: blur(25px);
+            animation: shadowDance 4s ease-in-out infinite;
         }
 
-        @keyframes shadowPulse {
-            0%, 100% { opacity: 0.3; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.1); }
+        @keyframes shadowDance {
+            0%, 100% { opacity: 0.4; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.2); filter: blur(30px); }
         }
 
         /* Счетчик кликов */
         .click-counter {
             position: absolute;
-            top: -30px;
-            right: -30px;
-            background: #ff6b6b;
+            top: -40px;
+            right: -40px;
+            background: linear-gradient(135deg, #ff6b6b, #ff4757);
             color: white;
-            width: 50px;
-            height: 50px;
+            width: 70px;
+            height: 70px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: bold;
-            border: 3px solid #b595ff;
-            box-shadow: 0 0 20px #ff6b6b;
+            border: 4px solid #b595ff;
+            box-shadow: 0 0 40px #ff6b6b;
             opacity: 0;
             transition: opacity 0.3s;
             pointer-events: none;
+            z-index: 30;
+            animation: counterPulse 1s ease-in-out infinite;
+        }
+
+        @keyframes counterPulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
         }
 
         .click-counter.visible {
@@ -528,41 +783,74 @@
             background: rgba(18, 22, 38, 0.7);
             backdrop-filter: blur(10px);
             border: 2px solid #b595ff;
-            border-radius: 48px;
+            border-radius: 60px;
             padding: 3rem 4rem;
-            box-shadow: 0 25px 40px -10px black, 0 0 30px #b595ff;
-            margin-top: 20px;
+            box-shadow: 0 30px 50px -10px black, 0 0 50px #b595ff, inset 0 0 30px rgba(181,149,255,0.3);
+            margin-top: 30px;
+            animation: blockGlow 4s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .welcome-block::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,107,107,0.2) 0%, transparent 60%);
+            animation: blockRotate 10s linear infinite;
+        }
+
+        @keyframes blockGlow {
+            0%, 100% { box-shadow: 0 30px 50px -10px black, 0 0 50px #b595ff; }
+            50% { box-shadow: 0 30px 50px -10px black, 0 0 80px #ff6b6b; }
+        }
+
+        @keyframes blockRotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
 
         .welcome-block h2 {
-            font-size: 2.8rem;
-            background: linear-gradient(145deg, #ff6b6b, #b595ff);
+            font-size: 3.2rem;
+            background: linear-gradient(145deg, #ff8b8b, #c5a5ff, #ff8b8b);
             -webkit-background-clip: text;
             background-clip: text;
             color: transparent;
             margin-bottom: 1rem;
-            text-shadow: 0 0 20px rgba(255, 107, 107, 0.5);
+            text-shadow: 0 0 40px rgba(255, 107, 107, 0.7);
+            animation: textShimmer 3s linear infinite;
+            background-size: 200% auto;
+        }
+
+        @keyframes textShimmer {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
         }
 
         .welcome-block p {
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             max-width: 600px;
-            color: #d4c2ff;
+            color: #e0d0ff;
+            text-shadow: 0 0 20px #b595ff;
         }
 
         .dungeon-icon {
-            font-size: 4rem;
-            filter: drop-shadow(0 0 30px #b595ff);
+            font-size: 5rem;
+            filter: drop-shadow(0 0 50px #b595ff) drop-shadow(0 0 20px #ff6b6b);
             margin-bottom: 20px;
-            animation: iconFloat 3s ease-in-out infinite;
+            animation: iconDance 3s ease-in-out infinite;
         }
 
-        @keyframes iconFloat {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
+        @keyframes iconDance {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-10px) rotate(5deg); }
+            75% { transform: translateY(10px) rotate(-5deg); }
         }
 
-        /* Меню настроек - Гробница настроек */
+        /* Остальные стили (без изменений) */
         .settings-menu {
             position: fixed;
             top: 50%;
@@ -575,7 +863,7 @@
             background: rgba(30, 35, 55, 0.95);
             border: 3px solid #b595ff;
             border-radius: 40px;
-            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 50px #b595ff;
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), 0 0 80px #b595ff;
             padding: 2rem 1.5rem;
             z-index: 1000;
             display: none;
@@ -585,6 +873,12 @@
 
         .settings-menu.active {
             display: block;
+            animation: menuAppear 0.3s ease-out;
+        }
+
+        @keyframes menuAppear {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
         }
 
         .settings-menu h2 {
@@ -652,6 +946,7 @@
         }
         .tab:hover {
             background: #3e3768;
+            transform: scale(1.05);
         }
         
         .tab-badge {
@@ -770,7 +1065,7 @@
             transform: translateY(3px);
         }
 
-        /* Панель профиля со сменой пароля */
+        /* Панель профиля */
         .profile-panel {
             background: rgba(20, 24, 43, 0.9);
             border-radius: 30px;
@@ -882,6 +1177,7 @@
             width: 100%;
         }
 
+        /* Чат */
         .chat-container {
             background: rgba(20, 24, 43, 0.9);
             border-radius: 30px;
@@ -933,58 +1229,8 @@
             transform: scale(1.1);
             box-shadow: 0 0 15px #aa88ff;
         }
-        .message-content {
-            flex: 1;
-        }
-        .message-header {
-            font-size: 0.85rem;
-            color: #b1a6e0;
-            margin-bottom: 5px;
-            display: flex;
-            gap: 10px;
-            align-items: center;
-        }
-        .message-sender {
-            font-weight: bold;
-            color: #d7c9ff;
-            cursor: pointer;
-        }
-        .message-sender:hover {
-            text-decoration: underline;
-            color: #f0eaff;
-        }
-        .message-time {
-            color: #8f84b0;
-        }
-        .message-text {
-            color: white;
-            word-wrap: break-word;
-        }
-        .chat-input-area {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
-        .chat-input-area input {
-            flex: 1;
-            background: #0b0f21;
-            border: 3px solid #b595ff;
-            padding: 15px 20px;
-            border-radius: 60px;
-            color: white;
-            outline: none;
-        }
-        .chat-input-area button {
-            background: #594e94;
-            border: none;
-            padding: 0 25px;
-            border-radius: 60px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-            border-bottom: 3px solid #2e274b;
-        }
 
+        /* Входящие */
         .inbox-list {
             background: rgba(20, 24, 43, 0.9);
             border-radius: 30px;
@@ -1008,336 +1254,18 @@
         .inbox-item:hover {
             background: #313a57;
             border-color: #ff6b6b;
+            transform: scale(1.02);
         }
         .inbox-item.unread {
             border-left: 8px solid #ff6b6b;
             background: #2f2b55;
         }
-        .inbox-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            color: white;
-            border: 2px solid #b595ff;
-            flex-shrink: 0;
-        }
-        .inbox-info {
-            flex: 1;
-        }
-        .inbox-info h4 {
-            color: #d7c9ff;
-            margin-bottom: 5px;
-        }
-        .inbox-info p {
-            color: #8f84b0;
-            font-size: 0.9rem;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-        .inbox-badge {
-            background: #ff4757;
-            color: white;
-            font-weight: bold;
-            min-width: 25px;
-            height: 25px;
-            border-radius: 25px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 8px;
-            font-size: 0.9rem;
-            border: 2px solid #8b0000;
-        }
 
-        .profile-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 400px;
-            background: rgba(30, 35, 55, 0.95);
-            border: 3px solid #b595ff;
-            border-radius: 40px;
-            padding: 30px;
-            z-index: 2000;
-            display: none;
-            color: white;
-            box-shadow: 0 30px 60px black, 0 0 50px #b595ff;
-            backdrop-filter: blur(10px);
-        }
-        .profile-modal.active {
-            display: block;
-        }
-        .profile-close {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #ff6b6b;
-            background: #2f2b4a;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #b595ff;
-        }
-        .profile-avatar {
-            width: 100px;
-            height: 100px;
-            border-radius: 50%;
-            margin: 0 auto 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 3rem;
-            font-weight: bold;
-            color: white;
-            border: 3px solid #b595ff;
-            box-shadow: 0 0 30px #aa88ff;
-        }
-
-        .search-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 600px;
-            max-height: 80vh;
-            overflow-y: auto;
-            background: rgba(30, 35, 55, 0.95);
-            border: 3px solid #b595ff;
-            border-radius: 40px;
-            padding: 2rem 1.5rem;
-            z-index: 2000;
-            display: none;
-            color: #e3d9ff;
-            backdrop-filter: blur(10px);
-        }
-        .search-modal.active {
-            display: block;
-        }
-        .search-close {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #ff6b6b;
-            background: #2f2b4a;
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #b595ff;
-        }
-        .search-field {
-            width: 100%;
-            background: #0b0f21;
-            border: 3px solid #b595ff;
-            padding: 15px 20px;
-            border-radius: 60px;
-            color: white;
-            outline: none;
-            margin-bottom: 25px;
-            font-size: 1.1rem;
-        }
-        .user-card {
-            background: #262b44;
-            border-radius: 30px;
-            padding: 15px;
-            margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            border: 2px solid #5b4e93;
-        }
-        .card-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            border: 2px solid #b595ff;
-            cursor: pointer;
-        }
-        .card-info {
-            flex: 1;
-        }
-        .card-info h4 {
-            color: #d7c9ff;
-            cursor: pointer;
-        }
-        .card-info h4:hover {
-            text-decoration: underline;
-        }
-        .card-actions {
-            display: flex;
-            gap: 10px;
-        }
-        .pm-btn-small {
-            background: #8f6bb3;
-            border: none;
-            color: white;
-            padding: 8px 15px;
-            border-radius: 40px;
-            cursor: pointer;
-            font-weight: bold;
-            border-bottom: 3px solid #5a4180;
-        }
-
-        .friends-section {
-            border-top: 2px solid #47407c;
-            padding-top: 20px;
-            margin-top: 20px;
-        }
-        .friends-section h4 {
-            color: #cbb7ff;
-            margin-bottom: 15px;
-            font-size: 1.3rem;
-        }
-        .friend-item {
-            background: #2b2e48;
-            border-radius: 30px;
-            padding: 10px 15px;
-            margin-bottom: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-        .friend-item span {
-            color: #d7c9ff;
-            font-weight: 600;
-        }
-
-        .pm-modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 500px;
-            height: 70vh;
-            background: rgba(30, 35, 55, 0.95);
-            border: 3px solid #b595ff;
-            border-radius: 40px;
-            padding: 20px;
-            z-index: 2000;
-            display: none;
-            flex-direction: column;
-            color: white;
-            backdrop-filter: blur(10px);
-        }
-        .pm-modal.active {
-            display: flex;
-        }
-        .pm-header {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #5b4e93;
-            margin-bottom: 15px;
-        }
-        .pm-header-avatar {
-            width: 45px;
-            height: 45px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-            border: 2px solid #b595ff;
-            cursor: pointer;
-        }
-        .pm-header h3 {
-            flex: 1;
-            color: #d3c2ff;
-            cursor: pointer;
-        }
-        .pm-header h3:hover {
-            text-decoration: underline;
-        }
-        .close-pm {
-            font-size: 2rem;
-            cursor: pointer;
-            color: #ff6b6b;
-            background: #2f2b4a;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #b595ff;
-        }
-        .pm-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 15px;
-            background: #14182b;
-            border-radius: 30px;
-            margin-bottom: 15px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-        .pm-input-area {
-            display: flex;
-            gap: 10px;
-        }
-        .pm-input-area input {
-            flex: 1;
-            background: #0b0f21;
-            border: 3px solid #b595ff;
-            padding: 15px 20px;
-            border-radius: 60px;
-            color: white;
-            outline: none;
-        }
-        .pm-input-area button {
-            background: #594e94;
-            border: none;
-            padding: 0 25px;
-            border-radius: 60px;
-            color: white;
-            font-weight: bold;
-            cursor: pointer;
-        }
-
-        /* Админ панель - таблица пользователей */
-        .admin-controls {
-            margin-bottom: 20px;
-        }
-        .search-input {
-            width: 100%;
-            background: #0b0f21;
-            border: 3px solid #b595ff;
-            padding: 15px 20px;
-            border-radius: 60px;
-            color: white;
-            outline: none;
-            margin-bottom: 20px;
-        }
+        /* Админ панель */
         .users-table {
             width: 100%;
             border-collapse: collapse;
-            background: #14182b;
+            background: rgba(20, 24, 43, 0.9);
             border-radius: 30px;
             overflow: hidden;
             border: 2px solid #4d4382;
@@ -1345,10 +1273,7 @@
         .users-table th {
             background: #2e2b55;
             color: #ded1ff;
-            font-size: 1rem;
             padding: 15px 5px;
-            font-weight: 600;
-            text-align: center;
             border-bottom: 3px solid #7e6ec0;
         }
         .users-table td {
@@ -1366,47 +1291,61 @@
             justify-content: center;
             color: white;
             font-weight: bold;
-            margin: 0 auto;
         }
         .action-btn {
             background: #b1536b;
             border: none;
             color: white;
-            font-weight: bold;
             padding: 6px 12px;
             border-radius: 40px;
             cursor: pointer;
             border-bottom: 3px solid #71283b;
-            font-size: 0.9rem;
-            transition: 0.1s;
             margin: 2px;
-        }
-        .action-btn:active {
-            border-bottom-width: 1px;
-            transform: translateY(2px);
         }
         .action-btn.blocked {
             background: #3f3f6b;
             border-bottom-color: #20203b;
         }
-        .action-btn.pm-btn {
-            background: #4f5b99;
-            border-bottom-color: #2d3563;
-        }
-        .action-btn.pm-btn:hover {
-            background: #6170b5;
-        }
-        .empty-message {
-            text-align: center;
+
+        /* Модальные окна */
+        .profile-modal, .search-modal, .pm-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            max-width: 500px;
+            background: rgba(30, 35, 55, 0.95);
+            border: 3px solid #b595ff;
+            border-radius: 40px;
             padding: 30px;
-            color: #8f84b0;
+            z-index: 2000;
+            display: none;
+            color: white;
+            box-shadow: 0 30px 60px black, 0 0 80px #b595ff;
+            backdrop-filter: blur(10px);
+        }
+        .profile-modal.active, .search-modal.active, .pm-modal.active {
+            display: block;
+            animation: modalAppear 0.3s ease-out;
+        }
+
+        @keyframes modalAppear {
+            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+        }
+
+        .pm-modal {
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
         }
 
         .overlay {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.7);
-            backdrop-filter: blur(6px);
+            backdrop-filter: blur(8px);
             z-index: 999;
             display: none;
         }
@@ -1424,24 +1363,28 @@
                 justify-content: center;
             }
             .skull-container {
-                width: 300px;
-                height: 300px;
+                width: 350px;
+                height: 350px;
+            }
+            .site-title::before, .site-title::after {
+                display: none;
             }
         }
     </style>
 </head>
 <body>
-    <!-- Неоновый анимированный фон с кубиками -->
+    <!-- Улучшенный неоновый фон -->
     <div class="neon-background">
+        <div class="glow-spot" style="top: 20%; left: 20%;"></div>
+        <div class="glow-spot" style="bottom: 20%; right: 20%; animation-delay: -2s;"></div>
         <div class="floating-cubes" id="cubesContainer"></div>
-        <div class="neon-line" style="top: 20%;"></div>
-        <div class="neon-line" style="top: 50%; transform: rotate(45deg);"></div>
-        <div class="neon-line" style="top: 80%; transform: rotate(-30deg);"></div>
+        <div class="neon-line" style="top: 15%;"></div>
+        <div class="neon-line" style="top: 45%; transform: rotate(30deg);"></div>
+        <div class="neon-line" style="top: 75%; transform: rotate(-20deg);"></div>
     </div>
 
     <!-- Затемнение -->
     <div class="overlay" id="overlay"></div>
-    <div class="overlay" id="searchOverlay"></div>
 
     <!-- Модальное окно профиля -->
     <div class="profile-modal" id="profileModal">
@@ -1475,7 +1418,7 @@
         </div>
     </div>
 
-    <!-- Меню настроек - Гробница настроек -->
+    <!-- Меню настроек -->
     <div class="settings-menu" id="settingsMenu">
         <div class="close-menu" id="closeMenu">✕</div>
         <h2>⚰️ ГРОБНИЦА НАСТРОЕК</h2>
@@ -1642,9 +1585,9 @@
         </div>
     </div>
 
-    <!-- Шапка сайта -->
+    <!-- Шапка сайта с улучшенным логотипом -->
     <header class="header">
-        <div class="site-title">⚔️ Ma2DUNGEON</div>
+        <div class="site-title">Ma2DUNGEON</div>
         <div class="user-info" id="userInfo">
             <div class="header-avatar" id="headerAvatar">😊</div>
             <div class="user-name-center" id="userNameDisplay">─── ⋆⋅ stranger ⋅⋆ ───</div>
@@ -1657,16 +1600,26 @@
 
     <!-- Основной контент -->
     <main class="content">
-        <!-- Реалистичная голова скелета -->
+        <!-- Супер-реалистичная голова скелета -->
         <div class="skull-container" id="skullContainer">
             <div class="skull" id="skull">
                 <div class="skull-3d">
                     <div class="skull-main" id="skullMain">
                         <div class="bone-texture"></div>
+                        
+                        <!-- Надбровные дуги -->
+                        <div class="brow-ridge left"></div>
+                        <div class="brow-ridge right"></div>
+                        
                         <!-- Трещины -->
-                        <div class="crack" style="--width: 30px; --height: 5px; --left: 150px; --top: 100px; --angle: 15deg;"></div>
-                        <div class="crack" style="--width: 40px; --height: 6px; --left: 300px; --top: 150px; --angle: -10deg;"></div>
-                        <div class="crack" style="--width: 25px; --height: 4px; --left: 200px; --top: 250px; --angle: 30deg;"></div>
+                        <div class="crack" style="--width: 40px; --height: 8px; --left: 150px; --top: 100px; --angle: 15deg;"></div>
+                        <div class="crack" style="--width: 50px; --height: 8px; --left: 350px; --top: 150px; --angle: -10deg;"></div>
+                        <div class="crack" style="--width: 35px; --height: 6px; --left: 250px; --top: 280px; --angle: 30deg;"></div>
+                        <div class="crack" style="--width: 30px; --height: 5px; --left: 400px; --top: 220px; --angle: 45deg;"></div>
+                        
+                        <!-- Скулы -->
+                        <div class="cheekbone left"></div>
+                        <div class="cheekbone right"></div>
                         
                         <!-- Глаза -->
                         <div class="eye-socket left">
@@ -1694,7 +1647,7 @@
                             <div class="tooth"></div>
                         </div>
 
-                        <!-- Аксессуары (будут добавляться динамически) -->
+                        <!-- Аксессуары -->
                         <div id="skullAccessories"></div>
                     </div>
                 </div>
@@ -1707,7 +1660,7 @@
             <div class="dungeon-icon">🗝️🏮</div>
             <h2>Подземелье ждёт</h2>
             <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Ищи друзей и общайся!</p>
-            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Друзья делают подземелье светлее»</p>
+            <p style="margin-top: 30px; font-style: italic; color: #d4c2ff;">«Друзья делают подземелье светлее»</p>
         </div>
     </main>
 
@@ -1763,30 +1716,33 @@
                 const container = document.getElementById('cubesContainer');
                 if (!container) return;
                 
-                for (let i = 0; i < 30; i++) {
+                // Кубики
+                for (let i = 0; i < 40; i++) {
                     const cube = document.createElement('div');
                     cube.className = 'cube';
-                    const size = Math.random() * 60 + 20;
+                    const size = Math.random() * 80 + 30;
                     cube.style.width = size + 'px';
                     cube.style.height = size + 'px';
                     cube.style.left = Math.random() * 100 + '%';
                     cube.style.top = Math.random() * 100 + '%';
-                    cube.style.animationDuration = (Math.random() * 20 + 10) + 's';
-                    cube.style.animationDelay = (Math.random() * 5) + 's';
-                    cube.style.background = `rgba(${Math.random()*100+100}, ${Math.random()*100+50}, 255, 0.1)`;
+                    cube.style.animationDuration = (Math.random() * 25 + 15) + 's';
+                    cube.style.animationDelay = (Math.random() * 10) + 's';
+                    cube.style.background = `rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.15)`;
+                    cube.style.borderColor = `rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.5)`;
                     container.appendChild(cube);
                 }
                 
-                for (let i = 0; i < 50; i++) {
+                // Частицы
+                for (let i = 0; i < 80; i++) {
                     const particle = document.createElement('div');
                     particle.className = 'particle';
-                    const size = Math.random() * 10 + 5;
+                    const size = Math.random() * 15 + 5;
                     particle.style.width = size + 'px';
                     particle.style.height = size + 'px';
                     particle.style.left = Math.random() * 100 + '%';
-                    particle.style.animationDuration = (Math.random() * 15 + 10) + 's';
-                    particle.style.animationDelay = (Math.random() * 5) + 's';
-                    particle.style.background = `rgba(${Math.random()*155+100}, ${Math.random()*100+100}, 255, 0.3)`;
+                    particle.style.animationDuration = (Math.random() * 20 + 15) + 's';
+                    particle.style.animationDelay = (Math.random() * 10) + 's';
+                    particle.style.background = `radial-gradient(circle, rgba(${Math.random()*100+155}, ${Math.random()*100+100}, 255, 0.8), transparent)`;
                     container.appendChild(particle);
                 }
             }
@@ -1814,13 +1770,11 @@
                     clickCounter.textContent = clickCount;
                     clickCounter.classList.add('visible');
                     
-                    // Визуальный эффект
                     skull.classList.add('easter-egg');
                     setTimeout(() => {
                         skull.classList.remove('easter-egg');
                     }, 200);
                     
-                    // Сброс счетчика через 2 секунды бездействия
                     if (clickTimer) {
                         clearTimeout(clickTimer);
                     }
@@ -1831,7 +1785,6 @@
                         clickCounter.classList.remove('visible');
                     }, 2000);
                     
-                    // Активация пасхалки при 7+ кликах
                     if (clickCount >= 7) {
                         playBoneSound();
                         clickCount = 0;
@@ -1839,8 +1792,7 @@
                         clickCounter.classList.remove('visible');
                         clearTimeout(clickTimer);
                         
-                        // Дополнительный визуальный эффект
-                        skull.style.animation = 'realisticShake 1s, skullGlow 0.5s 3';
+                        skull.style.animation = 'realisticShake 1s, skullEasterGlow 0.5s 3';
                         setTimeout(() => {
                             skull.style.animation = '';
                         }, 1500);
@@ -1848,51 +1800,49 @@
                 });
             }
 
-            // Генерация звука костей через Web Audio API
+            // Генерация звука костей
             function playBoneSound() {
                 try {
                     const audioContext = new (window.AudioContext || window.webkitAudioContext)();
                     
-                    // Создаем несколько осцилляторов для эффекта костей
-                    for (let i = 0; i < 5; i++) {
+                    for (let i = 0; i < 8; i++) {
                         setTimeout(() => {
                             const oscillator = audioContext.createOscillator();
                             const gainNode = audioContext.createGain();
                             
                             oscillator.type = 'sawtooth';
-                            oscillator.frequency.setValueAtTime(100 + Math.random() * 200, audioContext.currentTime);
+                            oscillator.frequency.setValueAtTime(80 + Math.random() * 300, audioContext.currentTime);
                             
-                            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.2);
+                            gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
+                            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.25);
                             
                             oscillator.connect(gainNode);
                             gainNode.connect(audioContext.destination);
                             
                             oscillator.start();
-                            oscillator.stop(audioContext.currentTime + 0.2);
-                        }, i * 50);
+                            oscillator.stop(audioContext.currentTime + 0.25);
+                        }, i * 40);
                     }
                     
-                    // Дополнительный шум для реалистичности
                     const bufferSize = 4096;
                     const noiseNode = audioContext.createScriptProcessor(bufferSize, 1, 1);
                     noiseNode.onaudioprocess = function(e) {
                         const output = e.outputBuffer.getChannelData(0);
                         for (let i = 0; i < bufferSize; i++) {
-                            output[i] = Math.random() * 0.1;
+                            output[i] = Math.random() * 0.15;
                         }
                     };
                     
                     const noiseGain = audioContext.createGain();
-                    noiseGain.gain.setValueAtTime(0.1, audioContext.currentTime);
-                    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    noiseGain.gain.setValueAtTime(0.15, audioContext.currentTime);
+                    noiseGain.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.4);
                     
                     noiseNode.connect(noiseGain);
                     noiseGain.connect(audioContext.destination);
                     
                     setTimeout(() => {
                         noiseNode.disconnect();
-                    }, 300);
+                    }, 400);
                     
                 } catch (e) {
                     console.log('Аудио контекст не поддерживается');
@@ -1908,7 +1858,7 @@
                 
                 if (skullMain) {
                     const baseColor = skullColors[color] || '#f5f5f5';
-                    skullMain.style.background = `radial-gradient(circle at 30% 30%, ${baseColor}, ${adjustColor(baseColor, -30)})`;
+                    skullMain.style.background = `radial-gradient(circle at 30% 30%, ${baseColor}, ${adjustColor(baseColor, -30)}, ${adjustColor(baseColor, -60)})`;
                 }
                 
                 if (leftEye && rightEye) {
@@ -1921,7 +1871,7 @@
                         yellow: '#ffff00'
                     };
                     const eyeBase = eyeColorMap[eyeColor] || '#ff0000';
-                    const eyeStyle = `radial-gradient(circle at 30% 30%, ${eyeBase}, ${adjustColor(eyeBase, -50)})`;
+                    const eyeStyle = `radial-gradient(circle at 30% 30%, ${eyeBase}, ${adjustColor(eyeBase, -50)}, ${adjustColor(eyeBase, -80)})`;
                     leftEye.style.background = eyeStyle;
                     rightEye.style.background = eyeStyle;
                 }
@@ -2673,7 +2623,6 @@
                     banUser(userId).then(() => {
                         renderUsersList(document.getElementById('userSearch').value);
                         
-                        // Если забанили текущего пользователя
                         if (currentUser && userId === currentUser.id) {
                             localStorage.removeItem(currentUserIdKey);
                             window.location.reload();
