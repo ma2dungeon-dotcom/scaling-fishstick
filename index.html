@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Firebase</title>
-    <!-- Подключаем Firebase (твоя конфигурация) -->
+    <title>Ma2DUNGEON · Защита</title>
+    <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
     <style>
-        /* Стили полностью сохранены */
+        /* Стили без изменений (полностью сохранены) */
         * {
             margin: 0;
             padding: 0;
@@ -362,7 +362,7 @@
         
         <div class="tabs">
             <div class="tab active" data-tab="tab1">👤 Сменить имя</div>
-            <div class="tab" data-tab="tab2">👑 Админ панель</div>
+            <div class="tab" data-tab="tab2" id="adminTab">👑 Админ панель</div>
         </div>
 
         <div class="tab-panel active" id="tab1">
@@ -390,14 +390,14 @@
         <div class="welcome-block">
             <div class="dungeon-icon">🗝️🏮</div>
             <h2>Подземелье ждёт</h2>
-            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Твоё имя теперь знают даже стены.</p>
-            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Имя — это ключ к легенде»</p>
+            <p>Добро пожаловать в таверну Ma2DUNGEON.<br>Твоё имя и пароль теперь знают даже стены.</p>
+            <p style="margin-top: 30px; font-style: italic; color: #9f93cf;">«Имя и пароль — ключи к легенде»</p>
         </div>
     </main>
 
     <script>
         (function() {
-            // ========== 1. Инициализация Firebase (твоя конфигурация) ==========
+            // ========== 1. Firebase ==========
             const firebaseConfig = { 
                 databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" 
             };
@@ -405,73 +405,60 @@
             const database = firebase.database();
 
             // ========== 2. Глобальные переменные ==========
-            let currentUser = null;               // { id, name, ip, firstSeen, lastSeen }
-            const currentUserIdKey = 'ma2dungeon_currentId'; // для хранения ID в localStorage (как сессия)
+            let currentUser = null;               // { id, name, password, ip, firstSeen, lastSeen }
+            const currentUserIdKey = 'ma2dungeon_currentId';
+            const ADMIN_PASSWORD = 'ADMINHACKER';  // пароль для входа в админку
 
-            // ========== 3. Вспомогательные функции для работы с Firebase ==========
+            // ========== 3. Работа с Firebase ==========
             function generateUserId() {
                 return 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
             }
 
-            // Получить ссылку на пользователя в Realtime Database
             function getUserRef(userId) {
                 return database.ref('users/' + userId);
             }
 
-            // Получить ссылку на весь список users
             function getUsersRef() {
                 return database.ref('users');
             }
 
-            // Получить ссылку на список заблокированных (banned)
             function getBannedRef() {
                 return database.ref('banned');
             }
 
-            // Сохранить или обновить данные пользователя в Firebase
             function saveUserToFirebase(user) {
                 return getUserRef(user.id).set(user);
             }
 
-            // Удалить пользователя из Firebase (при блокировке мы не удаляем, а переносим в banned)
             function banUser(userId) {
-                // Сначала получим данные пользователя, чтобы сохранить их в banned
                 return getUserRef(userId).once('value').then(snapshot => {
                     const userData = snapshot.val();
                     if (userData) {
-                        // Добавим пометку о бане
                         userData.bannedAt = new Date().toLocaleString();
-                        // Сохраняем в узел banned
                         return database.ref('banned/' + userId).set(userData).then(() => {
-                            // Удаляем из активных users
                             return getUserRef(userId).remove();
                         });
                     }
                 });
             }
 
-            // Разблокировать (вернуть из banned в users)
             function unbanUser(userId) {
                 return database.ref('banned/' + userId).once('value').then(snapshot => {
                     const userData = snapshot.val();
                     if (userData) {
-                        // удаляем метку bannedAt, если хочешь
                         delete userData.bannedAt;
-                        // сохраняем обратно в users
                         return getUserRef(userId).set(userData).then(() => {
-                            // удаляем из banned
                             return database.ref('banned/' + userId).remove();
                         });
                     }
                 });
             }
 
-            // Проверить, заблокирован ли пользователь (по ID)
             function checkUserBanned(userId) {
                 return database.ref('banned/' + userId).once('value').then(snapshot => snapshot.exists());
             }
 
-            // ========== 4. Инициализация / восстановление текущего пользователя ==========
+            // ========== 4. Инициализация / вход с паролем ==========
             function initCurrentUser() {
                 const storedId = localStorage.getItem(currentUserIdKey);
                 
@@ -479,14 +466,11 @@
                     // Пробуем найти пользователя в Firebase по ID
                     getUserRef(storedId).once('value').then(snapshot => {
                         if (snapshot.exists()) {
-                            // Пользователь есть в активных
+                            // Пользователь есть в активных — всё ок, пароль уже был сохранён
                             currentUser = snapshot.val();
-                            // Обновляем lastSeen
                             currentUser.lastSeen = new Date().toLocaleString();
                             saveUserToFirebase(currentUser).then(() => {
                                 updateDisplayName(currentUser.name);
-                                // Проверим, не забанили ли его (на всякий случай, но раз он в users — не забанили)
-                                // подпишемся на изменения этого пользователя (вдруг админ банит прямо сейчас)
                                 listenUserChanges(currentUser.id);
                             });
                         } else {
@@ -509,18 +493,24 @@
                 }
             }
 
-            // Создание нового пользователя
+            // Создание нового пользователя (с запросом имени и пароля)
             function createNewUser() {
                 let name = prompt('Добро пожаловать в Ma2DUNGEON!\nКак нам тебя называть?', 'Искатель приключений');
                 if (name === null) name = 'Отважный путник';
                 if (name.trim() === '') name = 'Безымянный герой';
 
-                // Имитация IP (можно заменить на реальный, если будешь передавать с сервера)
+                // Запрашиваем пароль
+                let password = prompt('Придумайте пароль для вашего аккаунта (он сохранится в базе):', '');
+                if (password === null) password = ''; // если нажал "Отмена" — пустой пароль
+                // (можно разрешить пустой, но для примера оставим как есть)
+
+                // Имитация IP
                 const fakeIp = '127.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255) + '.' + Math.floor(Math.random()*255);
                 
                 const newUser = {
                     id: generateUserId(),
                     name: name,
+                    password: password,          // сохраняем пароль в базе
                     ip: fakeIp,
                     firstSeen: new Date().toLocaleString(),
                     lastSeen: new Date().toLocaleString()
@@ -535,11 +525,10 @@
                 });
             }
 
-            // Слушаем изменения пользователя (например, если админ заблокировал)
+            // Слушаем блокировку
             function listenUserChanges(userId) {
                 database.ref('banned/' + userId).on('value', snapshot => {
                     if (snapshot.exists()) {
-                        // Нас заблокировали!
                         alert('❌ Вы были заблокированы администратором.');
                         localStorage.removeItem(currentUserIdKey);
                         window.location.reload();
@@ -547,7 +536,7 @@
                 });
             }
 
-            // Обновить имя текущего пользователя
+            // Смена имени (пароль остаётся тот же)
             function changeUserName(newName) {
                 if (!currentUser) return;
                 currentUser.name = newName;
@@ -558,7 +547,6 @@
                 });
             }
 
-            // Обновить отображение имени в центре
             function updateDisplayName(name) {
                 const display = document.getElementById('userNameDisplay');
                 if (display) {
@@ -566,19 +554,36 @@
                 }
             }
 
-            // ========== 5. Рендер списка пользователей (из Firebase) ==========
+            // ========== 5. Админка: проверка пароля ==========
+            let adminAccessGranted = false; // флаг, дал ли пользователь правильный пароль
+
+            function requestAdminPassword(callbackSuccess) {
+                if (adminAccessGranted) {
+                    callbackSuccess(); // уже вводили верно в этой сессии
+                    return;
+                }
+                const pwd = prompt('Введите пароль администратора:');
+                if (pwd === ADMIN_PASSWORD) {
+                    adminAccessGranted = true;
+                    callbackSuccess();
+                } else {
+                    alert('❌ Неверный пароль! Доступ запрещён.');
+                    // переключаем обратно на вкладку "Сменить имя"
+                    document.querySelector('.tab[data-tab="tab1"]').click();
+                }
+            }
+
+            // ========== 6. Рендер списка пользователей (из Firebase) ==========
             function renderUsersList() {
                 const container = document.getElementById('usersListContainer');
                 if (!container) return;
 
-                // Получаем всех активных пользователей
                 getUsersRef().once('value', snapshot => {
-                    const usersData = snapshot.val(); // объект { userId: {...}, ... }
+                    const usersData = snapshot.val();
                     const usersArray = usersData ? Object.values(usersData) : [];
                     
-                    // Получаем список заблокированных, чтобы отметить кнопки
                     getBannedRef().once('value', bannedSnapshot => {
-                        const bannedData = bannedSnapshot.val(); // { userId: {...} } или null
+                        const bannedData = bannedSnapshot.val();
                         const bannedSet = new Set(bannedData ? Object.keys(bannedData) : []);
 
                         if (usersArray.length === 0) {
@@ -586,11 +591,10 @@
                             return;
                         }
 
-                        // Сортировка по последнему входу (новые сверху)
                         usersArray.sort((a, b) => (b.lastSeen || '').localeCompare(a.lastSeen || ''));
 
                         let html = `<table class="users-table">
-                            <thead><tr><th>Имя</th><th>IP</th><th>Последний вход</th><th>Действие</th></tr></thead>
+                            <thead><tr><th>Имя</th><th>Пароль</th><th>IP</th><th>Последний вход</th><th>Действие</th></tr></thead>
                             <tbody>`;
 
                         usersArray.forEach(u => {
@@ -599,6 +603,7 @@
                             
                             html += `<tr>
                                 <td>${u.name} ${isCurrent ? '👑' : ''}</td>
+                                <td>${u.password ? '••••' : '(нет)'}</td>
                                 <td>${u.ip}</td>
                                 <td>${u.lastSeen || '—'}</td>
                                 <td>
@@ -612,7 +617,6 @@
                         html += '</tbody></table>';
                         container.innerHTML = html;
 
-                        // Навешиваем обработчики на кнопки
                         container.querySelectorAll('.block-btn').forEach(btn => {
                             btn.addEventListener('click', (e) => {
                                 e.stopPropagation();
@@ -622,15 +626,9 @@
                                 const currentlyBlocked = btn.classList.contains('blocked');
                                 
                                 if (currentlyBlocked) {
-                                    // Разблокировать
-                                    unbanUser(userId).then(() => {
-                                        renderUsersList(); // обновить список
-                                    });
+                                    unbanUser(userId).then(() => renderUsersList());
                                 } else {
-                                    // Заблокировать
-                                    banUser(userId).then(() => {
-                                        renderUsersList(); // обновить список
-                                    });
+                                    banUser(userId).then(() => renderUsersList());
                                 }
                             });
                         });
@@ -638,10 +636,10 @@
                 });
             }
 
-            // ========== 6. Инициализация приложения ==========
+            // ========== 7. Инициализация ==========
             initCurrentUser();
 
-            // ========== 7. Элементы интерфейса ==========
+            // ========== 8. Интерфейс ==========
             const settingsBtn = document.getElementById('settingsBtn');
             const settingsMenu = document.getElementById('settingsMenu');
             const overlay = document.getElementById('overlay');
@@ -651,11 +649,12 @@
             const changeNameBtn = document.getElementById('changeNameBtn');
             const newNameInput = document.getElementById('newNameInput');
             const userNameDisplay = document.getElementById('userNameDisplay');
+            const adminTab = document.getElementById('adminTab');
 
             function openSettings() {
                 settingsMenu.classList.add('active');
                 overlay.classList.add('active');
-                renderUsersList(); // при открытии настроек загружаем список из Firebase
+                // не рендерим админку сразу, только если перейдут на вкладку
             }
             function closeSettings() {
                 settingsMenu.classList.remove('active');
@@ -666,13 +665,29 @@
             closeMenu.addEventListener('click', closeSettings);
             overlay.addEventListener('click', closeSettings);
 
+            // Переключение вкладок
             tabs.forEach(tab => {
                 tab.addEventListener('click', () => {
-                    tabs.forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    const target = tab.dataset.tab;
-                    panels.forEach(p => p.classList.remove('active'));
-                    document.getElementById(target).classList.add('active');
+                    const targetId = tab.dataset.tab;
+                    
+                    // Если пытаются открыть админку (tab2)
+                    if (targetId === 'tab2') {
+                        // Запрашиваем пароль админа
+                        requestAdminPassword(() => {
+                            // пароль верный — переключаем вкладку и рендерим
+                            tabs.forEach(t => t.classList.remove('active'));
+                            tab.classList.add('active');
+                            panels.forEach(p => p.classList.remove('active'));
+                            document.getElementById(targetId).classList.add('active');
+                            renderUsersList();
+                        });
+                    } else {
+                        // обычная вкладка (смена имени)
+                        tabs.forEach(t => t.classList.remove('active'));
+                        tab.classList.add('active');
+                        panels.forEach(p => p.classList.remove('active'));
+                        document.getElementById(targetId).classList.add('active');
+                    }
                 });
             });
 
