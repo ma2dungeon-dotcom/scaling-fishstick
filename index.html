@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ma2DUNGEON · Исправлено</title>
+    <title>Ma2DUNGEON · ФИНАЛ</title>
     <!-- Firebase -->
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
@@ -1705,7 +1705,7 @@
         <div id="searchResults"></div>
     </div>
 
-    <!-- Модальное окно личных сообщений -->
+    <!-- Модальное окно личных сообщений (ИЗНАЧАЛЬНО СКРЫТО) -->
     <div class="pm-modal" id="pmModal">
         <div class="pm-header">
             <div class="pm-header-avatar" id="pmAvatar">😊</div>
@@ -2246,6 +2246,24 @@
                 const preview = document.getElementById('avatarPreview');
                 preview.style.background = currentUser.avatar.color;
                 preview.textContent = currentUser.avatar.icon || currentUser.avatar.letter;
+                
+                // Выделяем текущий цвет
+                document.querySelectorAll('#avatarColors .color-option').forEach(opt => {
+                    if (opt.style.backgroundColor === currentUser.avatar.color) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
+                
+                // Выделяем текущую иконку
+                document.querySelectorAll('#avatarIcons .icon-option').forEach(opt => {
+                    if (opt.textContent === currentUser.avatar.icon) {
+                        opt.classList.add('selected');
+                    } else {
+                        opt.classList.remove('selected');
+                    }
+                });
             }
 
             // ========== ОНЛАЙН-СТАТУС ==========
@@ -2416,6 +2434,7 @@
             function openPrivateChat(userId, userName) {
                 if (!currentUser) return;
                 
+                // Закрываем предыдущий слушатель если есть
                 if (pmListener) {
                     pmListener();
                     pmListener = null;
@@ -2460,7 +2479,10 @@
             }
 
             function closePrivateChat() {
-                if (pmListener) pmListener();
+                if (pmListener) {
+                    pmListener();
+                    pmListener = null;
+                }
                 document.getElementById('pmModal').classList.remove('active');
                 document.getElementById('overlay').classList.remove('active');
                 currentPMUser = null;
@@ -3032,4 +3054,4 @@
         })();
     </script>
 </body>
-                            </html>
+                                                        </html>
