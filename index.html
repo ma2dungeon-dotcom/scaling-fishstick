@@ -3,10 +3,355 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пещерная сеть | Грот</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    <title>Грот | Пещерная социальная сеть</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Courier New', monospace;
+        }
+
+        body {
+            overflow: hidden;
+            color: #e0d3b5;
+        }
+
+        .cave-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #2a1e0f 0%, #3d2e1a 50%, #1a1308 100%);
+            background-image: 
+                radial-gradient(circle at 10% 20%, rgba(100, 70, 40, 0.3) 0%, transparent 30%),
+                radial-gradient(circle at 90% 70%, rgba(80, 50, 20, 0.4) 0%, transparent 40%),
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px);
+            z-index: -1;
+        }
+
+        #app {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: none;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .screen.active {
+            display: block;
+        }
+
+        .cave-entrance {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 30px;
+            background: rgba(30, 20, 10, 0.8);
+            border: 3px solid #8b6e4b;
+            border-radius: 15px;
+            box-shadow: 0 0 30px rgba(255, 140, 0, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .glow-text {
+            font-size: 3em;
+            color: #ff9900;
+            text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300;
+            letter-spacing: 5px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #b89a7a;
+            margin-bottom: 30px;
+            font-style: italic;
+        }
+
+        .auth-tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #6b4f35;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: none;
+            border: none;
+            color: #a78e6f;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            color: #ff9900;
+            border-bottom: 2px solid #ff9900;
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-form input,
+        .auth-form select {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            background: rgba(10, 5, 0, 0.7);
+            border: 1px solid #6b4f35;
+            color: #e0d3b5;
+            border-radius: 5px;
+        }
+
+        .cave-btn {
+            background: #6b4f35;
+            border: 2px solid #b87c4b;
+            color: #ffd700;
+            padding: 12px 30px;
+            font-size: 1.2em;
+            cursor: pointer;
+            transition: all 0.3s;
+            border-radius: 8px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .cave-btn:hover {
+            background: #8b6e4b;
+            border-color: #ff9900;
+            box-shadow: 0 0 15px #ff6600;
+        }
+
+        .cave-btn.small {
+            padding: 8px 15px;
+            font-size: 0.9em;
+        }
+
+        .cave-btn.danger {
+            background: #4a1a1a;
+            border-color: #8b0000;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 20px;
+            background: rgba(20, 10, 0, 0.9);
+            border-bottom: 2px solid #b87c4b;
+            margin-bottom: 20px;
+        }
+
+        .cave-title {
+            color: #ff9900;
+            text-shadow: 0 0 5px #ff6600;
+        }
+
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            margin-left: 10px;
+            filter: drop-shadow(0 0 5px #ff6600);
+        }
+
+        .content {
+            display: grid;
+            grid-template-columns: 250px 1fr 250px;
+            gap: 20px;
+            height: calc(100vh - 100px);
+        }
+
+        .left-sidebar {
+            background: rgba(20, 10, 0, 0.8);
+            border: 1px solid #6b4f35;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .profile-card {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            font-size: 5em;
+            margin: 10px 0;
+            filter: drop-shadow(0 0 10px #ff6600);
+        }
+
+        .danger-meter {
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        .meter {
+            height: 20px;
+            background: #2a1e0f;
+            border: 1px solid #6b4f35;
+            margin: 10px 0;
+        }
+
+        .meter-fill {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #ff9900, #ff3300);
+            transition: width 0.3s;
+        }
+
+        .feed {
+            background: rgba(20, 10, 0, 0.7);
+            border: 1px solid #6b4f35;
+            padding: 15px;
+            border-radius: 10px;
+            overflow-y: auto;
+        }
+
+        .post-creator {
+            margin-bottom: 20px;
+        }
+
+        .post-creator textarea {
+            width: 100%;
+            height: 80px;
+            padding: 10px;
+            background: rgba(0,0,0,0.5);
+            border: 1px solid #6b4f35;
+            color: #e0d3b5;
+            resize: none;
+            margin-bottom: 10px;
+        }
+
+        .post {
+            background: rgba(30, 20, 10, 0.9);
+            border: 1px solid #8b6e4b;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+        }
+
+        .post-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .post-avatar {
+            font-size: 2em;
+            margin-right: 10px;
+        }
+
+        .post-info {
+            flex: 1;
+        }
+
+        .post-author {
+            font-weight: bold;
+            color: #ff9900;
+        }
+
+        .post-time {
+            font-size: 0.8em;
+            color: #6b4f35;
+        }
+
+        .post-content {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+
+        .post-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .post-actions button {
+            background: none;
+            border: 1px solid #6b4f35;
+            color: #b89a7a;
+            padding: 5px 10px;
+            cursor: pointer;
+        }
+
+        .right-sidebar {
+            background: rgba(20, 10, 0, 0.8);
+            border: 1px solid #6b4f35;
+            padding: 15px;
+            border-radius: 10px;
+        }
+
+        .hazards-list ul {
+            list-style: none;
+        }
+
+        .hazards-list li {
+            padding: 8px;
+            margin: 5px 0;
+            background: rgba(139, 0, 0, 0.2);
+            border-left: 3px solid #ff3300;
+        }
+
+        .settings-panel {
+            max-width: 600px;
+            margin: 50px auto;
+            padding: 30px;
+            background: rgba(20, 10, 0, 0.95);
+            border: 3px solid #8b6e4b;
+            border-radius: 15px;
+        }
+
+        .settings-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 1px solid #6b4f35;
+        }
+
+        .admin-section {
+            border-color: #ff9900;
+            background: rgba(255, 100, 0, 0.1);
+        }
+
+        .admin-section h3 {
+            color: #ff9900;
+        }
+
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #2a1e0f;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: #6b4f35;
+            border-radius: 5px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8b6e4b;
+        }
+    </style>
 </head>
 <body>
     <div class="cave-bg"></div>
@@ -70,7 +415,7 @@
                         <div class="meter">
                             <div class="meter-fill" style="width: 75%"></div>
                         </div>
-                        <p>75% - Медведь рядом!</p>
+                        <p id="danger-text">75% - Медведь рядом!</p>
                     </div>
                 </div>
 
@@ -152,360 +497,514 @@
         </div>
     </div>
 
-    <script src="script.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
+    
+    <script>
+        // Конфигурация Firebase
+        const firebaseConfig = {
+            databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com"
+        };
+
+        // Инициализация Firebase
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+
+        // Глобальные переменные
+        let currentUser = null;
+        const ADMIN_PASSWORD = "ADMINHACKER";
+        const dangerPhrases = [
+            "Медведь рядом!",
+            "Обвал камней!",
+            "Подземная река разлилась!",
+            "Стая волков близко!",
+            "Землетрясение!",
+            "Пещерный лев рычит!",
+            "Ядовитые пауки!",
+            "Голодный мамонт!",
+            "Соседи украли огонь!",
+            "Сталагмиты падают!"
+        ];
+
+        // Функции переключения экранов
+        window.showTab = function(tabName) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
+            
+            if (tabName === 'login') {
+                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.getElementById('login-form').classList.add('active');
+            } else {
+                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.getElementById('register-form').classList.add('active');
+            }
+        };
+
+        window.showSettings = function() {
+            document.getElementById('main-screen').classList.remove('active');
+            document.getElementById('settings-screen').classList.add('active');
+            
+            const adminSection = document.getElementById('admin-section');
+            if (currentUser && currentUser.isAdmin) {
+                adminSection.style.display = 'block';
+                updateAdminStats();
+            } else {
+                adminSection.style.display = 'none';
+            }
+        };
+
+        window.showMainScreen = function() {
+            document.getElementById('settings-screen').classList.remove('active');
+            document.getElementById('main-screen').classList.add('active');
+            loadPosts();
+            loadHazards();
+        };
+
+        // Аутентификация
+        window.register = async function() {
+            const username = document.getElementById('reg-username').value;
+            const password = document.getElementById('reg-password').value;
+            const avatar = document.getElementById('reg-avatar').value;
+            
+            if (!username || !password) {
+                alert('Заполните все поля!');
+                return;
+            }
+            
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+                
+                if (snapshot.exists()) {
+                    alert('Такое имя уже существует в пещере!');
+                    return;
+                }
+                
+                const newUser = {
+                    username: username,
+                    password: password,
+                    avatar: avatar,
+                    status: 'Исследую пещеры',
+                    isAdmin: false,
+                    createdAt: new Date().toISOString()
+                };
+                
+                const newUserRef = await usersRef.push(newUser);
+                currentUser = { id: newUserRef.key, ...newUser };
+                
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                alert('Регистрация успешна! Добро пожаловать в пещеру!');
+                document.getElementById('auth-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
+                updateUserInfo();
+                loadPosts();
+                loadHazards();
+                updateDangerLevel();
+                
+            } catch (error) {
+                console.error('Ошибка регистрации:', error);
+                alert('Ошибка регистрации');
+            }
+        };
+
+        window.login = async function() {
+            const username = document.getElementById('login-username').value;
+            const password = document.getElementById('login-password').value;
+            
+            if (!username || !password) {
+                alert('Введите имя и пароль!');
+                return;
+            }
+            
+            try {
+                const usersRef = database.ref('users');
+                const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
+                
+                if (!snapshot.exists()) {
+                    alert('Пользователь не найден!');
+                    return;
+                }
+                
+                let userData = null;
+                let userId = null;
+                
+                snapshot.forEach(child => {
+                    if (child.val().password === password) {
+                        userData = child.val();
+                        userId = child.key;
+                    }
+                });
+                
+                if (!userData) {
+                    alert('Неверный пароль!');
+                    return;
+                }
+                
+                currentUser = { id: userId, ...userData };
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                document.getElementById('auth-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
+                updateUserInfo();
+                loadPosts();
+                loadHazards();
+                updateDangerLevel();
+                
+            } catch (error) {
+                console.error('Ошибка входа:', error);
+                alert('Ошибка входа');
+            }
+        };
+
+        window.logout = function() {
+            currentUser = null;
+            localStorage.removeItem('currentUser');
+            document.getElementById('main-screen').classList.remove('active');
+            document.getElementById('auth-screen').classList.add('active');
+        };
+
+        function updateUserInfo() {
+            if (!currentUser) return;
+            
+            document.getElementById('user-name').textContent = currentUser.username;
+            document.getElementById('user-status').textContent = currentUser.status || 'В пещере';
+            
+            const avatars = {
+                'caveman1': '👨',
+                'caveman2': '👩',
+                'shaman': '🧙',
+                'warrior': '⚔️',
+                'hunter': '🏹'
+            };
+            
+            document.getElementById('user-avatar').textContent = avatars[currentUser.avatar] || '👨';
+            document.getElementById('settings-avatar').value = currentUser.avatar || 'caveman1';
+            document.getElementById('settings-status').value = currentUser.status || '';
+        }
+
+        window.createPost = async function() {
+            if (!currentUser) return;
+            
+            const content = document.getElementById('new-post').value;
+            if (!content.trim()) {
+                alert('Напишите что-нибудь!');
+                return;
+            }
+            
+            try {
+                const postsRef = database.ref('posts');
+                const newPost = {
+                    userId: currentUser.id,
+                    username: currentUser.username,
+                    avatar: currentUser.avatar,
+                    content: content,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    hazardLevel: Math.floor(Math.random() * 5)
+                };
+                
+                await postsRef.push(newPost);
+                document.getElementById('new-post').value = '';
+                loadPosts();
+                updateDangerLevel();
+                
+            } catch (error) {
+                console.error('Ошибка создания поста:', error);
+                alert('Ошибка создания поста');
+            }
+        };
+
+        async function loadPosts() {
+            try {
+                const postsRef = database.ref('posts');
+                const snapshot = await postsRef.orderByChild('timestamp').limitToLast(20).once('value');
+                
+                const container = document.getElementById('posts-container');
+                container.innerHTML = '';
+                
+                const posts = [];
+                snapshot.forEach(child => {
+                    posts.push({ id: child.key, ...child.val() });
+                });
+                
+                posts.reverse().forEach(post => {
+                    const postElement = createPostElement(post);
+                    container.appendChild(postElement);
+                });
+                
+            } catch (error) {
+                console.error('Ошибка загрузки постов:', error);
+            }
+        }
+
+        function createPostElement(post) {
+            const div = document.createElement('div');
+            div.className = 'post';
+            
+            const avatars = {
+                'caveman1': '👨',
+                'caveman2': '👩',
+                'shaman': '🧙',
+                'warrior': '⚔️',
+                'hunter': '🏹'
+            };
+            
+            const date = new Date(post.timestamp).toLocaleString();
+            const hazardEmoji = post.hazardLevel > 2 ? '🔥' : '⚠️';
+            
+            div.innerHTML = `
+                <div class="post-header">
+                    <span class="post-avatar">${avatars[post.avatar] || '👨'}</span>
+                    <div class="post-info">
+                        <span class="post-author">${post.username}</span>
+                        <span class="post-time">${date}</span>
+                    </div>
+                </div>
+                <div class="post-content">
+                    ${post.content}
+                    ${post.hazardLevel > 0 ? `<br><small>${hazardEmoji} Опасность уровня ${post.hazardLevel}</small>` : ''}
+                </div>
+                <div class="post-actions">
+                    <button onclick="likePost('${post.id}')">👍 ${post.likes || 0}</button>
+                    ${currentUser && (currentUser.id === post.userId || currentUser.isAdmin) ? 
+                        `<button onclick="deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                </div>
+            `;
+            
+            return div;
+        }
+
+        window.likePost = async function(postId) {
+            if (!currentUser) return;
+            
+            try {
+                const postRef = database.ref(`posts/${postId}/likes`);
+                const snapshot = await postRef.once('value');
+                const currentLikes = snapshot.val() || 0;
+                await postRef.set(currentLikes + 1);
+                loadPosts();
+            } catch (error) {
+                console.error('Ошибка лайка:', error);
+            }
+        };
+
+        window.deletePost = async function(postId) {
+            if (!currentUser || !confirm('Удалить запись?')) return;
+            
+            try {
+                await database.ref(`posts/${postId}`).remove();
+                loadPosts();
+            } catch (error) {
+                console.error('Ошибка удаления:', error);
+            }
+        };
+
+        async function loadHazards() {
+            try {
+                const hazardsRef = database.ref('hazards');
+                const snapshot = await hazardsRef.limitToLast(5).once('value');
+                
+                const list = document.getElementById('hazards-list');
+                list.innerHTML = '';
+                
+                if (snapshot.exists()) {
+                    snapshot.forEach(child => {
+                        const hazard = child.val();
+                        const li = document.createElement('li');
+                        li.textContent = hazard.text;
+                        list.appendChild(li);
+                    });
+                } else {
+                    const defaultHazards = [
+                        '🐻 Медведь в 3 пещере',
+                        '🔥 Обвал камней',
+                        '🌊 Подземная река'
+                    ];
+                    defaultHazards.forEach(h => {
+                        const li = document.createElement('li');
+                        li.textContent = h;
+                        list.appendChild(li);
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Ошибка загрузки опасностей:', error);
+            }
+        }
+
+        window.addHazard = async function() {
+            const adminPass = document.getElementById('admin-password').value;
+            if (adminPass !== ADMIN_PASSWORD) {
+                alert('Неверный пароль администратора!');
+                return;
+            }
+            
+            const hazardText = document.getElementById('new-hazard').value;
+            if (!hazardText) return;
+            
+            try {
+                const hazardsRef = database.ref('hazards');
+                await hazardsRef.push({
+                    text: hazardText,
+                    createdBy: currentUser?.id || 'admin',
+                    timestamp: new Date().toISOString()
+                });
+                
+                document.getElementById('new-hazard').value = '';
+                loadHazards();
+                updateDangerLevel();
+                
+            } catch (error) {
+                console.error('Ошибка добавления опасности:', error);
+            }
+        };
+
+        function updateDangerLevel() {
+            const meter = document.querySelector('.meter-fill');
+            const dangerText = document.getElementById('danger-text');
+            if (meter && dangerText) {
+                const randomLevel = Math.floor(Math.random() * 100);
+                meter.style.width = randomLevel + '%';
+                const randomPhrase = dangerPhrases[Math.floor(Math.random() * dangerPhrases.length)];
+                dangerText.textContent = `${randomLevel}% - ${randomPhrase}`;
+            }
+        }
+
+        window.updateProfile = async function() {
+            if (!currentUser) return;
+            
+            const newAvatar = document.getElementById('settings-avatar').value;
+            const newStatus = document.getElementById('settings-status').value;
+            
+            try {
+                await database.ref(`users/${currentUser.id}`).update({
+                    avatar: newAvatar,
+                    status: newStatus
+                });
+                
+                currentUser.avatar = newAvatar;
+                currentUser.status = newStatus;
+                localStorage.setItem('currentUser', JSON.stringify(currentUser));
+                
+                updateUserInfo();
+                alert('Профиль обновлен!');
+                
+            } catch (error) {
+                console.error('Ошибка обновления профиля:', error);
+            }
+        };
+
+        window.deleteUser = async function() {
+            const adminPass = document.getElementById('admin-password').value;
+            if (adminPass !== ADMIN_PASSWORD) {
+                alert('Неверный пароль администратора!');
+                return;
+            }
+            
+            const userId = document.getElementById('delete-user-id').value;
+            if (!userId) return;
+            
+            if (confirm('Точно удалить этого пещерного жителя?')) {
+                try {
+                    await database.ref(`users/${userId}`).remove();
+                    
+                    const postsRef = database.ref('posts');
+                    const snapshot = await postsRef.orderByChild('userId').equalTo(userId).once('value');
+                    const deletions = [];
+                    snapshot.forEach(child => {
+                        deletions.push(child.ref.remove());
+                    });
+                    await Promise.all(deletions);
+                    
+                    document.getElementById('delete-user-id').value = '';
+                    updateAdminStats();
+                    alert('Пользователь удален!');
+                    
+                } catch (error) {
+                    console.error('Ошибка удаления пользователя:', error);
+                }
+            }
+        };
+
+        window.makeAnnouncement = async function() {
+            const adminPass = document.getElementById('admin-password').value;
+            if (adminPass !== ADMIN_PASSWORD) {
+                alert('Неверный пароль администратора!');
+                return;
+            }
+            
+            const announcement = document.getElementById('admin-announcement').value;
+            if (!announcement) return;
+            
+            try {
+                const postsRef = database.ref('posts');
+                await postsRef.push({
+                    userId: 'admin',
+                    username: '🪨 Шаман племени',
+                    avatar: 'shaman',
+                    content: `🔊 ОБЪЯВЛЕНИЕ: ${announcement}`,
+                    timestamp: new Date().toISOString(),
+                    likes: 0,
+                    isAnnouncement: true
+                });
+                
+                document.getElementById('admin-announcement').value = '';
+                loadPosts();
+                
+            } catch (error) {
+                console.error('Ошибка создания объявления:', error);
+            }
+        };
+
+        async function updateAdminStats() {
+            try {
+                const usersSnapshot = await database.ref('users').once('value');
+                const postsSnapshot = await database.ref('posts').once('value');
+                
+                document.getElementById('user-count').textContent = `Жителей: ${usersSnapshot.size || 0}`;
+                document.getElementById('post-count').textContent = `Записей: ${postsSnapshot.size || 0}`;
+                
+            } catch (error) {
+                console.error('Ошибка загрузки статистики:', error);
+            }
+        }
+
+        // Обработка админ-пароля
+        document.addEventListener('DOMContentLoaded', function() {
+            const adminPassInput = document.getElementById('admin-password');
+            if (adminPassInput) {
+                adminPassInput.addEventListener('input', function(e) {
+                    if (e.target.value === ADMIN_PASSWORD && currentUser) {
+                        currentUser.isAdmin = true;
+                        document.getElementById('admin-section').style.display = 'block';
+                        updateAdminStats();
+                    } else if (currentUser) {
+                        currentUser.isAdmin = false;
+                        document.getElementById('admin-section').style.display = 'none';
+                    }
+                });
+            }
+
+            // Проверка сохраненной сессии
+            const savedUser = localStorage.getItem('currentUser');
+            if (savedUser) {
+                currentUser = JSON.parse(savedUser);
+                document.getElementById('auth-screen').classList.remove('active');
+                document.getElementById('main-screen').classList.add('active');
+                updateUserInfo();
+                loadPosts();
+                loadHazards();
+            }
+            
+            // Запускаем обновление опасностей каждые 30 секунд
+            setInterval(() => {
+                if (document.getElementById('main-screen').classList.contains('active')) {
+                    updateDangerLevel();
+                    loadHazards();
+                }
+            }, 30000);
+        });
+    </script>
 </body>
 </html>
-
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'Courier New', monospace;
-}
-
-body {
-    overflow: hidden;
-    color: #e0d3b5;
-}
-
-.cave-bg {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: linear-gradient(135deg, #2a1e0f 0%, #3d2e1a 50%, #1a1308 100%);
-    background-image: 
-        radial-gradient(circle at 10% 20%, rgba(100, 70, 40, 0.3) 0%, transparent 30%),
-        radial-gradient(circle at 90% 70%, rgba(80, 50, 20, 0.4) 0%, transparent 40%),
-        repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px);
-    z-index: -1;
-}
-
-#app {
-    position: relative;
-    width: 100vw;
-    height: 100vh;
-    overflow: hidden;
-}
-
-.screen {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: none;
-    padding: 20px;
-    overflow-y: auto;
-}
-
-.screen.active {
-    display: block;
-}
-
-/* Экран входа */
-.cave-entrance {
-    max-width: 400px;
-    margin: 100px auto;
-    padding: 30px;
-    background: rgba(30, 20, 10, 0.8);
-    border: 3px solid #8b6e4b;
-    border-radius: 15px 15px 15px 15px;
-    box-shadow: 0 0 30px rgba(255, 140, 0, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
-    text-align: center;
-    backdrop-filter: blur(5px);
-}
-
-.glow-text {
-    font-size: 3em;
-    color: #ff9900;
-    text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300;
-    letter-spacing: 5px;
-    margin-bottom: 10px;
-}
-
-.subtitle {
-    color: #b89a7a;
-    margin-bottom: 30px;
-    font-style: italic;
-}
-
-.auth-tabs {
-    display: flex;
-    margin-bottom: 20px;
-    border-bottom: 1px solid #6b4f35;
-}
-
-.tab-btn {
-    flex: 1;
-    padding: 10px;
-    background: none;
-    border: none;
-    color: #a78e6f;
-    font-size: 1.2em;
-    cursor: pointer;
-    transition: all 0.3s;
-}
-
-.tab-btn.active {
-    color: #ff9900;
-    border-bottom: 2px solid #ff9900;
-}
-
-.auth-form {
-    display: none;
-}
-
-.auth-form.active {
-    display: block;
-}
-
-.auth-form input,
-.auth-form select {
-    width: 100%;
-    padding: 12px;
-    margin: 10px 0;
-    background: rgba(10, 5, 0, 0.7);
-    border: 1px solid #6b4f35;
-    color: #e0d3b5;
-    border-radius: 5px;
-}
-
-.cave-btn {
-    background: #6b4f35;
-    border: 2px solid #b87c4b;
-    color: #ffd700;
-    padding: 12px 30px;
-    font-size: 1.2em;
-    cursor: pointer;
-    transition: all 0.3s;
-    border-radius: 8px;
-    text-transform: uppercase;
-    letter-spacing: 2px;
-}
-
-.cave-btn:hover {
-    background: #8b6e4b;
-    border-color: #ff9900;
-    box-shadow: 0 0 15px #ff6600;
-}
-
-.cave-btn.small {
-    padding: 8px 15px;
-    font-size: 0.9em;
-}
-
-.cave-btn.danger {
-    background: #4a1a1a;
-    border-color: #8b0000;
-}
-
-/* Основной экран */
-.header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 20px;
-    background: rgba(20, 10, 0, 0.9);
-    border-bottom: 2px solid #b87c4b;
-    margin-bottom: 20px;
-}
-
-.cave-title {
-    color: #ff9900;
-    text-shadow: 0 0 5px #ff6600;
-}
-
-.icon-btn {
-    background: none;
-    border: none;
-    font-size: 1.5em;
-    cursor: pointer;
-    margin-left: 10px;
-    filter: drop-shadow(0 0 5px #ff6600);
-}
-
-.content {
-    display: grid;
-    grid-template-columns: 250px 1fr 250px;
-    gap: 20px;
-    height: calc(100vh - 100px);
-}
-
-/* Левая колонка */
-.left-sidebar {
-    background: rgba(20, 10, 0, 0.8);
-    border: 1px solid #6b4f35;
-    padding: 15px;
-    border-radius: 10px;
-}
-
-.profile-card {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.avatar {
-    font-size: 5em;
-    margin: 10px 0;
-    filter: drop-shadow(0 0 10px #ff6600);
-}
-
-.danger-meter {
-    background: rgba(0,0,0,0.3);
-    padding: 10px;
-    border-radius: 5px;
-}
-
-.meter {
-    height: 20px;
-    background: #2a1e0f;
-    border: 1px solid #6b4f35;
-    margin: 10px 0;
-}
-
-.meter-fill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, #ff9900, #ff3300);
-    transition: width 0.3s;
-}
-
-/* Центральная лента */
-.feed {
-    background: rgba(20, 10, 0, 0.7);
-    border: 1px solid #6b4f35;
-    padding: 15px;
-    border-radius: 10px;
-    overflow-y: auto;
-}
-
-.post-creator {
-    margin-bottom: 20px;
-}
-
-.post-creator textarea {
-    width: 100%;
-    height: 80px;
-    padding: 10px;
-    background: rgba(0,0,0,0.5);
-    border: 1px solid #6b4f35;
-    color: #e0d3b5;
-    resize: none;
-    margin-bottom: 10px;
-}
-
-.post {
-    background: rgba(30, 20, 10, 0.9);
-    border: 1px solid #8b6e4b;
-    padding: 15px;
-    margin-bottom: 15px;
-    border-radius: 8px;
-}
-
-.post-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 10px;
-}
-
-.post-avatar {
-    font-size: 2em;
-    margin-right: 10px;
-}
-
-.post-info {
-    flex: 1;
-}
-
-.post-author {
-    font-weight: bold;
-    color: #ff9900;
-}
-
-.post-time {
-    font-size: 0.8em;
-    color: #6b4f35;
-}
-
-.post-content {
-    margin-bottom: 10px;
-    line-height: 1.5;
-}
-
-.post-actions {
-    display: flex;
-    gap: 10px;
-}
-
-.post-actions button {
-    background: none;
-    border: 1px solid #6b4f35;
-    color: #b89a7a;
-    padding: 5px 10px;
-    cursor: pointer;
-}
-
-/* Правая колонка */
-.right-sidebar {
-    background: rgba(20, 10, 0, 0.8);
-    border: 1px solid #6b4f35;
-    padding: 15px;
-    border-radius: 10px;
-}
-
-.hazards-list ul {
-    list-style: none;
-}
-
-.hazards-list li {
-    padding: 8px;
-    margin: 5px 0;
-    background: rgba(139, 0, 0, 0.2);
-    border-left: 3px solid #ff3300;
-}
-
-/* Настройки */
-.settings-panel {
-    max-width: 600px;
-    margin: 50px auto;
-    padding: 30px;
-    background: rgba(20, 10, 0, 0.95);
-    border: 3px solid #8b6e4b;
-    border-radius: 15px;
-}
-
-.settings-section {
-    margin: 20px 0;
-    padding: 15px;
-    background: rgba(0,0,0,0.3);
-    border: 1px solid #6b4f35;
-}
-
-.admin-section {
-    border-color: #ff9900;
-    background: rgba(255, 100, 0, 0.1);
-}
-
-.admin-section h3 {
-    color: #ff9900;
-}
-
-/* Скроллбар */
-::-webkit-scrollbar {
-    width: 10px;
-}
-
-::-webkit-scrollbar-track {
-    background: #2a1e0f;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #6b4f35;
-    border-radius: 5px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #8b6e4b;
-}
