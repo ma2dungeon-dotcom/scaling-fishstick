@@ -3,32 +3,71 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Грот | Пещерная социальная сеть</title>
+    <title>Пещерная сеть | Грот</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <style>
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            font-family: 'Courier New', monospace;
+            font-family: 'Segoe UI', 'Courier New', monospace;
         }
 
         body {
             overflow: hidden;
-            color: #e0d3b5;
+            color: #e8dcc0;
         }
 
+        /* Анимированный фон пещеры */
         .cave-bg {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: linear-gradient(135deg, #2a1e0f 0%, #3d2e1a 50%, #1a1308 100%);
+            background: radial-gradient(ellipse at 20% 30%, #3d2e1a, #1a1208);
             background-image: 
-                radial-gradient(circle at 10% 20%, rgba(100, 70, 40, 0.3) 0%, transparent 30%),
-                radial-gradient(circle at 90% 70%, rgba(80, 50, 20, 0.4) 0%, transparent 40%),
-                repeating-linear-gradient(45deg, rgba(0,0,0,0.1) 0px, rgba(0,0,0,0.1) 2px, transparent 2px, transparent 4px);
+                radial-gradient(circle at 10% 20%, rgba(180, 130, 70, 0.15) 0%, transparent 30%),
+                radial-gradient(circle at 90% 70%, rgba(140, 90, 40, 0.2) 0%, transparent 40%),
+                repeating-linear-gradient(45deg, rgba(0,0,0,0.2) 0px, rgba(0,0,0,0.2) 2px, transparent 2px, transparent 6px);
             z-index: -1;
+            animation: caveFlicker 8s infinite alternate;
+        }
+
+        @keyframes caveFlicker {
+            0% { opacity: 1; filter: brightness(1); }
+            50% { opacity: 0.95; filter: brightness(1.05); }
+            100% { opacity: 1; filter: brightness(1); }
+        }
+
+        /* Логотип с эффектом свечения */
+        .logo {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            font-size: 4em;
+            filter: drop-shadow(0 0 15px #ff9900);
+            animation: glow 2s ease-in-out infinite alternate;
+        }
+
+        .logo-text {
+            font-size: 3.5em;
+            font-weight: bold;
+            background: linear-gradient(45deg, #ff9900, #ff6600, #ff3300);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-shadow: 0 0 20px rgba(255, 100, 0, 0.5);
+            letter-spacing: 5px;
+        }
+
+        @keyframes glow {
+            from { filter: drop-shadow(0 0 5px #ff9900); }
+            to { filter: drop-shadow(0 0 20px #ff3300); }
         }
 
         #app {
@@ -47,309 +86,564 @@
             display: none;
             padding: 20px;
             overflow-y: auto;
+            backdrop-filter: blur(3px);
         }
 
         .screen.active {
             display: block;
         }
 
+        /* Стили для входа */
         .cave-entrance {
-            max-width: 400px;
-            margin: 100px auto;
-            padding: 30px;
-            background: rgba(30, 20, 10, 0.8);
-            border: 3px solid #8b6e4b;
-            border-radius: 15px;
-            box-shadow: 0 0 30px rgba(255, 140, 0, 0.2), inset 0 0 20px rgba(0,0,0,0.5);
+            max-width: 450px;
+            margin: 80px auto;
+            padding: 40px;
+            background: rgba(20, 12, 5, 0.9);
+            border: 3px solid #b87c4b;
+            border-radius: 30px 30px 30px 30px;
+            box-shadow: 0 0 50px rgba(255, 100, 0, 0.3), inset 0 0 30px rgba(255, 140, 0, 0.2);
             text-align: center;
-            backdrop-filter: blur(5px);
+            backdrop-filter: blur(10px);
+            animation: entranceAppear 0.8s ease-out;
         }
 
-        .glow-text {
-            font-size: 3em;
-            color: #ff9900;
-            text-shadow: 0 0 10px #ff6600, 0 0 20px #ff3300;
-            letter-spacing: 5px;
-            margin-bottom: 10px;
-        }
-
-        .subtitle {
-            color: #b89a7a;
-            margin-bottom: 30px;
-            font-style: italic;
+        @keyframes entranceAppear {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
         }
 
         .auth-tabs {
             display: flex;
-            margin-bottom: 20px;
-            border-bottom: 1px solid #6b4f35;
+            margin: 30px 0 20px;
+            border-bottom: 2px solid #8b6e4b;
+            gap: 10px;
         }
 
         .tab-btn {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             background: none;
             border: none;
-            color: #a78e6f;
+            color: #c0a57a;
             font-size: 1.2em;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
+            position: relative;
         }
 
         .tab-btn.active {
-            color: #ff9900;
-            border-bottom: 2px solid #ff9900;
+            color: #ffaa33;
+        }
+
+        .tab-btn.active::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, #ffaa33, #ff6600, #ffaa33, transparent);
+            animation: tabGlow 2s infinite;
+        }
+
+        @keyframes tabGlow {
+            0% { opacity: 0.5; }
+            50% { opacity: 1; }
+            100% { opacity: 0.5; }
         }
 
         .auth-form {
             display: none;
+            animation: formFade 0.5s;
         }
 
         .auth-form.active {
             display: block;
         }
 
+        @keyframes formFade {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
         .auth-form input,
         .auth-form select {
             width: 100%;
-            padding: 12px;
+            padding: 15px;
             margin: 10px 0;
-            background: rgba(10, 5, 0, 0.7);
-            border: 1px solid #6b4f35;
-            color: #e0d3b5;
-            border-radius: 5px;
+            background: rgba(40, 25, 10, 0.8);
+            border: 2px solid #8b6e4b;
+            color: #ffdd99;
+            border-radius: 12px;
+            font-size: 1.1em;
+            transition: all 0.3s;
+        }
+
+        .auth-form input:focus,
+        .auth-form select:focus {
+            border-color: #ff9900;
+            box-shadow: 0 0 15px #ff9900;
+            outline: none;
         }
 
         .cave-btn {
-            background: #6b4f35;
-            border: 2px solid #b87c4b;
-            color: #ffd700;
-            padding: 12px 30px;
-            font-size: 1.2em;
+            background: linear-gradient(135deg, #8b6e4b, #5a3e2b);
+            border: 2px solid #d4a373;
+            color: #ffecb3;
+            padding: 15px 40px;
+            font-size: 1.3em;
+            font-weight: bold;
             cursor: pointer;
             transition: all 0.3s;
-            border-radius: 8px;
+            border-radius: 15px;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
         }
 
         .cave-btn:hover {
-            background: #8b6e4b;
-            border-color: #ff9900;
-            box-shadow: 0 0 15px #ff6600;
+            background: linear-gradient(135deg, #a7865f, #6b4f35);
+            border-color: #ffb347;
+            box-shadow: 0 0 25px #ff6600;
+            transform: scale(1.05);
         }
 
         .cave-btn.small {
-            padding: 8px 15px;
-            font-size: 0.9em;
+            padding: 10px 20px;
+            font-size: 1em;
+            letter-spacing: 1px;
         }
 
         .cave-btn.danger {
-            background: #4a1a1a;
-            border-color: #8b0000;
+            background: linear-gradient(135deg, #8b0000, #4a0000);
+            border-color: #ff6b6b;
         }
 
+        /* Основной хедер */
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 10px 20px;
-            background: rgba(20, 10, 0, 0.9);
-            border-bottom: 2px solid #b87c4b;
+            padding: 15px 30px;
+            background: rgba(10, 5, 0, 0.85);
+            border-bottom: 3px solid #ff8c00;
+            border-radius: 0 0 20px 20px;
+            box-shadow: 0 5px 20px rgba(255, 100, 0, 0.2);
             margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .mini-logo {
+            font-size: 2em;
+            filter: drop-shadow(0 0 8px #ff9900);
         }
 
         .cave-title {
-            color: #ff9900;
-            text-shadow: 0 0 5px #ff6600;
+            font-size: 2em;
+            background: linear-gradient(45deg, #ffaa33, #ff8833);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 15px;
         }
 
         .icon-btn {
-            background: none;
-            border: none;
-            font-size: 1.5em;
+            background: rgba(40, 25, 5, 0.8);
+            border: 2px solid #b87c4b;
+            font-size: 1.8em;
             cursor: pointer;
-            margin-left: 10px;
-            filter: drop-shadow(0 0 5px #ff6600);
+            padding: 10px;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+            color: #ffaa33;
         }
 
+        .icon-btn:hover {
+            border-color: #ffaa33;
+            box-shadow: 0 0 20px #ff6600;
+            transform: rotate(15deg) scale(1.1);
+        }
+
+        /* Основной контент */
         .content {
             display: grid;
-            grid-template-columns: 250px 1fr 250px;
+            grid-template-columns: 280px 1fr 280px;
             gap: 20px;
-            height: calc(100vh - 100px);
+            height: calc(100vh - 120px);
         }
 
-        .left-sidebar {
-            background: rgba(20, 10, 0, 0.8);
-            border: 1px solid #6b4f35;
-            padding: 15px;
-            border-radius: 10px;
+        /* Левая колонка */
+        .left-sidebar, .right-sidebar {
+            background: rgba(15, 8, 2, 0.8);
+            border: 2px solid #8b6e4b;
+            padding: 20px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
 
         .profile-card {
             text-align: center;
+            padding: 20px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 20px;
             margin-bottom: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .profile-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(255, 100, 0, 0.3);
         }
 
         .avatar {
-            font-size: 5em;
+            font-size: 6em;
             margin: 10px 0;
-            filter: drop-shadow(0 0 10px #ff6600);
+            filter: drop-shadow(0 0 15px #ff9900);
+            transition: all 0.3s;
+        }
+
+        .avatar:hover {
+            transform: scale(1.1);
+            filter: drop-shadow(0 0 25px #ff6600);
+        }
+
+        .user-info {
+            margin-top: 10px;
+        }
+
+        #user-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #ffaa33;
+        }
+
+        #user-status {
+            display: block;
+            color: #c0a57a;
+            font-style: italic;
+            margin-top: 5px;
         }
 
         .danger-meter {
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 5px;
+            background: rgba(0,0,0,0.4);
+            padding: 15px;
+            border-radius: 15px;
         }
 
         .meter {
             height: 20px;
-            background: #2a1e0f;
-            border: 1px solid #6b4f35;
+            background: #2a1a0a;
+            border: 2px solid #8b6e4b;
+            border-radius: 10px;
             margin: 10px 0;
+            overflow: hidden;
         }
 
         .meter-fill {
             height: 100%;
             width: 0%;
-            background: linear-gradient(90deg, #ff9900, #ff3300);
-            transition: width 0.3s;
+            background: linear-gradient(90deg, #ffaa33, #ff3300);
+            transition: width 0.5s ease-in-out;
+            border-radius: 10px;
         }
 
+        /* Лента */
         .feed {
-            background: rgba(20, 10, 0, 0.7);
-            border: 1px solid #6b4f35;
-            padding: 15px;
-            border-radius: 10px;
+            background: rgba(10, 5, 0, 0.7);
+            border: 2px solid #8b6e4b;
+            padding: 20px;
+            border-radius: 25px;
             overflow-y: auto;
+            backdrop-filter: blur(10px);
         }
 
         .post-creator {
+            background: rgba(30, 20, 5, 0.8);
+            padding: 20px;
+            border-radius: 20px;
             margin-bottom: 20px;
         }
 
         .post-creator textarea {
             width: 100%;
-            height: 80px;
-            padding: 10px;
+            height: 100px;
+            padding: 15px;
             background: rgba(0,0,0,0.5);
-            border: 1px solid #6b4f35;
-            color: #e0d3b5;
+            border: 2px solid #b87c4b;
+            color: #ffdd99;
+            border-radius: 15px;
             resize: none;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+
+        .post-creator textarea:focus {
+            border-color: #ff9900;
+            box-shadow: 0 0 15px #ff9900;
+            outline: none;
         }
 
         .post {
-            background: rgba(30, 20, 10, 0.9);
-            border: 1px solid #8b6e4b;
-            padding: 15px;
-            margin-bottom: 15px;
-            border-radius: 8px;
+            background: rgba(30, 18, 8, 0.9);
+            border: 2px solid #b87c4b;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.5);
+            transition: all 0.3s;
+        }
+
+        .post:hover {
+            transform: translateX(5px);
+            border-color: #ff9900;
+            box-shadow: 0 5px 25px rgba(255, 100, 0, 0.3);
         }
 
         .post-header {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
+            cursor: pointer;
         }
 
         .post-avatar {
-            font-size: 2em;
-            margin-right: 10px;
-        }
-
-        .post-info {
-            flex: 1;
+            font-size: 2.5em;
+            margin-right: 15px;
+            filter: drop-shadow(0 0 8px #ff9900);
         }
 
         .post-author {
+            font-size: 1.3em;
             font-weight: bold;
-            color: #ff9900;
+            color: #ffaa33;
         }
 
         .post-time {
-            font-size: 0.8em;
-            color: #6b4f35;
+            font-size: 0.9em;
+            color: #8b6e4b;
         }
 
         .post-content {
-            margin-bottom: 10px;
-            line-height: 1.5;
+            font-size: 1.2em;
+            line-height: 1.6;
+            margin-bottom: 15px;
         }
 
         .post-actions {
             display: flex;
-            gap: 10px;
+            gap: 15px;
         }
 
         .post-actions button {
-            background: none;
-            border: 1px solid #6b4f35;
-            color: #b89a7a;
-            padding: 5px 10px;
-            cursor: pointer;
-        }
-
-        .right-sidebar {
-            background: rgba(20, 10, 0, 0.8);
-            border: 1px solid #6b4f35;
-            padding: 15px;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #8b6e4b;
+            color: #d4a373;
+            padding: 8px 20px;
             border-radius: 10px;
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: all 0.3s;
         }
 
-        .hazards-list ul {
-            list-style: none;
+        .post-actions button:hover {
+            border-color: #ff9900;
+            color: #ffaa33;
+            transform: scale(1.05);
         }
 
-        .hazards-list li {
-            padding: 8px;
-            margin: 5px 0;
-            background: rgba(139, 0, 0, 0.2);
-            border-left: 3px solid #ff3300;
-        }
-
-        .settings-panel {
-            max-width: 600px;
-            margin: 50px auto;
+        /* Страница пользователя */
+        .user-page {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(15, 8, 2, 0.95);
+            border: 3px solid #b87c4b;
+            border-radius: 30px;
             padding: 30px;
-            background: rgba(20, 10, 0, 0.95);
-            border: 3px solid #8b6e4b;
+            backdrop-filter: blur(10px);
+        }
+
+        .user-header {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 2px solid #8b6e4b;
+        }
+
+        .user-avatar-large {
+            font-size: 8em;
+            filter: drop-shadow(0 0 20px #ff9900);
+        }
+
+        .user-details h1 {
+            font-size: 2.5em;
+            color: #ffaa33;
+            margin-bottom: 10px;
+        }
+
+        .user-details p {
+            font-size: 1.2em;
+            color: #c0a57a;
+            margin: 5px 0;
+        }
+
+        .back-btn {
+            background: none;
+            border: 2px solid #8b6e4b;
+            color: #ffaa33;
+            padding: 10px 25px;
             border-radius: 15px;
+            cursor: pointer;
+            font-size: 1.2em;
+            margin-bottom: 20px;
+        }
+
+        /* Админ панель */
+        .admin-section {
+            border: 3px solid #ff6600;
+            background: rgba(255, 100, 0, 0.15);
+            box-shadow: 0 0 30px rgba(255, 100, 0, 0.3);
+        }
+
+        .admin-panel {
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .user-card {
+            background: rgba(0,0,0,0.3);
+            border: 2px solid #8b6e4b;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 15px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .user-card-avatar {
+            font-size: 2.5em;
+        }
+
+        .user-card-info {
+            flex: 1;
+        }
+
+        .user-card-info h4 {
+            color: #ffaa33;
+            font-size: 1.2em;
+        }
+
+        .user-card-info p {
+            color: #c0a57a;
+            font-size: 0.9em;
+        }
+
+        .ban-btn {
+            background: #8b0000;
+            border: 2px solid #ff6b6b;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .ban-btn:hover {
+            background: #b30000;
+            box-shadow: 0 0 15px #ff0000;
+        }
+
+        /* Настройки */
+        .settings-panel {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 40px;
+            background: rgba(15, 8, 2, 0.95);
+            border: 3px solid #b87c4b;
+            border-radius: 40px;
+            backdrop-filter: blur(15px);
         }
 
         .settings-section {
-            margin: 20px 0;
-            padding: 15px;
+            margin: 25px 0;
+            padding: 25px;
             background: rgba(0,0,0,0.3);
-            border: 1px solid #6b4f35;
+            border: 2px solid #8b6e4b;
+            border-radius: 20px;
         }
 
-        .admin-section {
-            border-color: #ff9900;
-            background: rgba(255, 100, 0, 0.1);
+        .settings-section h3 {
+            color: #ffaa33;
+            margin-bottom: 20px;
+            font-size: 1.5em;
         }
 
-        .admin-section h3 {
-            color: #ff9900;
+        .settings-section label {
+            display: block;
+            color: #d4a373;
+            margin: 10px 0 5px;
         }
 
+        .settings-section input,
+        .settings-section select,
+        .settings-section textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 15px;
+            background: rgba(40, 25, 10, 0.8);
+            border: 2px solid #8b6e4b;
+            color: #ffdd99;
+            border-radius: 10px;
+        }
+
+        /* Скроллбар */
         ::-webkit-scrollbar {
-            width: 10px;
+            width: 12px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #2a1e0f;
+            background: #2a1a0a;
+            border-radius: 10px;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #6b4f35;
-            border-radius: 5px;
+            background: #8b6e4b;
+            border-radius: 10px;
+            border: 2px solid #5a3e2b;
         }
 
         ::-webkit-scrollbar-thumb:hover {
-            background: #8b6e4b;
+            background: #b87c4b;
+        }
+
+        /* Анимации */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .post, .user-card {
+            animation: fadeIn 0.5s ease-out;
         }
     </style>
 </head>
@@ -357,11 +651,15 @@
     <div class="cave-bg"></div>
     
     <div id="app">
-        <!-- Экран входа/регистрации -->
+        <!-- Экран входа -->
         <div id="auth-screen" class="screen active">
             <div class="cave-entrance">
-                <h1 class="glow-text">⚔️ ГРОТ ⚔️</h1>
-                <p class="subtitle">Социальная сеть пещерных людей</p>
+                <div class="logo">
+                    <span class="logo-icon">🪨</span>
+                    <span class="logo-text">ГРОТ</span>
+                    <span class="logo-icon">🔥</span>
+                </div>
+                <p class="subtitle">Социальная сеть древних людей</p>
                 
                 <div class="auth-tabs">
                     <button class="tab-btn active" onclick="showTab('login')">Вход</button>
@@ -378,40 +676,43 @@
                     <input type="text" id="reg-username" placeholder="Имя пещерного жителя">
                     <input type="password" id="reg-password" placeholder="Секретный код">
                     <select id="reg-avatar">
-                        <option value="caveman1">👨 Пещерный житель</option>
-                        <option value="caveman2">👩 Пещерная жительница</option>
+                        <option value="caveman1">👨 Охотник</option>
+                        <option value="caveman2">👩 Собирательница</option>
                         <option value="shaman">🧙 Шаман</option>
                         <option value="warrior">⚔️ Воин</option>
-                        <option value="hunter">🏹 Охотник</option>
+                        <option value="hunter">🏹 Следопыт</option>
                     </select>
                     <button onclick="register()" class="cave-btn">Поселиться в пещере</button>
                 </div>
             </div>
         </div>
 
-        <!-- Основной экран (лента) -->
+        <!-- Основной экран -->
         <div id="main-screen" class="screen">
             <div class="header">
-                <h2 class="cave-title">🏚️ Лента опасностей</h2>
+                <div class="header-left">
+                    <span class="mini-logo">🪨</span>
+                    <h2 class="cave-title">Лента опасностей</h2>
+                </div>
                 <div class="header-controls">
-                    <button onclick="showSettings()" class="icon-btn">⚙️</button>
-                    <button onclick="logout()" class="icon-btn">🚪</button>
+                    <button onclick="showSettings()" class="icon-btn"><i class="fas fa-cog"></i></button>
+                    <button onclick="logout()" class="icon-btn"><i class="fas fa-sign-out-alt"></i></button>
                 </div>
             </div>
 
             <div class="content">
-                <!-- Левая колонка - профиль -->
+                <!-- Левая колонка -->
                 <div class="left-sidebar">
-                    <div class="profile-card">
+                    <div class="profile-card" onclick="showUserPage(currentUser.id)">
                         <div class="avatar" id="user-avatar">👨</div>
                         <div class="user-info">
-                            <span id="user-name">Игрок</span>
-                            <small id="user-status">Онлайн в пещере</small>
+                            <span id="user-name">Загрузка...</span>
+                            <small id="user-status">В пещере</small>
                         </div>
                     </div>
                     
                     <div class="danger-meter">
-                        <h4>📊 Уровень опасности</h4>
+                        <h4><i class="fas fa-exclamation-triangle"></i> Уровень опасности</h4>
                         <div class="meter">
                             <div class="meter-fill" style="width: 75%"></div>
                         </div>
@@ -419,46 +720,52 @@
                     </div>
                 </div>
 
-                <!-- Центр - лента постов -->
+                <!-- Лента -->
                 <div class="feed">
                     <div class="post-creator">
-                        <textarea id="new-post" placeholder="Расскажи о своей опасности..."></textarea>
+                        <textarea id="new-post" placeholder="Расскажи о своей охоте или опасности..."></textarea>
                         <button onclick="createPost()" class="cave-btn small">🪨 Опубликовать</button>
                     </div>
                     
-                    <div id="posts-container" class="posts">
-                        <!-- Посты будут загружаться сюда -->
-                    </div>
+                    <div id="posts-container" class="posts"></div>
                 </div>
 
-                <!-- Правая колонка - опасности -->
+                <!-- Правая колонка -->
                 <div class="right-sidebar">
                     <div class="hazards-list">
-                        <h4>⚠️ Текущие опасности</h4>
-                        <ul id="hazards-list">
-                            <li>🐻 Медведь в 3 пещере</li>
-                            <li>🔥 Обвал камней</li>
-                            <li>🌊 Подземная река</li>
-                        </ul>
+                        <h4><i class="fas fa-skull-crossbones"></i> Текущие опасности</h4>
+                        <ul id="hazards-list"></ul>
+                    </div>
+                    <div class="online-users" style="margin-top: 20px;">
+                        <h4><i class="fas fa-users"></i> Жители пещеры</h4>
+                        <div id="online-users-list"></div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Экран настроек -->
+        <!-- Страница пользователя -->
+        <div id="user-page-screen" class="screen">
+            <div class="user-page">
+                <button onclick="showMainScreen()" class="back-btn"><i class="fas fa-arrow-left"></i> Вернуться</button>
+                <div id="user-page-content"></div>
+            </div>
+        </div>
+
+        <!-- Настройки -->
         <div id="settings-screen" class="screen">
             <div class="settings-panel">
-                <h2>⚙️ Настройки пещеры</h2>
+                <h2><i class="fas fa-cog"></i> Настройки пещеры</h2>
                 
                 <div class="settings-section">
-                    <h3>Профиль</h3>
+                    <h3><i class="fas fa-user"></i> Профиль</h3>
                     <label>Изменить аватар:</label>
                     <select id="settings-avatar">
-                        <option value="caveman1">👨 Пещерный житель</option>
-                        <option value="caveman2">👩 Пещерная жительница</option>
+                        <option value="caveman1">👨 Охотник</option>
+                        <option value="caveman2">👩 Собирательница</option>
                         <option value="shaman">🧙 Шаман</option>
                         <option value="warrior">⚔️ Воин</option>
-                        <option value="hunter">🏹 Охотник</option>
+                        <option value="hunter">🏹 Следопыт</option>
                     </select>
                     
                     <label>Статус:</label>
@@ -467,32 +774,33 @@
                     <button onclick="updateProfile()" class="cave-btn small">Сохранить</button>
                 </div>
 
-                <div class="settings-section admin-section" id="admin-section" style="display: none;">
-                    <h3>👑 Админ-меню (только для шаманов)</h3>
+                <div class="settings-section" id="admin-section" style="display: none;">
+                    <h3><i class="fas fa-crown"></i> Админ-панель шамана</h3>
                     
-                    <label>Пароль администратора:</label>
-                    <input type="password" id="admin-password" placeholder="Введите пароль">
+                    <label>🔑 Пароль администратора:</label>
+                    <input type="password" id="admin-password" placeholder="Введите ADMINHACKER">
                     
-                    <label>ID пользователя для удаления:</label>
-                    <input type="text" id="delete-user-id" placeholder="ID пользователя">
-                    <button onclick="deleteUser()" class="cave-btn small danger">Удалить пользователя</button>
-                    
-                    <label>Создать опасность:</label>
-                    <input type="text" id="new-hazard" placeholder="Новая опасность">
-                    <button onclick="addHazard()" class="cave-btn small">Добавить опасность</button>
-                    
-                    <label>Сделать объявление:</label>
-                    <textarea id="admin-announcement" placeholder="Объявление для всех..."></textarea>
-                    <button onclick="makeAnnouncement()" class="cave-btn small">Отправить</button>
-                    
-                    <div class="admin-stats">
-                        <h4>Статистика пещеры:</h4>
-                        <p id="user-count">Жителей: 0</p>
-                        <p id="post-count">Записей: 0</p>
+                    <div id="admin-panel-content" style="display: none;">
+                        <h4><i class="fas fa-users"></i> Все жители пещеры:</h4>
+                        <div class="admin-panel" id="users-list"></div>
+                        
+                        <h4 style="margin-top: 20px;"><i class="fas fa-exclamation-triangle"></i> Управление опасностями:</h4>
+                        <input type="text" id="new-hazard" placeholder="Новая опасность">
+                        <button onclick="addHazard()" class="cave-btn small">Добавить</button>
+                        
+                        <h4 style="margin-top: 20px;"><i class="fas fa-bullhorn"></i> Сделать объявление:</h4>
+                        <textarea id="admin-announcement" placeholder="Объявление для всех..." rows="3"></textarea>
+                        <button onclick="makeAnnouncement()" class="cave-btn small">Отправить</button>
+                        
+                        <div class="admin-stats" style="margin-top: 20px;">
+                            <h4>Статистика:</h4>
+                            <p id="user-count">Жителей: 0</p>
+                            <p id="post-count">Записей: 0</p>
+                        </div>
                     </div>
                 </div>
 
-                <button onclick="showMainScreen()" class="cave-btn">🔙 Вернуться в пещеру</button>
+                <button onclick="showMainScreen()" class="cave-btn"><i class="fas fa-home"></i> Вернуться</button>
             </div>
         </div>
     </div>
@@ -506,7 +814,6 @@
             databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com"
         };
 
-        // Инициализация Firebase
         firebase.initializeApp(firebaseConfig);
         const database = firebase.database();
 
@@ -514,60 +821,68 @@
         let currentUser = null;
         const ADMIN_PASSWORD = "ADMINHACKER";
         const dangerPhrases = [
-            "Медведь рядом!",
-            "Обвал камней!",
+            "Медведь шатун!",
+            "Обвал в северной пещере!",
             "Подземная река разлилась!",
-            "Стая волков близко!",
+            "Стая саблезубых волков!",
             "Землетрясение!",
             "Пещерный лев рычит!",
             "Ядовитые пауки!",
             "Голодный мамонт!",
-            "Соседи украли огонь!",
+            "Соседнее племя нападает!",
             "Сталагмиты падают!"
         ];
 
-        // Функции переключения экранов
+        // Переключение табов
         window.showTab = function(tabName) {
             document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
             document.querySelectorAll('.auth-form').forEach(form => form.classList.remove('active'));
             
             if (tabName === 'login') {
-                document.querySelector('.tab-btn:first-child').classList.add('active');
+                document.querySelectorAll('.tab-btn')[0].classList.add('active');
                 document.getElementById('login-form').classList.add('active');
             } else {
-                document.querySelector('.tab-btn:last-child').classList.add('active');
+                document.querySelectorAll('.tab-btn')[1].classList.add('active');
                 document.getElementById('register-form').classList.add('active');
             }
         };
 
-        window.showSettings = function() {
-            document.getElementById('main-screen').classList.remove('active');
-            document.getElementById('settings-screen').classList.add('active');
-            
-            const adminSection = document.getElementById('admin-section');
-            if (currentUser && currentUser.isAdmin) {
-                adminSection.style.display = 'block';
-                updateAdminStats();
-            } else {
-                adminSection.style.display = 'none';
-            }
-        };
-
+        // Навигация
         window.showMainScreen = function() {
-            document.getElementById('settings-screen').classList.remove('active');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('main-screen').classList.add('active');
             loadPosts();
             loadHazards();
+            loadOnlineUsers();
         };
 
-        // Аутентификация
+        window.showSettings = function() {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('settings-screen').classList.add('active');
+            updateUserInfo();
+            
+            // Сбрасываем админ-панель
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-panel-content').style.display = 'none';
+            document.getElementById('admin-section').style.display = 'block';
+        };
+
+        window.showUserPage = async function(userId) {
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+            document.getElementById('user-page-screen').classList.add('active');
+            
+            const userData = await loadUserData(userId);
+            displayUserPage(userData);
+        };
+
+        // Регистрация
         window.register = async function() {
             const username = document.getElementById('reg-username').value;
             const password = document.getElementById('reg-password').value;
             const avatar = document.getElementById('reg-avatar').value;
             
             if (!username || !password) {
-                alert('Заполните все поля!');
+                alert('❌ Заполни все поля, пещерный житель!');
                 return;
             }
             
@@ -576,7 +891,7 @@
                 const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
                 
                 if (snapshot.exists()) {
-                    alert('Такое имя уже существует в пещере!');
+                    alert('❌ Такое имя уже есть в пещере!');
                     return;
                 }
                 
@@ -584,9 +899,10 @@
                     username: username,
                     password: password,
                     avatar: avatar,
-                    status: 'Исследую пещеры',
+                    status: '🔍 Исследую пещеры',
                     isAdmin: false,
-                    createdAt: new Date().toISOString()
+                    createdAt: new Date().toISOString(),
+                    lastSeen: new Date().toISOString()
                 };
                 
                 const newUserRef = await usersRef.push(newUser);
@@ -594,26 +910,23 @@
                 
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                alert('Регистрация успешна! Добро пожаловать в пещеру!');
-                document.getElementById('auth-screen').classList.remove('active');
-                document.getElementById('main-screen').classList.add('active');
+                alert('✅ Добро пожаловать в пещеру!');
+                showMainScreen();
                 updateUserInfo();
-                loadPosts();
-                loadHazards();
-                updateDangerLevel();
                 
             } catch (error) {
-                console.error('Ошибка регистрации:', error);
+                console.error('Ошибка:', error);
                 alert('Ошибка регистрации');
             }
         };
 
+        // Вход
         window.login = async function() {
             const username = document.getElementById('login-username').value;
             const password = document.getElementById('login-password').value;
             
             if (!username || !password) {
-                alert('Введите имя и пароль!');
+                alert('❌ Введите имя и пароль!');
                 return;
             }
             
@@ -622,7 +935,7 @@
                 const snapshot = await usersRef.orderByChild('username').equalTo(username).once('value');
                 
                 if (!snapshot.exists()) {
-                    alert('Пользователь не найден!');
+                    alert('❌ Пользователь не найден!');
                     return;
                 }
                 
@@ -637,22 +950,22 @@
                 });
                 
                 if (!userData) {
-                    alert('Неверный пароль!');
+                    alert('❌ Неверный пароль!');
                     return;
                 }
                 
                 currentUser = { id: userId, ...userData };
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
-                document.getElementById('auth-screen').classList.remove('active');
-                document.getElementById('main-screen').classList.add('active');
+                await database.ref(`users/${userId}`).update({
+                    lastSeen: new Date().toISOString()
+                });
+                
+                showMainScreen();
                 updateUserInfo();
-                loadPosts();
-                loadHazards();
-                updateDangerLevel();
                 
             } catch (error) {
-                console.error('Ошибка входа:', error);
+                console.error('Ошибка:', error);
                 alert('Ошибка входа');
             }
         };
@@ -660,10 +973,11 @@
         window.logout = function() {
             currentUser = null;
             localStorage.removeItem('currentUser');
-            document.getElementById('main-screen').classList.remove('active');
+            document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
             document.getElementById('auth-screen').classList.add('active');
         };
 
+        // Обновление информации о пользователе
         function updateUserInfo() {
             if (!currentUser) return;
             
@@ -683,18 +997,72 @@
             document.getElementById('settings-status').value = currentUser.status || '';
         }
 
+        // Загрузка данных пользователя
+        async function loadUserData(userId) {
+            try {
+                const snapshot = await database.ref(`users/${userId}`).once('value');
+                return { id: userId, ...snapshot.val() };
+            } catch (error) {
+                console.error('Ошибка загрузки пользователя:', error);
+                return null;
+            }
+        }
+
+        // Отображение страницы пользователя
+        async function displayUserPage(userData) {
+            if (!userData) return;
+            
+            const avatars = {
+                'caveman1': '👨',
+                'caveman2': '👩',
+                'shaman': '🧙',
+                'warrior': '⚔️',
+                'hunter': '🏹'
+            };
+            
+            // Загружаем посты пользователя
+            const postsRef = database.ref('posts');
+            const snapshot = await postsRef.orderByChild('userId').equalTo(userData.id).limitToLast(10).once('value');
+            
+            let postsHtml = '';
+            snapshot.forEach(child => {
+                const post = child.val();
+                postsHtml += `
+                    <div class="post">
+                        <div class="post-content">${post.content}</div>
+                        <small>${new Date(post.timestamp).toLocaleString()}</small>
+                    </div>
+                `;
+            });
+            
+            document.getElementById('user-page-content').innerHTML = `
+                <div class="user-header">
+                    <span class="user-avatar-large">${avatars[userData.avatar] || '👨'}</span>
+                    <div class="user-details">
+                        <h1>${userData.username}</h1>
+                        <p><i class="fas fa-quote-right"></i> ${userData.status || 'Без статуса'}</p>
+                        <p><i class="fas fa-calendar"></i> В пещере с ${new Date(userData.createdAt).toLocaleDateString()}</p>
+                        <p><i class="fas fa-clock"></i> Последний раз: ${new Date(userData.lastSeen).toLocaleString()}</p>
+                    </div>
+                </div>
+                <h3>📜 Записи ${userData.username}:</h3>
+                ${postsHtml || '<p>Пока нет записей</p>'}
+            `;
+        }
+
+        // Создание поста
         window.createPost = async function() {
             if (!currentUser) return;
             
             const content = document.getElementById('new-post').value;
             if (!content.trim()) {
-                alert('Напишите что-нибудь!');
+                alert('Напиши что-нибудь!');
                 return;
             }
             
             try {
                 const postsRef = database.ref('posts');
-                const newPost = {
+                await postsRef.push({
                     userId: currentUser.id,
                     username: currentUser.username,
                     avatar: currentUser.avatar,
@@ -702,23 +1070,23 @@
                     timestamp: new Date().toISOString(),
                     likes: 0,
                     hazardLevel: Math.floor(Math.random() * 5)
-                };
+                });
                 
-                await postsRef.push(newPost);
                 document.getElementById('new-post').value = '';
                 loadPosts();
                 updateDangerLevel();
                 
             } catch (error) {
-                console.error('Ошибка создания поста:', error);
+                console.error('Ошибка:', error);
                 alert('Ошибка создания поста');
             }
         };
 
+        // Загрузка постов
         async function loadPosts() {
             try {
                 const postsRef = database.ref('posts');
-                const snapshot = await postsRef.orderByChild('timestamp').limitToLast(20).once('value');
+                const snapshot = await postsRef.orderByChild('timestamp').limitToLast(30).once('value');
                 
                 const container = document.getElementById('posts-container');
                 container.innerHTML = '';
@@ -729,8 +1097,7 @@
                 });
                 
                 posts.reverse().forEach(post => {
-                    const postElement = createPostElement(post);
-                    container.appendChild(postElement);
+                    container.appendChild(createPostElement(post));
                 });
                 
             } catch (error) {
@@ -738,6 +1105,7 @@
             }
         }
 
+        // Создание элемента поста
         function createPostElement(post) {
             const div = document.createElement('div');
             div.className = 'post';
@@ -751,24 +1119,23 @@
             };
             
             const date = new Date(post.timestamp).toLocaleString();
-            const hazardEmoji = post.hazardLevel > 2 ? '🔥' : '⚠️';
             
             div.innerHTML = `
-                <div class="post-header">
+                <div class="post-header" onclick="showUserPage('${post.userId}')">
                     <span class="post-avatar">${avatars[post.avatar] || '👨'}</span>
-                    <div class="post-info">
-                        <span class="post-author">${post.username}</span>
-                        <span class="post-time">${date}</span>
+                    <div>
+                        <div class="post-author">${post.username}</div>
+                        <div class="post-time">${date}</div>
                     </div>
                 </div>
                 <div class="post-content">
                     ${post.content}
-                    ${post.hazardLevel > 0 ? `<br><small>${hazardEmoji} Опасность уровня ${post.hazardLevel}</small>` : ''}
+                    ${post.hazardLevel > 0 ? `<br><small>⚠️ Уровень опасности: ${post.hazardLevel}/5</small>` : ''}
                 </div>
                 <div class="post-actions">
-                    <button onclick="likePost('${post.id}')">👍 ${post.likes || 0}</button>
+                    <button onclick="likePost('${post.id}')"><i class="fas fa-fire"></i> ${post.likes || 0}</button>
                     ${currentUser && (currentUser.id === post.userId || currentUser.isAdmin) ? 
-                        `<button onclick="deletePost('${post.id}')">🗑️ Удалить</button>` : ''}
+                        `<button onclick="deletePost('${post.id}')"><i class="fas fa-trash"></i> Удалить</button>` : ''}
                 </div>
             `;
             
@@ -781,11 +1148,10 @@
             try {
                 const postRef = database.ref(`posts/${postId}/likes`);
                 const snapshot = await postRef.once('value');
-                const currentLikes = snapshot.val() || 0;
-                await postRef.set(currentLikes + 1);
+                await postRef.set((snapshot.val() || 0) + 1);
                 loadPosts();
             } catch (error) {
-                console.error('Ошибка лайка:', error);
+                console.error('Ошибка:', error);
             }
         };
 
@@ -796,10 +1162,11 @@
                 await database.ref(`posts/${postId}`).remove();
                 loadPosts();
             } catch (error) {
-                console.error('Ошибка удаления:', error);
+                console.error('Ошибка:', error);
             }
         };
 
+        // Загрузка опасностей
         async function loadHazards() {
             try {
                 const hazardsRef = database.ref('hazards');
@@ -812,54 +1179,63 @@
                     snapshot.forEach(child => {
                         const hazard = child.val();
                         const li = document.createElement('li');
-                        li.textContent = hazard.text;
+                        li.innerHTML = `<i class="fas fa-skull"></i> ${hazard.text}`;
                         list.appendChild(li);
                     });
                 } else {
                     const defaultHazards = [
-                        '🐻 Медведь в 3 пещере',
-                        '🔥 Обвал камней',
-                        '🌊 Подземная река'
+                        '🐻 Медведь в северной пещере',
+                        '🔥 Обвал у входа',
+                        '🌊 Разлив подземной реки'
                     ];
                     defaultHazards.forEach(h => {
                         const li = document.createElement('li');
-                        li.textContent = h;
+                        li.innerHTML = h;
                         list.appendChild(li);
                     });
                 }
                 
             } catch (error) {
-                console.error('Ошибка загрузки опасностей:', error);
+                console.error('Ошибка:', error);
             }
         }
 
-        window.addHazard = async function() {
-            const adminPass = document.getElementById('admin-password').value;
-            if (adminPass !== ADMIN_PASSWORD) {
-                alert('Неверный пароль администратора!');
-                return;
-            }
-            
-            const hazardText = document.getElementById('new-hazard').value;
-            if (!hazardText) return;
-            
+        // Загрузка списка пользователей
+        async function loadOnlineUsers() {
             try {
-                const hazardsRef = database.ref('hazards');
-                await hazardsRef.push({
-                    text: hazardText,
-                    createdBy: currentUser?.id || 'admin',
-                    timestamp: new Date().toISOString()
+                const snapshot = await database.ref('users').once('value');
+                const list = document.getElementById('online-users-list');
+                list.innerHTML = '';
+                
+                const avatars = {
+                    'caveman1': '👨',
+                    'caveman2': '👩',
+                    'shaman': '🧙',
+                    'warrior': '⚔️',
+                    'hunter': '🏹'
+                };
+                
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    const isOnline = (new Date() - new Date(user.lastSeen)) < 600000; // 10 минут
+                    
+                    const userDiv = document.createElement('div');
+                    userDiv.style.cssText = 'display: flex; align-items: center; gap: 10px; padding: 8px; border-bottom: 1px solid #8b6e4b; cursor: pointer;';
+                    userDiv.onclick = () => showUserPage(child.key);
+                    userDiv.innerHTML = `
+                        <span style="font-size: 1.5em;">${avatars[user.avatar] || '👨'}</span>
+                        <span style="flex: 1; color: ${isOnline ? '#00ff00' : '#888'};">${user.username}</span>
+                        <span style="font-size: 0.8em;">${isOnline ? '🟢' : '⚫'}</span>
+                    `;
+                    list.appendChild(userDiv);
                 });
                 
-                document.getElementById('new-hazard').value = '';
-                loadHazards();
-                updateDangerLevel();
-                
             } catch (error) {
-                console.error('Ошибка добавления опасности:', error);
+                console.error('Ошибка:', error);
             }
-        };
+        }
 
+        // Обновление уровня опасности
         function updateDangerLevel() {
             const meter = document.querySelector('.meter-fill');
             const dangerText = document.getElementById('danger-text');
@@ -871,6 +1247,7 @@
             }
         }
 
+        // Обновление профиля
         window.updateProfile = async function() {
             if (!currentUser) return;
             
@@ -888,58 +1265,40 @@
                 localStorage.setItem('currentUser', JSON.stringify(currentUser));
                 
                 updateUserInfo();
-                alert('Профиль обновлен!');
+                alert('✅ Профиль обновлен!');
                 
             } catch (error) {
-                console.error('Ошибка обновления профиля:', error);
+                console.error('Ошибка:', error);
             }
         };
 
-        window.deleteUser = async function() {
-            const adminPass = document.getElementById('admin-password').value;
-            if (adminPass !== ADMIN_PASSWORD) {
-                alert('Неверный пароль администратора!');
-                return;
-            }
+        // Админ-функции
+        window.addHazard = async function() {
+            const hazardText = document.getElementById('new-hazard').value;
+            if (!hazardText) return;
             
-            const userId = document.getElementById('delete-user-id').value;
-            if (!userId) return;
-            
-            if (confirm('Точно удалить этого пещерного жителя?')) {
-                try {
-                    await database.ref(`users/${userId}`).remove();
-                    
-                    const postsRef = database.ref('posts');
-                    const snapshot = await postsRef.orderByChild('userId').equalTo(userId).once('value');
-                    const deletions = [];
-                    snapshot.forEach(child => {
-                        deletions.push(child.ref.remove());
-                    });
-                    await Promise.all(deletions);
-                    
-                    document.getElementById('delete-user-id').value = '';
-                    updateAdminStats();
-                    alert('Пользователь удален!');
-                    
-                } catch (error) {
-                    console.error('Ошибка удаления пользователя:', error);
-                }
+            try {
+                await database.ref('hazards').push({
+                    text: hazardText,
+                    createdBy: currentUser?.id || 'admin',
+                    timestamp: new Date().toISOString()
+                });
+                
+                document.getElementById('new-hazard').value = '';
+                loadHazards();
+                alert('✅ Опасность добавлена!');
+                
+            } catch (error) {
+                console.error('Ошибка:', error);
             }
         };
 
         window.makeAnnouncement = async function() {
-            const adminPass = document.getElementById('admin-password').value;
-            if (adminPass !== ADMIN_PASSWORD) {
-                alert('Неверный пароль администратора!');
-                return;
-            }
-            
             const announcement = document.getElementById('admin-announcement').value;
             if (!announcement) return;
             
             try {
-                const postsRef = database.ref('posts');
-                await postsRef.push({
+                await database.ref('posts').push({
                     userId: 'admin',
                     username: '🪨 Шаман племени',
                     avatar: 'shaman',
@@ -950,61 +1309,124 @@
                 });
                 
                 document.getElementById('admin-announcement').value = '';
-                loadPosts();
+                alert('✅ Объявление опубликовано!');
                 
             } catch (error) {
-                console.error('Ошибка создания объявления:', error);
+                console.error('Ошибка:', error);
             }
         };
 
-        async function updateAdminStats() {
+        window.banUser = async function(userId) {
+            if (!confirm('Точно изгнать этого жителя из пещеры?')) return;
+            
             try {
-                const usersSnapshot = await database.ref('users').once('value');
-                const postsSnapshot = await database.ref('posts').once('value');
+                // Удаляем пользователя
+                await database.ref(`users/${userId}`).remove();
                 
-                document.getElementById('user-count').textContent = `Жителей: ${usersSnapshot.size || 0}`;
-                document.getElementById('post-count').textContent = `Записей: ${postsSnapshot.size || 0}`;
+                // Удаляем все посты пользователя
+                const postsRef = database.ref('posts');
+                const snapshot = await postsRef.orderByChild('userId').equalTo(userId).once('value');
+                const deletions = [];
+                snapshot.forEach(child => {
+                    deletions.push(child.ref.remove());
+                });
+                await Promise.all(deletions);
+                
+                loadUsersList();
+                alert('✅ Житель изгнан!');
                 
             } catch (error) {
-                console.error('Ошибка загрузки статистики:', error);
+                console.error('Ошибка:', error);
+            }
+        };
+
+        // Загрузка списка пользователей для админа
+        async function loadUsersList() {
+            try {
+                const snapshot = await database.ref('users').once('value');
+                const list = document.getElementById('users-list');
+                list.innerHTML = '';
+                
+                const avatars = {
+                    'caveman1': '👨',
+                    'caveman2': '👩',
+                    'shaman': '🧙',
+                    'warrior': '⚔️',
+                    'hunter': '🏹'
+                };
+                
+                snapshot.forEach(child => {
+                    const user = child.val();
+                    const userCard = document.createElement('div');
+                    userCard.className = 'user-card';
+                    userCard.innerHTML = `
+                        <span class="user-card-avatar">${avatars[user.avatar] || '👨'}</span>
+                        <div class="user-card-info">
+                            <h4>${user.username}</h4>
+                            <p>${user.status || 'Нет статуса'}</p>
+                            <p><small>ID: ${child.key}</small></p>
+                        </div>
+                        ${child.key !== currentUser?.id ? 
+                            `<button class="ban-btn" onclick="banUser('${child.key}')"><i class="fas fa-ban"></i> Изгнать</button>` : 
+                            '<span style="color: #ffaa33;">👑 Это вы</span>'}
+                    `;
+                    list.appendChild(userCard);
+                });
+                
+                // Обновляем статистику
+                const postsSnapshot = await database.ref('posts').once('value');
+                document.getElementById('user-count').textContent = `Жителей: ${snapshot.size}`;
+                document.getElementById('post-count').textContent = `Записей: ${postsSnapshot.size}`;
+                
+            } catch (error) {
+                console.error('Ошибка загрузки пользователей:', error);
             }
         }
 
         // Обработка админ-пароля
-        document.addEventListener('DOMContentLoaded', function() {
-            const adminPassInput = document.getElementById('admin-password');
-            if (adminPassInput) {
-                adminPassInput.addEventListener('input', function(e) {
-                    if (e.target.value === ADMIN_PASSWORD && currentUser) {
-                        currentUser.isAdmin = true;
-                        document.getElementById('admin-section').style.display = 'block';
-                        updateAdminStats();
-                    } else if (currentUser) {
-                        currentUser.isAdmin = false;
-                        document.getElementById('admin-section').style.display = 'none';
-                    }
-                });
+        document.getElementById('admin-password').addEventListener('input', function(e) {
+            if (e.target.value === ADMIN_PASSWORD) {
+                document.getElementById('admin-panel-content').style.display = 'block';
+                currentUser.isAdmin = true;
+                loadUsersList();
+            } else {
+                document.getElementById('admin-panel-content').style.display = 'none';
+                currentUser.isAdmin = false;
             }
+        });
 
-            // Проверка сохраненной сессии
+        // Инициализация при загрузке
+        window.addEventListener('load', async () => {
             const savedUser = localStorage.getItem('currentUser');
             if (savedUser) {
                 currentUser = JSON.parse(savedUser);
-                document.getElementById('auth-screen').classList.remove('active');
-                document.getElementById('main-screen').classList.add('active');
-                updateUserInfo();
-                loadPosts();
-                loadHazards();
+                // Проверяем, существует ли пользователь в базе
+                try {
+                    const snapshot = await database.ref(`users/${currentUser.id}`).once('value');
+                    if (snapshot.exists()) {
+                        currentUser = { id: currentUser.id, ...snapshot.val() };
+                        showMainScreen();
+                        updateUserInfo();
+                    } else {
+                        localStorage.removeItem('currentUser');
+                        document.getElementById('auth-screen').classList.add('active');
+                    }
+                } catch {
+                    document.getElementById('auth-screen').classList.add('active');
+                }
+            } else {
+                document.getElementById('auth-screen').classList.add('active');
             }
             
-            // Запускаем обновление опасностей каждые 30 секунд
+            // Запускаем обновления
             setInterval(() => {
                 if (document.getElementById('main-screen').classList.contains('active')) {
                     updateDangerLevel();
                     loadHazards();
+                    loadOnlineUsers();
                 }
-            }, 30000);
+            }, 15000);
         });
     </script>
 </body>
-</html>
+    </html>
