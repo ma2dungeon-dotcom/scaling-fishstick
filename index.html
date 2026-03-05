@@ -3,1395 +3,155 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Пещерная Сеть · CavernBook</title>
-    <!-- Firebase -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', 'Caveat', cursive, system-ui;
-        }
-
-        /* Пещерный фон */
-        body {
-            min-height: 100vh;
-            background: #0a0c0e;
-            position: relative;
-            overflow-x: hidden;
-            color: #e8d5b5;
-        }
-
-        /* Сталактиты и сталагмиты */
-        .cave-ceiling {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 150px;
-            background: linear-gradient(180deg, #1a1c1e 0%, transparent 100%);
-            z-index: -1;
-        }
-
-        .stalactite {
-            position: fixed;
-            top: 0;
-            width: 40px;
-            height: 200px;
-            background: linear-gradient(180deg, #4a3e35 0%, #2a241f 100%);
-            clip-path: polygon(20% 0%, 80% 0%, 100% 100%, 0% 100%);
-            z-index: -1;
-            opacity: 0.6;
-            animation: drip 8s infinite;
-        }
-
-        .stalactite:nth-child(1) { left: 10%; height: 250px; width: 50px; }
-        .stalactite:nth-child(2) { left: 30%; height: 180px; width: 35px; animation-delay: -2s; }
-        .stalactite:nth-child(3) { left: 50%; height: 300px; width: 60px; animation-delay: -4s; }
-        .stalactite:nth-child(4) { left: 70%; height: 220px; width: 45px; animation-delay: -6s; }
-        .stalactite:nth-child(5) { left: 90%; height: 190px; width: 40px; animation-delay: -3s; }
-
-        .stalagmite {
-            position: fixed;
-            bottom: 0;
-            width: 40px;
-            height: 200px;
-            background: linear-gradient(0deg, #4a3e35 0%, #2a241f 100%);
-            clip-path: polygon(0% 0%, 100% 0%, 80% 100%, 20% 100%);
-            z-index: -1;
-            opacity: 0.6;
-            animation: grow 10s infinite;
-        }
-
-        .stalagmite:nth-child(6) { left: 20%; height: 180px; width: 45px; }
-        .stalagmite:nth-child(7) { left: 40%; height: 250px; width: 55px; animation-delay: -3s; }
-        .stalagmite:nth-child(8) { left: 60%; height: 200px; width: 40px; animation-delay: -5s; }
-        .stalagmite:nth-child(9) { left: 80%; height: 220px; width: 50px; animation-delay: -2s; }
-
-        /* Кристаллы */
-        .crystal {
-            position: fixed;
-            width: 30px;
-            height: 60px;
-            background: rgba(100, 200, 255, 0.3);
-            clip-path: polygon(50% 0%, 100% 30%, 80% 100%, 20% 100%, 0% 30%);
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5);
-            animation: glow 3s infinite;
-            z-index: -1;
-        }
-
-        .crystal:nth-child(10) { top: 30%; left: 15%; transform: rotate(15deg); animation-delay: -1s; }
-        .crystal:nth-child(11) { top: 60%; right: 10%; transform: rotate(-10deg); animation-delay: -2s; background: rgba(255, 100, 100, 0.3); box-shadow: 0 0 20px rgba(255, 100, 100, 0.5); }
-        .crystal:nth-child(12) { bottom: 20%; left: 5%; transform: rotate(45deg); animation-delay: -3s; background: rgba(200, 255, 100, 0.3); box-shadow: 0 0 20px rgba(200, 255, 100, 0.5); }
-
-        /* Туман */
-        .fog {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: radial-gradient(circle at 50% 50%, transparent 0%, rgba(10,20,10,0.3) 100%);
-            pointer-events: none;
-            z-index: -1;
-            animation: fogMove 20s infinite;
-        }
-
-        /* Шапка - пещерный вход */
-        .header {
-            background: linear-gradient(180deg, #2a241f 0%, #1a1410 100%);
-            border-bottom: 3px solid #8b6b4d;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 50px #3a2e24;
-            padding: 1rem 2rem;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            position: relative;
-            z-index: 10;
-        }
-
-        .header::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: repeating-linear-gradient(45deg, rgba(100,70,40,0.1) 0px, rgba(100,70,40,0.1) 10px, transparent 10px, transparent 20px);
-            pointer-events: none;
-        }
-
-        .logo {
-            font-size: 2.5rem;
-            font-weight: 800;
-            text-transform: uppercase;
-            background: linear-gradient(135deg, #ff9966, #cc6633);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 30px #ff6600, 0 0 60px #993300;
-            position: relative;
-            letter-spacing: 4px;
-        }
-
-        .logo::before {
-            content: '⛰️';
-            position: absolute;
-            left: -50px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            filter: drop-shadow(0 0 10px #ff6600);
-        }
-
-        .logo::after {
-            content: '💎';
-            position: absolute;
-            right: -50px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 2rem;
-            filter: drop-shadow(0 0 10px #00ffff);
-        }
-
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            background: #2a201a;
-            padding: 0.5rem 1.5rem;
-            border-radius: 50px;
-            border: 2px solid #b77b4a;
-            box-shadow: 0 0 30px #b77b4a;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .user-info:hover {
-            transform: scale(1.05);
-            border-color: #ffaa66;
-            box-shadow: 0 0 50px #ffaa66;
-        }
-
-        .user-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #8b6b4d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            border: 3px solid #ffaa66;
-        }
-
-        .user-name {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #ffd5aa;
-        }
-
-        .nav-buttons {
-            display: flex;
-            gap: 15px;
-        }
-
-        .nav-btn {
-            background: #332a24;
-            border: 2px solid #8b6b4d;
-            color: #ffd5aa;
-            padding: 0.8rem 1.5rem;
-            border-radius: 40px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.3s;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .nav-btn:hover {
-            border-color: #ffaa66;
-            box-shadow: 0 0 30px #ffaa66;
-            transform: translateY(-2px);
-        }
-
-        /* Основной контент */
-        .content {
-            display: flex;
-            padding: 2rem;
-            gap: 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        /* Левая колонка - профиль */
-        .left-column {
-            width: 300px;
-            background: rgba(20, 16, 12, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1.5rem;
-            box-shadow: 0 0 50px rgba(139, 107, 77, 0.3);
-            height: fit-content;
-        }
-
-        .profile-card {
-            text-align: center;
-        }
-
-        .profile-avatar-large {
-            width: 150px;
-            height: 150px;
-            border-radius: 50%;
-            background: #8b6b4d;
-            margin: 0 auto 1rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 4rem;
-            border: 4px solid #ffaa66;
-            box-shadow: 0 0 50px #ffaa66;
-        }
-
-        .profile-stats {
-            display: flex;
-            justify-content: space-around;
-            margin: 1.5rem 0;
-            padding: 1rem 0;
-            border-top: 2px solid #8b6b4d;
-            border-bottom: 2px solid #8b6b4d;
-        }
-
-        .stat {
-            text-align: center;
-        }
-
-        .stat-value {
-            font-size: 1.8rem;
-            font-weight: bold;
-            color: #ffaa66;
-        }
-
-        .stat-label {
-            font-size: 0.9rem;
-            color: #b99e7c;
-        }
-
-        /* Центральная колонка - лента */
-        .center-column {
-            flex: 1;
-            background: rgba(20, 16, 12, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1.5rem;
-            box-shadow: 0 0 50px rgba(139, 107, 77, 0.3);
-        }
-
-        .feed-tabs {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 1.5rem;
-            border-bottom: 2px solid #8b6b4d;
-            padding-bottom: 0.5rem;
-        }
-
-        .feed-tab {
-            padding: 0.5rem 1.5rem;
-            border-radius: 30px;
-            cursor: pointer;
-            transition: 0.3s;
-            font-weight: 600;
-        }
-
-        .feed-tab.active {
-            background: #8b6b4d;
-            color: white;
-        }
-
-        .feed-tab:hover {
-            background: #5a4a3a;
-        }
-
-        .post-creator {
-            display: flex;
-            gap: 1rem;
-            margin-bottom: 2rem;
-            padding-bottom: 1rem;
-            border-bottom: 2px solid #8b6b4d;
-        }
-
-        .creator-avatar {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
-            background: #8b6b4d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 2rem;
-            border: 2px solid #ffaa66;
-        }
-
-        .creator-input {
-            flex: 1;
-            background: #332a24;
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1rem 1.5rem;
-            color: #ffd5aa;
-            font-size: 1.1rem;
-            outline: none;
-        }
-
-        .creator-input:focus {
-            border-color: #ffaa66;
-            box-shadow: 0 0 30px #ffaa66;
-        }
-
-        .post-btn {
-            background: #8b6b4d;
-            border: none;
-            color: white;
-            padding: 0.8rem 2rem;
-            border-radius: 30px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            transition: 0.3s;
-            border-bottom: 4px solid #5a3f2b;
-        }
-
-        .post-btn:active {
-            border-bottom-width: 2px;
-            transform: translateY(2px);
-        }
-
-        .post {
-            background: #2a201a;
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1.5rem;
-            margin-bottom: 1.5rem;
-            transition: 0.3s;
-        }
-
-        .post:hover {
-            border-color: #ffaa66;
-            box-shadow: 0 0 30px rgba(255,170,102,0.3);
-        }
-
-        .post-header {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            margin-bottom: 1rem;
-        }
-
-        .post-avatar {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: #8b6b4d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.8rem;
-            border: 2px solid #ffaa66;
-            cursor: pointer;
-        }
-
-        .post-author {
-            font-size: 1.3rem;
-            font-weight: 600;
-            color: #ffaa66;
-            cursor: pointer;
-        }
-
-        .post-time {
-            font-size: 0.9rem;
-            color: #b99e7c;
-        }
-
-        .post-content {
-            font-size: 1.1rem;
-            line-height: 1.5;
-            margin-bottom: 1rem;
-            padding: 0.5rem 0;
-        }
-
-        .post-actions {
-            display: flex;
-            gap: 2rem;
-            padding-top: 1rem;
-            border-top: 1px solid #8b6b4d;
-        }
-
-        .post-action {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: #b99e7c;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-
-        .post-action:hover {
-            color: #ffaa66;
-        }
-
-        .post-action.liked {
-            color: #ff6b6b;
-        }
-
-        /* Правая колонка - друзья онлайн */
-        .right-column {
-            width: 300px;
-            background: rgba(20, 16, 12, 0.8);
-            backdrop-filter: blur(10px);
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1.5rem;
-            box-shadow: 0 0 50px rgba(139, 107, 77, 0.3);
-            height: fit-content;
-        }
-
-        .online-title {
-            font-size: 1.5rem;
-            color: #ffaa66;
-            margin-bottom: 1.5rem;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            border-bottom: 2px solid #8b6b4d;
-            padding-bottom: 0.5rem;
-        }
-
-        .online-user {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            padding: 0.8rem;
-            border-radius: 20px;
-            cursor: pointer;
-            transition: 0.3s;
-            margin-bottom: 0.5rem;
-        }
-
-        .online-user:hover {
-            background: #332a24;
-        }
-
-        .online-avatar {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #8b6b4d;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.3rem;
-            border: 2px solid #ffaa66;
-        }
-
-        .online-name {
-            flex: 1;
-            font-weight: 500;
-        }
-
-        .online-status {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: #4ade80;
-            box-shadow: 0 0 20px #4ade80;
-            animation: pulse 2s infinite;
-        }
-
-        /* Модальные окна - пещеры */
-        .modal {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 90%;
-            max-width: 500px;
-            background: #1a1410;
-            border: 3px solid #b77b4a;
-            border-radius: 40px;
-            padding: 2rem;
-            z-index: 2000;
-            display: none;
-            color: #ffd5aa;
-            box-shadow: 0 0 100px #b77b4a, inset 0 0 50px #3a2e24;
-        }
-
-        .modal.active {
-            display: block;
-            animation: modalAppear 0.3s ease-out;
-        }
-
-        .modal-close {
-            position: absolute;
-            top: 20px;
-            right: 25px;
-            font-size: 2rem;
-            cursor: pointer;
-            color: #ff6b6b;
-            background: #2f2b4a;
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border: 2px solid #b77b4a;
-        }
-
-        .modal h2 {
-            font-size: 2rem;
-            margin-bottom: 1.5rem;
-            color: #ffaa66;
-            text-align: center;
-        }
-
-        .modal input, .modal textarea, .modal select {
-            width: 100%;
-            background: #332a24;
-            border: 2px solid #8b6b4d;
-            border-radius: 30px;
-            padding: 1rem;
-            color: #ffd5aa;
-            font-size: 1.1rem;
-            margin-bottom: 1rem;
-            outline: none;
-        }
-
-        .modal input:focus, .modal textarea:focus, .modal select:focus {
-            border-color: #ffaa66;
-        }
-
-        .modal-btn {
-            background: #8b6b4d;
-            border: none;
-            color: white;
-            padding: 1rem;
-            border-radius: 30px;
-            font-size: 1.2rem;
-            cursor: pointer;
-            width: 100%;
-            border-bottom: 4px solid #5a3f2b;
-            margin-bottom: 0.5rem;
-        }
-
-        .modal-btn:active {
-            border-bottom-width: 2px;
-            transform: translateY(2px);
-        }
-
-        .modal-link {
-            text-align: center;
-            color: #ffaa66;
-            cursor: pointer;
-            margin-top: 1rem;
-        }
-
-        .modal-link:hover {
-            text-decoration: underline;
-        }
-
-        /* Чат */
-        .chat-modal {
-            height: 70vh;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .chat-messages {
-            flex: 1;
-            overflow-y: auto;
-            padding: 1rem;
-            background: #2a201a;
-            border-radius: 30px;
-            margin: 1rem 0;
-            border: 2px solid #8b6b4d;
-        }
-
-        .chat-message {
-            margin-bottom: 1rem;
-            padding: 0.8rem;
-            background: #332a24;
-            border-radius: 20px;
-            max-width: 80%;
-        }
-
-        .chat-message.own {
-            background: #4a3a2a;
-            margin-left: auto;
-        }
-
-        .chat-message-header {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.5rem;
-            color: #ffaa66;
-        }
-
-        .overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8);
-            backdrop-filter: blur(8px);
-            z-index: 1999;
-            display: none;
-        }
-        .overlay.active {
-            display: block;
-        }
-
-        /* Анимации */
-        @keyframes drip {
-            0%, 100% { transform: scaleY(1); }
-            50% { transform: scaleY(0.98); }
-        }
-
-        @keyframes grow {
-            0%, 100% { transform: scaleY(1); }
-            50% { transform: scaleY(1.02); }
-        }
-
-        @keyframes glow {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.8; }
-        }
-
-        @keyframes fogMove {
-            0%, 100% { opacity: 0.3; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-
-        @keyframes modalAppear {
-            0% { transform: translate(-50%, -50%) scale(0.9); opacity: 0; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-        }
-
-        @media (max-width: 1000px) {
-            .content {
-                flex-direction: column;
-            }
-            .left-column, .right-column {
-                width: 100%;
-            }
-        }
-    </style>
+    <title>Пещерная сеть | Грот</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.1/firebase-database-compat.js"></script>
 </head>
 <body>
-    <!-- Пещерный декор -->
-    <div class="cave-ceiling"></div>
-    <div class="stalactite"></div>
-    <div class="stalactite"></div>
-    <div class="stalactite"></div>
-    <div class="stalactite"></div>
-    <div class="stalactite"></div>
-    <div class="stalagmite"></div>
-    <div class="stalagmite"></div>
-    <div class="stalagmite"></div>
-    <div class="stalagmite"></div>
-    <div class="crystal"></div>
-    <div class="crystal"></div>
-    <div class="crystal"></div>
-    <div class="fog"></div>
-
-    <!-- Затемнение -->
-    <div class="overlay" id="overlay"></div>
-
-    <!-- Модальное окно входа/регистрации -->
-    <div class="modal" id="authModal">
-        <div class="modal-close" id="closeAuth">✕</div>
-        <h2 id="authTitle">🔐 Вход в пещеру</h2>
-        <input type="text" id="authName" placeholder="Имя">
-        <input type="password" id="authPassword" placeholder="Пароль">
-        <button class="modal-btn" id="authLoginBtn">Войти</button>
-        <button class="modal-btn" id="authRegisterBtn">Зарегистрироваться</button>
-        <div class="modal-link" id="authToggle">Нет аккаунта? Создать</div>
-    </div>
-
-    <!-- Модальное окно профиля -->
-    <div class="modal" id="profileModal">
-        <div class="modal-close" id="closeProfile">✕</div>
-        <h2>👤 Профиль</h2>
-        <div id="profileContent"></div>
-    </div>
-
-    <!-- Модальное окно поиска -->
-    <div class="modal" id="searchModal">
-        <div class="modal-close" id="closeSearch">✕</div>
-        <h2>🔍 Поиск в пещерах</h2>
-        <input type="text" id="searchInput" placeholder="Введите имя...">
-        <div id="searchResults" style="margin-top: 1rem;"></div>
-    </div>
-
-    <!-- Модальное окно настроек -->
-    <div class="modal" id="settingsModal">
-        <div class="modal-close" id="closeSettings">✕</div>
-        <h2>⚙️ Настройки пещеры</h2>
-        <input type="text" id="settingsName" placeholder="Новое имя">
-        <select id="settingsAvatar">
-            <option value="😊">😊 Улыбка</option>
-            <option value="😎">😎 Крутой</option>
-            <option value="🧙">🧙 Маг</option>
-            <option value="⚔️">⚔️ Воин</option>
-            <option value="🦸">🦸 Герой</option>
-            <option value="🧛">🧛 Вампир</option>
-        </select>
-        <input type="color" id="settingsColor" value="#FF6B6B">
-        <input type="password" id="settingsPassword" placeholder="Новый пароль">
-        <button class="modal-btn" id="settingsSaveBtn">Сохранить</button>
-        <button class="modal-btn" id="settingsLogoutBtn">Выйти</button>
-    </div>
-
-    <!-- Модальное окно чата -->
-    <div class="modal chat-modal" id="chatModal">
-        <div class="modal-close" id="closeChat">✕</div>
-        <h2 id="chatTitle">💬 Чат</h2>
-        <div class="chat-messages" id="chatMessages"></div>
-        <div style="display: flex; gap: 10px;">
-            <input type="text" id="chatInput" placeholder="Напишите сообщение..." style="flex: 1;">
-            <button class="modal-btn" id="sendChatBtn" style="width: auto; padding: 1rem 2rem;">➤</button>
-        </div>
-    </div>
-
-    <!-- Шапка -->
-    <header class="header">
-        <div class="logo">CAVERNBOOK</div>
-        <div class="user-info" id="userInfo" style="display: none;">
-            <div class="user-avatar" id="headerAvatar">😊</div>
-            <div class="user-name" id="headerName">Загрузка...</div>
-        </div>
-        <div class="nav-buttons">
-            <div class="nav-btn" id="searchBtn">🔍 Поиск</div>
-            <div class="nav-btn" id="settingsBtn">⚙️ Настройки</div>
-        </div>
-    </header>
-
-    <!-- Основной контент (скрыт до авторизации) -->
-    <main class="content" id="mainContent" style="display: none;">
-        <!-- Левая колонка - профиль -->
-        <div class="left-column">
-            <div class="profile-card">
-                <div class="profile-avatar-large" id="profileAvatar">😊</div>
-                <h2 id="profileName">Имя</h2>
-                <p style="color: #b99e7c;" id="profileStatus">Искатель приключений</p>
+    <div class="cave-bg"></div>
+    
+    <div id="app">
+        <!-- Экран входа/регистрации -->
+        <div id="auth-screen" class="screen active">
+            <div class="cave-entrance">
+                <h1 class="glow-text">⚔️ ГРОТ ⚔️</h1>
+                <p class="subtitle">Социальная сеть пещерных людей</p>
                 
-                <div class="profile-stats">
-                    <div class="stat">
-                        <div class="stat-value" id="postsCount">0</div>
-                        <div class="stat-label">Постов</div>
+                <div class="auth-tabs">
+                    <button class="tab-btn active" onclick="showTab('login')">Вход</button>
+                    <button class="tab-btn" onclick="showTab('register')">Регистрация</button>
+                </div>
+
+                <div id="login-form" class="auth-form active">
+                    <input type="text" id="login-username" placeholder="Имя пещерного жителя">
+                    <input type="password" id="login-password" placeholder="Секретный код">
+                    <button onclick="login()" class="cave-btn">Войти в пещеру</button>
+                </div>
+
+                <div id="register-form" class="auth-form">
+                    <input type="text" id="reg-username" placeholder="Имя пещерного жителя">
+                    <input type="password" id="reg-password" placeholder="Секретный код">
+                    <select id="reg-avatar">
+                        <option value="caveman1">👨 Пещерный житель</option>
+                        <option value="caveman2">👩 Пещерная жительница</option>
+                        <option value="shaman">🧙 Шаман</option>
+                        <option value="warrior">⚔️ Воин</option>
+                        <option value="hunter">🏹 Охотник</option>
+                    </select>
+                    <button onclick="register()" class="cave-btn">Поселиться в пещере</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Основной экран (лента) -->
+        <div id="main-screen" class="screen">
+            <div class="header">
+                <h2 class="cave-title">🏚️ Лента опасностей</h2>
+                <div class="header-controls">
+                    <button onclick="showSettings()" class="icon-btn">⚙️</button>
+                    <button onclick="logout()" class="icon-btn">🚪</button>
+                </div>
+            </div>
+
+            <div class="content">
+                <!-- Левая колонка - профиль -->
+                <div class="left-sidebar">
+                    <div class="profile-card">
+                        <div class="avatar" id="user-avatar">👨</div>
+                        <div class="user-info">
+                            <span id="user-name">Игрок</span>
+                            <small id="user-status">Онлайн в пещере</small>
+                        </div>
                     </div>
-                    <div class="stat">
-                        <div class="stat-value" id="friendsCount">0</div>
-                        <div class="stat-label">Друзей</div>
+                    
+                    <div class="danger-meter">
+                        <h4>📊 Уровень опасности</h4>
+                        <div class="meter">
+                            <div class="meter-fill" style="width: 75%"></div>
+                        </div>
+                        <p>75% - Медведь рядом!</p>
                     </div>
-                    <div class="stat">
-                        <div class="stat-value" id="followersCount">0</div>
-                        <div class="stat-label">В сети</div>
+                </div>
+
+                <!-- Центр - лента постов -->
+                <div class="feed">
+                    <div class="post-creator">
+                        <textarea id="new-post" placeholder="Расскажи о своей опасности..."></textarea>
+                        <button onclick="createPost()" class="cave-btn small">🪨 Опубликовать</button>
+                    </div>
+                    
+                    <div id="posts-container" class="posts">
+                        <!-- Посты будут загружаться сюда -->
+                    </div>
+                </div>
+
+                <!-- Правая колонка - опасности -->
+                <div class="right-sidebar">
+                    <div class="hazards-list">
+                        <h4>⚠️ Текущие опасности</h4>
+                        <ul id="hazards-list">
+                            <li>🐻 Медведь в 3 пещере</li>
+                            <li>🔥 Обвал камней</li>
+                            <li>🌊 Подземная река</li>
+                        </ul>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Центральная колонка - лента -->
-        <div class="center-column">
-            <div class="feed-tabs">
-                <div class="feed-tab active" data-feed="main">📰 Главная</div>
-                <div class="feed-tab" data-feed="recommendations">🔥 Рекомендации</div>
-            </div>
+        <!-- Экран настроек -->
+        <div id="settings-screen" class="screen">
+            <div class="settings-panel">
+                <h2>⚙️ Настройки пещеры</h2>
+                
+                <div class="settings-section">
+                    <h3>Профиль</h3>
+                    <label>Изменить аватар:</label>
+                    <select id="settings-avatar">
+                        <option value="caveman1">👨 Пещерный житель</option>
+                        <option value="caveman2">👩 Пещерная жительница</option>
+                        <option value="shaman">🧙 Шаман</option>
+                        <option value="warrior">⚔️ Воин</option>
+                        <option value="hunter">🏹 Охотник</option>
+                    </select>
+                    
+                    <label>Статус:</label>
+                    <input type="text" id="settings-status" placeholder="Охота на мамонта...">
+                    
+                    <button onclick="updateProfile()" class="cave-btn small">Сохранить</button>
+                </div>
 
-            <div class="post-creator">
-                <div class="creator-avatar" id="creatorAvatar">😊</div>
-                <input type="text" class="creator-input" id="postInput" placeholder="Что нового в пещерах?">
-                <button class="post-btn" id="createPostBtn">⛏️</button>
+                <div class="settings-section admin-section" id="admin-section" style="display: none;">
+                    <h3>👑 Админ-меню (только для шаманов)</h3>
+                    
+                    <label>Пароль администратора:</label>
+                    <input type="password" id="admin-password" placeholder="Введите пароль">
+                    
+                    <label>ID пользователя для удаления:</label>
+                    <input type="text" id="delete-user-id" placeholder="ID пользователя">
+                    <button onclick="deleteUser()" class="cave-btn small danger">Удалить пользователя</button>
+                    
+                    <label>Создать опасность:</label>
+                    <input type="text" id="new-hazard" placeholder="Новая опасность">
+                    <button onclick="addHazard()" class="cave-btn small">Добавить опасность</button>
+                    
+                    <label>Сделать объявление:</label>
+                    <textarea id="admin-announcement" placeholder="Объявление для всех..."></textarea>
+                    <button onclick="makeAnnouncement()" class="cave-btn small">Отправить</button>
+                    
+                    <div class="admin-stats">
+                        <h4>Статистика пещеры:</h4>
+                        <p id="user-count">Жителей: 0</p>
+                        <p id="post-count">Записей: 0</p>
+                    </div>
+                </div>
+
+                <button onclick="showMainScreen()" class="cave-btn">🔙 Вернуться в пещеру</button>
             </div>
-            <div id="postsFeed"></div>
         </div>
+    </div>
 
-        <!-- Правая колонка - друзья онлайн -->
-        <div class="right-column">
-            <div class="online-title">
-                <span>🔥 В пещере</span>
-                <span id="onlineCount">0</span>
-            </div>
-            <div id="onlineList"></div>
-        </div>
-    </main>
-
-    <script>
-        (function() {
-            // Firebase
-            const firebaseConfig = { 
-                databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" 
-            };
-            firebase.initializeApp(firebaseConfig);
-            const database = firebase.database();
-
-            // Глобальные переменные
-            let currentUser = null;
-            const REMEMBER_KEY = 'cavernbook_remember';
-            let currentChatUser = null;
-            let chatListener = null;
-            let currentFeed = 'main';
-
-            // Элементы
-            const authModal = document.getElementById('authModal');
-            const mainContent = document.getElementById('mainContent');
-            const userInfo = document.getElementById('userInfo');
-            const authTitle = document.getElementById('authTitle');
-            const authName = document.getElementById('authName');
-            const authPassword = document.getElementById('authPassword');
-            const authLoginBtn = document.getElementById('authLoginBtn');
-            const authRegisterBtn = document.getElementById('authRegisterBtn');
-            const authToggle = document.getElementById('authToggle');
-
-            let isLoginMode = true;
-
-            // Проверка запомненного пользователя
-            function checkRemembered() {
-                const remembered = localStorage.getItem(REMEMBER_KEY);
-                if (remembered) {
-                    try {
-                        const data = JSON.parse(remembered);
-                        loginUser(data.name, data.password, true);
-                    } catch (e) {
-                        showAuth();
-                    }
-                } else {
-                    showAuth();
-                }
-            }
-
-            function showAuth() {
-                authModal.classList.add('active');
-                overlay.classList.add('active');
-                mainContent.style.display = 'none';
-                userInfo.style.display = 'none';
-            }
-
-            function hideAuth() {
-                authModal.classList.remove('active');
-                overlay.classList.remove('active');
-                mainContent.style.display = 'flex';
-                userInfo.style.display = 'flex';
-            }
-
-            // Переключение между входом и регистрацией
-            authToggle.addEventListener('click', () => {
-                isLoginMode = !isLoginMode;
-                if (isLoginMode) {
-                    authTitle.textContent = '🔐 Вход в пещеру';
-                    authLoginBtn.style.display = 'block';
-                    authRegisterBtn.style.display = 'none';
-                    authToggle.textContent = 'Нет аккаунта? Создать';
-                } else {
-                    authTitle.textContent = '📝 Регистрация';
-                    authLoginBtn.style.display = 'none';
-                    authRegisterBtn.style.display = 'block';
-                    authToggle.textContent = 'Уже есть аккаунт? Войти';
-                }
-            });
-
-            // Регистрация
-            authRegisterBtn.addEventListener('click', () => {
-                const name = authName.value.trim();
-                const password = authPassword.value.trim();
-
-                if (!name || !password) {
-                    alert('Введите имя и пароль!');
-                    return;
-                }
-
-                database.ref('users').once('value', snapshot => {
-                    const users = snapshot.val() || {};
-                    const existing = Object.values(users).find(u => u.name.toLowerCase() === name.toLowerCase());
-                    
-                    if (existing) {
-                        alert('Пользователь с таким именем уже существует!');
-                        return;
-                    }
-
-                    const newUser = {
-                        id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
-                        name: name,
-                        password: password,
-                        avatar: '😊',
-                        avatarColor: getRandomColor(),
-                        posts: 0,
-                        friends: [],
-                        followers: [],
-                        lastSeen: new Date().toLocaleString(),
-                        registered: new Date().toLocaleString()
-                    };
-
-                    database.ref('users/' + newUser.id).set(newUser).then(() => {
-                        currentUser = newUser;
-                        localStorage.setItem(REMEMBER_KEY, JSON.stringify({
-                            name: name,
-                            password: password
-                        }));
-                        hideAuth();
-                        updateUI();
-                        loadPosts();
-                        startOnlineTracking();
-                        authName.value = '';
-                        authPassword.value = '';
-                    });
-                });
-            });
-
-            // Вход
-            authLoginBtn.addEventListener('click', () => {
-                const name = authName.value.trim();
-                const password = authPassword.value.trim();
-                loginUser(name, password);
-            });
-
-            function loginUser(name, password, remember = false) {
-                if (!name || !password) {
-                    alert('Введите имя и пароль!');
-                    return;
-                }
-
-                database.ref('users').once('value', snapshot => {
-                    const users = snapshot.val() || {};
-                    const user = Object.values(users).find(u => 
-                        u.name.toLowerCase() === name.toLowerCase() && u.password === password
-                    );
-
-                    if (user) {
-                        currentUser = user;
-                        currentUser.lastSeen = new Date().toLocaleString();
-                        database.ref('users/' + user.id).update({ lastSeen: currentUser.lastSeen });
-                        
-                        if (remember) {
-                            localStorage.setItem(REMEMBER_KEY, JSON.stringify({ name, password }));
-                        }
-                        
-                        hideAuth();
-                        updateUI();
-                        loadPosts();
-                        startOnlineTracking();
-                        authName.value = '';
-                        authPassword.value = '';
-                    } else {
-                        alert('Неверное имя или пароль!');
-                    }
-                });
-            }
-
-            // Выход
-            document.getElementById('settingsLogoutBtn').addEventListener('click', () => {
-                localStorage.removeItem(REMEMBER_KEY);
-                currentUser = null;
-                showAuth();
-                if (chatListener) {
-                    chatListener();
-                    chatListener = null;
-                }
-            });
-
-            function getRandomColor() {
-                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#D4A5A5', '#9B59B6', '#3498DB'];
-                return colors[Math.floor(Math.random() * colors.length)];
-            }
-
-            function updateUI() {
-                if (!currentUser) return;
-                
-                document.getElementById('headerName').textContent = currentUser.name;
-                document.getElementById('profileName').textContent = currentUser.name;
-                document.getElementById('postsCount').textContent = currentUser.posts || 0;
-                
-                const avatars = document.querySelectorAll('#headerAvatar, #profileAvatar, #creatorAvatar');
-                avatars.forEach(el => {
-                    el.style.background = currentUser.avatarColor;
-                    el.textContent = currentUser.avatar;
-                });
-
-                // Заполняем настройки
-                document.getElementById('settingsName').value = currentUser.name;
-                document.getElementById('settingsAvatar').value = currentUser.avatar;
-                document.getElementById('settingsColor').value = currentUser.avatarColor;
-            }
-
-            // Посты
-            function loadPosts() {
-                database.ref('posts').limitToLast(50).on('value', snapshot => {
-                    const posts = [];
-                    snapshot.forEach(child => posts.push({ id: child.key, ...child.val() }));
-                    renderPosts(posts.reverse());
-                });
-            }
-
-            function renderPosts(posts) {
-                const container = document.getElementById('postsFeed');
-                if (!container) return;
-                
-                let filteredPosts = posts;
-                
-                if (currentFeed === 'main') {
-                    // Показываем все посты
-                    filteredPosts = posts;
-                } else {
-                    // Рекомендации - перемешиваем и показываем
-                    filteredPosts = [...posts].sort(() => Math.random() - 0.5);
-                }
-                
-                if (filteredPosts.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #b99e7c;">Пещера пуста... Напиши что-нибудь!</div>';
-                    return;
-                }
-                
-                let html = '';
-                filteredPosts.slice(0, 20).forEach(post => {
-                    const isLiked = post.likes && post.likes[currentUser?.id];
-                    
-                    html += `
-                        <div class="post" data-post-id="${post.id}">
-                            <div class="post-header">
-                                <div class="post-avatar" style="background: ${post.userAvatarColor || '#8b6b4d'}" onclick="window.openProfile('${post.userId}')">${post.userAvatar || '😊'}</div>
-                                <div>
-                                    <div class="post-author" onclick="window.openProfile('${post.userId}')">${post.userName}</div>
-                                    <div class="post-time">${post.time || 'только что'}</div>
-                                </div>
-                            </div>
-                            <div class="post-content">${post.text}</div>
-                            <div class="post-actions">
-                                <div class="post-action ${isLiked ? 'liked' : ''}" onclick="window.likePost('${post.id}')">
-                                    <span>❤️</span> ${post.likes ? Object.keys(post.likes).length : 0}
-                                </div>
-                                <div class="post-action" onclick="window.startChat('${post.userId}', '${post.userName}')">
-                                    <span>✉️</span> Написать
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
-            }
-
-            // Переключение ленты
-            document.querySelectorAll('.feed-tab').forEach(tab => {
-                tab.addEventListener('click', () => {
-                    document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
-                    tab.classList.add('active');
-                    currentFeed = tab.dataset.feed;
-                    loadPosts();
-                });
-            });
-
-            window.likePost = function(postId) {
-                if (!currentUser) return;
-                
-                const postRef = database.ref('posts/' + postId);
-                postRef.child('likes/' + currentUser.id).once('value', snapshot => {
-                    if (snapshot.exists()) {
-                        postRef.child('likes/' + currentUser.id).remove();
-                    } else {
-                        postRef.child('likes/' + currentUser.id).set(true);
-                    }
-                });
-            };
-
-            window.openProfile = function(userId) {
-                database.ref('users/' + userId).once('value', snapshot => {
-                    const user = snapshot.val();
-                    if (!user) return;
-                    
-                    const modal = document.getElementById('profileModal');
-                    const content = document.getElementById('profileContent');
-                    
-                    content.innerHTML = `
-                        <div style="text-align: center;">
-                            <div style="width: 100px; height: 100px; border-radius: 50%; background: ${user.avatarColor}; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid #ffaa66;">${user.avatar}</div>
-                            <h3>${user.name}</h3>
-                            <p style="color: #b99e7c;">Постов: ${user.posts || 0}</p>
-                            <p style="color: #b99e7c;">В пещере с: ${user.registered || 'неизвестно'}</p>
-                            ${user.id !== currentUser?.id ? '<button class="modal-btn" style="margin-top: 1rem;" onclick="window.startChat(\'' + user.id + '\', \'' + user.name + '\')">✉️ Написать</button>' : ''}
-                        </div>
-                    `;
-                    
-                    modal.classList.add('active');
-                    overlay.classList.add('active');
-                });
-            };
-
-            window.startChat = function(userId, userName) {
-                if (!currentUser) return;
-                
-                currentChatUser = { id: userId, name: userName };
-                
-                if (chatListener) {
-                    chatListener();
-                    chatListener = null;
-                }
-                
-                const modal = document.getElementById('chatModal');
-                document.getElementById('chatTitle').textContent = `💬 Чат с ${userName}`;
-                document.getElementById('chatMessages').innerHTML = '';
-                modal.classList.add('active');
-                overlay.classList.add('active');
-                
-                const chatId = [currentUser.id, userId].sort().join('_');
-                chatListener = database.ref('chats/' + chatId).limitToLast(50).on('value', snapshot => {
-                    const messages = [];
-                    snapshot.forEach(child => messages.push({ id: child.key, ...child.val() }));
-                    renderChatMessages(messages);
-                });
-            };
-
-            function renderChatMessages(messages) {
-                const container = document.getElementById('chatMessages');
-                if (!container) return;
-                
-                container.innerHTML = '';
-                messages.sort((a, b) => a.timestamp - b.timestamp).forEach(msg => {
-                    const isOwn = msg.fromUserId === currentUser.id;
-                    container.innerHTML += `
-                        <div class="chat-message ${isOwn ? 'own' : ''}">
-                            <div class="chat-message-header">
-                                <span>${isOwn ? 'Вы' : msg.fromUserName}</span>
-                                <span style="color: #b99e7c;">${msg.time || ''}</span>
-                            </div>
-                            <div>${msg.text}</div>
-                        </div>
-                    `;
-                });
-                container.scrollTop = container.scrollHeight;
-            }
-
-            // Создание поста
-            document.getElementById('createPostBtn').addEventListener('click', () => {
-                const text = document.getElementById('postInput').value.trim();
-                if (!text || !currentUser) return;
-                
-                const post = {
-                    userId: currentUser.id,
-                    userName: currentUser.name,
-                    userAvatar: currentUser.avatar,
-                    userAvatarColor: currentUser.avatarColor,
-                    text: text,
-                    timestamp: Date.now(),
-                    time: new Date().toLocaleTimeString(),
-                    likes: {},
-                    comments: {}
-                };
-                
-                database.ref('posts').push(post).then(() => {
-                    document.getElementById('postInput').value = '';
-                    currentUser.posts = (currentUser.posts || 0) + 1;
-                    database.ref('users/' + currentUser.id).update({ posts: currentUser.posts });
-                    updateUI();
-                });
-            });
-
-            // Онлайн-статус
-            function startOnlineTracking() {
-                setInterval(() => {
-                    if (currentUser) {
-                        currentUser.lastSeen = new Date().toLocaleString();
-                        database.ref('users/' + currentUser.id).update({ lastSeen: currentUser.lastSeen });
-                    }
-                }, 30000);
-                
-                database.ref('users').on('value', snapshot => {
-                    const users = snapshot.val() || {};
-                    const onlineUsers = [];
-                    
-                    Object.values(users).forEach(user => {
-                        if (user.id === currentUser?.id) return;
-                        
-                        const lastSeen = new Date(user.lastSeen).getTime();
-                        const now = new Date().getTime();
-                        if (now - lastSeen < 120000) {
-                            onlineUsers.push(user);
-                        }
-                    });
-                    
-                    updateOnlineList(onlineUsers);
-                });
-            }
-
-            function updateOnlineList(users) {
-                const container = document.getElementById('onlineList');
-                const countEl = document.getElementById('onlineCount');
-                
-                countEl.textContent = users.length;
-                
-                if (users.length === 0) {
-                    container.innerHTML = '<div style="text-align: center; color: #b99e7c;">Никого нет в пещере</div>';
-                    return;
-                }
-                
-                let html = '';
-                users.forEach(user => {
-                    html += `
-                        <div class="online-user" onclick="window.openProfile('${user.id}')">
-                            <div class="online-avatar" style="background: ${user.avatarColor};">${user.avatar}</div>
-                            <div class="online-name">${user.name}</div>
-                            <div class="online-status"></div>
-                        </div>
-                    `;
-                });
-                
-                container.innerHTML = html;
-            }
-
-            // Поиск
-            document.getElementById('searchBtn').addEventListener('click', () => {
-                document.getElementById('searchModal').classList.add('active');
-                overlay.classList.add('active');
-            });
-
-            document.getElementById('searchInput').addEventListener('input', (e) => {
-                const term = e.target.value.toLowerCase();
-                if (!term) {
-                    document.getElementById('searchResults').innerHTML = '';
-                    return;
-                }
-                
-                database.ref('users').once('value', snapshot => {
-                    const users = snapshot.val() || {};
-                    const results = Object.values(users).filter(user => 
-                        user.id !== currentUser?.id && 
-                        user.name.toLowerCase().includes(term)
-                    );
-                    
-                    let html = '';
-                    results.forEach(user => {
-                        html += `
-                            <div class="online-user" onclick="window.openProfile('${user.id}')">
-                                <div class="online-avatar" style="background: ${user.avatarColor};">${user.avatar}</div>
-                                <div class="online-name">${user.name}</div>
-                            </div>
-                        `;
-                    });
-                    
-                    document.getElementById('searchResults').innerHTML = html || 'Ничего не найдено';
-                });
-            });
-
-            // Настройки
-            document.getElementById('settingsBtn').addEventListener('click', () => {
-                if (!currentUser) return;
-                document.getElementById('settingsModal').classList.add('active');
-                overlay.classList.add('active');
-            });
-
-            document.getElementById('settingsSaveBtn').addEventListener('click', () => {
-                if (!currentUser) return;
-                
-                const newName = document.getElementById('settingsName').value.trim();
-                const newAvatar = document.getElementById('settingsAvatar').value;
-                const newColor = document.getElementById('settingsColor').value;
-                const newPassword = document.getElementById('settingsPassword').value.trim();
-                
-                if (newName) currentUser.name = newName;
-                if (newAvatar) currentUser.avatar = newAvatar;
-                if (newColor) currentUser.avatarColor = newColor;
-                if (newPassword) currentUser.password = newPassword;
-                
-                database.ref('users/' + currentUser.id).update({
-                    name: currentUser.name,
-                    avatar: currentUser.avatar,
-                    avatarColor: currentUser.avatarColor,
-                    password: currentUser.password
-                }).then(() => {
-                    updateUI();
-                    alert('Настройки сохранены!');
-                    document.getElementById('settingsModal').classList.remove('active');
-                    overlay.classList.remove('active');
-                });
-            });
-
-            // Закрытие модалок
-            document.getElementById('closeAuth').addEventListener('click', () => {
-                authModal.classList.remove('active');
-                overlay.classList.remove('active');
-            });
-            
-            document.getElementById('closeProfile').addEventListener('click', () => {
-                document.getElementById('profileModal').classList.remove('active');
-                overlay.classList.remove('active');
-            });
-            
-            document.getElementById('closeSearch').addEventListener('click', () => {
-                document.getElementById('searchModal').classList.remove('active');
-                overlay.classList.remove('active');
-            });
-            
-            document.getElementById('closeSettings').addEventListener('click', () => {
-                document.getElementById('settingsModal').classList.remove('active');
-                overlay.classList.remove('active');
-            });
-            
-            document.getElementById('closeChat').addEventListener('click', () => {
-                document.getElementById('chatModal').classList.remove('active');
-                overlay.classList.remove('active');
-                if (chatListener) {
-                    chatListener();
-                    chatListener = null;
-                }
-            });
-            
-            overlay.addEventListener('click', () => {
-                document.querySelectorAll('.modal.active').forEach(m => m.classList.remove('active'));
-                overlay.classList.remove('active');
-                if (chatListener) {
-                    chatListener();
-                    chatListener = null;
-                }
-            });
-
-            // Отправка сообщения
-            document.getElementById('sendChatBtn').addEventListener('click', () => {
-                const text = document.getElementById('chatInput').value.trim();
-                if (!text || !currentChatUser || !currentUser) return;
-                
-                const chatId = [currentUser.id, currentChatUser.id].sort().join('_');
-                database.ref('chats/' + chatId).push({
-                    fromUserId: currentUser.id,
-                    fromUserName: currentUser.name,
-                    text: text,
-                    timestamp: Date.now(),
-                    time: new Date().toLocaleTimeString(),
-                    read: false
-                });
-                
-                document.getElementById('chatInput').value = '';
-            });
-
-            // Клик по профилю
-            document.getElementById('userInfo').addEventListener('click', () => {
-                window.openProfile(currentUser?.id);
-            });
-
-            // Глобальные функции
-            window.openProfile = window.openProfile;
-            window.startChat = window.startChat;
-            window.likePost = window.likePost;
-
-            // Старт
-            checkRemembered();
-        })();
-    </script>
+    <script src="script.js"></script>
 </body>
 </html>
