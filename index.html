@@ -293,6 +293,31 @@
             box-shadow: 0 0 50px rgba(139, 107, 77, 0.3);
         }
 
+        .feed-tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 1.5rem;
+            border-bottom: 2px solid #8b6b4d;
+            padding-bottom: 0.5rem;
+        }
+
+        .feed-tab {
+            padding: 0.5rem 1.5rem;
+            border-radius: 30px;
+            cursor: pointer;
+            transition: 0.3s;
+            font-weight: 600;
+        }
+
+        .feed-tab.active {
+            background: #8b6b4d;
+            color: white;
+        }
+
+        .feed-tab:hover {
+            background: #5a4a3a;
+        }
+
         .post-creator {
             display: flex;
             gap: 1rem;
@@ -534,7 +559,7 @@
             text-align: center;
         }
 
-        .modal input, .modal textarea {
+        .modal input, .modal textarea, .modal select {
             width: 100%;
             background: #332a24;
             border: 2px solid #8b6b4d;
@@ -546,7 +571,7 @@
             outline: none;
         }
 
-        .modal input:focus, .modal textarea:focus {
+        .modal input:focus, .modal textarea:focus, .modal select:focus {
             border-color: #ffaa66;
         }
 
@@ -560,11 +585,23 @@
             cursor: pointer;
             width: 100%;
             border-bottom: 4px solid #5a3f2b;
+            margin-bottom: 0.5rem;
         }
 
         .modal-btn:active {
             border-bottom-width: 2px;
             transform: translateY(2px);
+        }
+
+        .modal-link {
+            text-align: center;
+            color: #ffaa66;
+            cursor: pointer;
+            margin-top: 1rem;
+        }
+
+        .modal-link:hover {
+            text-decoration: underline;
         }
 
         /* Чат */
@@ -677,6 +714,17 @@
     <!-- Затемнение -->
     <div class="overlay" id="overlay"></div>
 
+    <!-- Модальное окно входа/регистрации -->
+    <div class="modal" id="authModal">
+        <div class="modal-close" id="closeAuth">✕</div>
+        <h2 id="authTitle">🔐 Вход в пещеру</h2>
+        <input type="text" id="authName" placeholder="Имя">
+        <input type="password" id="authPassword" placeholder="Пароль">
+        <button class="modal-btn" id="authLoginBtn">Войти</button>
+        <button class="modal-btn" id="authRegisterBtn">Зарегистрироваться</button>
+        <div class="modal-link" id="authToggle">Нет аккаунта? Создать</div>
+    </div>
+
     <!-- Модальное окно профиля -->
     <div class="modal" id="profileModal">
         <div class="modal-close" id="closeProfile">✕</div>
@@ -692,6 +740,25 @@
         <div id="searchResults" style="margin-top: 1rem;"></div>
     </div>
 
+    <!-- Модальное окно настроек -->
+    <div class="modal" id="settingsModal">
+        <div class="modal-close" id="closeSettings">✕</div>
+        <h2>⚙️ Настройки пещеры</h2>
+        <input type="text" id="settingsName" placeholder="Новое имя">
+        <select id="settingsAvatar">
+            <option value="😊">😊 Улыбка</option>
+            <option value="😎">😎 Крутой</option>
+            <option value="🧙">🧙 Маг</option>
+            <option value="⚔️">⚔️ Воин</option>
+            <option value="🦸">🦸 Герой</option>
+            <option value="🧛">🧛 Вампир</option>
+        </select>
+        <input type="color" id="settingsColor" value="#FF6B6B">
+        <input type="password" id="settingsPassword" placeholder="Новый пароль">
+        <button class="modal-btn" id="settingsSaveBtn">Сохранить</button>
+        <button class="modal-btn" id="settingsLogoutBtn">Выйти</button>
+    </div>
+
     <!-- Модальное окно чата -->
     <div class="modal chat-modal" id="chatModal">
         <div class="modal-close" id="closeChat">✕</div>
@@ -703,19 +770,10 @@
         </div>
     </div>
 
-    <!-- Модальное окно комментариев -->
-    <div class="modal" id="commentsModal">
-        <div class="modal-close" id="closeComments">✕</div>
-        <h2>💬 Комментарии</h2>
-        <div id="commentsList" style="max-height: 300px; overflow-y: auto; margin-bottom: 1rem;"></div>
-        <input type="text" id="commentInput" placeholder="Ваш комментарий...">
-        <button class="modal-btn" id="sendCommentBtn">Отправить</button>
-    </div>
-
     <!-- Шапка -->
     <header class="header">
         <div class="logo">CAVERNBOOK</div>
-        <div class="user-info" id="userInfo">
+        <div class="user-info" id="userInfo" style="display: none;">
             <div class="user-avatar" id="headerAvatar">😊</div>
             <div class="user-name" id="headerName">Загрузка...</div>
         </div>
@@ -725,8 +783,8 @@
         </div>
     </header>
 
-    <!-- Основной контент -->
-    <main class="content">
+    <!-- Основной контент (скрыт до авторизации) -->
+    <main class="content" id="mainContent" style="display: none;">
         <!-- Левая колонка - профиль -->
         <div class="left-column">
             <div class="profile-card">
@@ -753,6 +811,11 @@
 
         <!-- Центральная колонка - лента -->
         <div class="center-column">
+            <div class="feed-tabs">
+                <div class="feed-tab active" data-feed="main">📰 Главная</div>
+                <div class="feed-tab" data-feed="recommendations">🔥 Рекомендации</div>
+            </div>
+
             <div class="post-creator">
                 <div class="creator-avatar" id="creatorAvatar">😊</div>
                 <input type="text" class="creator-input" id="postInput" placeholder="Что нового в пещерах?">
@@ -782,61 +845,170 @@
 
             // Глобальные переменные
             let currentUser = null;
-            const currentUserIdKey = 'cavernbook_user';
+            const REMEMBER_KEY = 'cavernbook_remember';
             let currentChatUser = null;
             let chatListener = null;
+            let currentFeed = 'main';
 
-            // Инициализация
-            function init() {
-                const storedId = localStorage.getItem(currentUserIdKey);
-                if (storedId) {
-                    loadUser(storedId);
+            // Элементы
+            const authModal = document.getElementById('authModal');
+            const mainContent = document.getElementById('mainContent');
+            const userInfo = document.getElementById('userInfo');
+            const authTitle = document.getElementById('authTitle');
+            const authName = document.getElementById('authName');
+            const authPassword = document.getElementById('authPassword');
+            const authLoginBtn = document.getElementById('authLoginBtn');
+            const authRegisterBtn = document.getElementById('authRegisterBtn');
+            const authToggle = document.getElementById('authToggle');
+
+            let isLoginMode = true;
+
+            // Проверка запомненного пользователя
+            function checkRemembered() {
+                const remembered = localStorage.getItem(REMEMBER_KEY);
+                if (remembered) {
+                    try {
+                        const data = JSON.parse(remembered);
+                        loginUser(data.name, data.password, true);
+                    } catch (e) {
+                        showAuth();
+                    }
                 } else {
-                    createUser();
+                    showAuth();
                 }
             }
 
-            function createUser() {
-                let name = prompt('Как назвать тебя в пещерах?', 'Путник');
-                if (!name) name = 'Путник';
-                
-                const newUser = {
-                    id: 'user_' + Date.now(),
-                    name: name,
-                    avatar: '😊',
-                    avatarColor: getRandomColor(),
-                    posts: 0,
-                    friends: [],
-                    followers: [],
-                    lastSeen: new Date().toLocaleString()
-                };
-                
-                database.ref('users/' + newUser.id).set(newUser).then(() => {
-                    currentUser = newUser;
-                    localStorage.setItem(currentUserIdKey, newUser.id);
-                    updateUI();
-                    loadPosts();
-                    startOnlineTracking();
-                });
+            function showAuth() {
+                authModal.classList.add('active');
+                overlay.classList.add('active');
+                mainContent.style.display = 'none';
+                userInfo.style.display = 'none';
             }
 
-            function loadUser(userId) {
-                database.ref('users/' + userId).once('value', snapshot => {
-                    if (snapshot.exists()) {
-                        currentUser = snapshot.val();
-                        currentUser.lastSeen = new Date().toLocaleString();
-                        database.ref('users/' + userId).update({ lastSeen: currentUser.lastSeen });
+            function hideAuth() {
+                authModal.classList.remove('active');
+                overlay.classList.remove('active');
+                mainContent.style.display = 'flex';
+                userInfo.style.display = 'flex';
+            }
+
+            // Переключение между входом и регистрацией
+            authToggle.addEventListener('click', () => {
+                isLoginMode = !isLoginMode;
+                if (isLoginMode) {
+                    authTitle.textContent = '🔐 Вход в пещеру';
+                    authLoginBtn.style.display = 'block';
+                    authRegisterBtn.style.display = 'none';
+                    authToggle.textContent = 'Нет аккаунта? Создать';
+                } else {
+                    authTitle.textContent = '📝 Регистрация';
+                    authLoginBtn.style.display = 'none';
+                    authRegisterBtn.style.display = 'block';
+                    authToggle.textContent = 'Уже есть аккаунт? Войти';
+                }
+            });
+
+            // Регистрация
+            authRegisterBtn.addEventListener('click', () => {
+                const name = authName.value.trim();
+                const password = authPassword.value.trim();
+
+                if (!name || !password) {
+                    alert('Введите имя и пароль!');
+                    return;
+                }
+
+                database.ref('users').once('value', snapshot => {
+                    const users = snapshot.val() || {};
+                    const existing = Object.values(users).find(u => u.name.toLowerCase() === name.toLowerCase());
+                    
+                    if (existing) {
+                        alert('Пользователь с таким именем уже существует!');
+                        return;
+                    }
+
+                    const newUser = {
+                        id: 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9),
+                        name: name,
+                        password: password,
+                        avatar: '😊',
+                        avatarColor: getRandomColor(),
+                        posts: 0,
+                        friends: [],
+                        followers: [],
+                        lastSeen: new Date().toLocaleString(),
+                        registered: new Date().toLocaleString()
+                    };
+
+                    database.ref('users/' + newUser.id).set(newUser).then(() => {
+                        currentUser = newUser;
+                        localStorage.setItem(REMEMBER_KEY, JSON.stringify({
+                            name: name,
+                            password: password
+                        }));
+                        hideAuth();
                         updateUI();
                         loadPosts();
                         startOnlineTracking();
+                        authName.value = '';
+                        authPassword.value = '';
+                    });
+                });
+            });
+
+            // Вход
+            authLoginBtn.addEventListener('click', () => {
+                const name = authName.value.trim();
+                const password = authPassword.value.trim();
+                loginUser(name, password);
+            });
+
+            function loginUser(name, password, remember = false) {
+                if (!name || !password) {
+                    alert('Введите имя и пароль!');
+                    return;
+                }
+
+                database.ref('users').once('value', snapshot => {
+                    const users = snapshot.val() || {};
+                    const user = Object.values(users).find(u => 
+                        u.name.toLowerCase() === name.toLowerCase() && u.password === password
+                    );
+
+                    if (user) {
+                        currentUser = user;
+                        currentUser.lastSeen = new Date().toLocaleString();
+                        database.ref('users/' + user.id).update({ lastSeen: currentUser.lastSeen });
+                        
+                        if (remember) {
+                            localStorage.setItem(REMEMBER_KEY, JSON.stringify({ name, password }));
+                        }
+                        
+                        hideAuth();
+                        updateUI();
+                        loadPosts();
+                        startOnlineTracking();
+                        authName.value = '';
+                        authPassword.value = '';
                     } else {
-                        createUser();
+                        alert('Неверное имя или пароль!');
                     }
                 });
             }
 
+            // Выход
+            document.getElementById('settingsLogoutBtn').addEventListener('click', () => {
+                localStorage.removeItem(REMEMBER_KEY);
+                currentUser = null;
+                showAuth();
+                if (chatListener) {
+                    chatListener();
+                    chatListener = null;
+                }
+            });
+
             function getRandomColor() {
-                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#D4A5A5'];
+                const colors = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#96CEB4', '#FFEAA7', '#D4A5A5', '#9B59B6', '#3498DB'];
                 return colors[Math.floor(Math.random() * colors.length)];
             }
 
@@ -852,11 +1024,16 @@
                     el.style.background = currentUser.avatarColor;
                     el.textContent = currentUser.avatar;
                 });
+
+                // Заполняем настройки
+                document.getElementById('settingsName').value = currentUser.name;
+                document.getElementById('settingsAvatar').value = currentUser.avatar;
+                document.getElementById('settingsColor').value = currentUser.avatarColor;
             }
 
             // Посты
             function loadPosts() {
-                database.ref('posts').limitToLast(20).on('value', snapshot => {
+                database.ref('posts').limitToLast(50).on('value', snapshot => {
                     const posts = [];
                     snapshot.forEach(child => posts.push({ id: child.key, ...child.val() }));
                     renderPosts(posts.reverse());
@@ -867,13 +1044,23 @@
                 const container = document.getElementById('postsFeed');
                 if (!container) return;
                 
-                if (posts.length === 0) {
+                let filteredPosts = posts;
+                
+                if (currentFeed === 'main') {
+                    // Показываем все посты
+                    filteredPosts = posts;
+                } else {
+                    // Рекомендации - перемешиваем и показываем
+                    filteredPosts = [...posts].sort(() => Math.random() - 0.5);
+                }
+                
+                if (filteredPosts.length === 0) {
                     container.innerHTML = '<div style="text-align: center; padding: 2rem; color: #b99e7c;">Пещера пуста... Напиши что-нибудь!</div>';
                     return;
                 }
                 
                 let html = '';
-                posts.forEach(post => {
+                filteredPosts.slice(0, 20).forEach(post => {
                     const isLiked = post.likes && post.likes[currentUser?.id];
                     
                     html += `
@@ -890,8 +1077,8 @@
                                 <div class="post-action ${isLiked ? 'liked' : ''}" onclick="window.likePost('${post.id}')">
                                     <span>❤️</span> ${post.likes ? Object.keys(post.likes).length : 0}
                                 </div>
-                                <div class="post-action" onclick="window.showComments('${post.id}')">
-                                    <span>💬</span> ${post.comments ? Object.keys(post.comments).length : 0}
+                                <div class="post-action" onclick="window.startChat('${post.userId}', '${post.userName}')">
+                                    <span>✉️</span> Написать
                                 </div>
                             </div>
                         </div>
@@ -900,6 +1087,16 @@
                 
                 container.innerHTML = html;
             }
+
+            // Переключение ленты
+            document.querySelectorAll('.feed-tab').forEach(tab => {
+                tab.addEventListener('click', () => {
+                    document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+                    tab.classList.add('active');
+                    currentFeed = tab.dataset.feed;
+                    loadPosts();
+                });
+            });
 
             window.likePost = function(postId) {
                 if (!currentUser) return;
@@ -912,11 +1109,6 @@
                         postRef.child('likes/' + currentUser.id).set(true);
                     }
                 });
-            };
-
-            window.showComments = function(postId) {
-                // Заглушка для комментариев
-                alert('Комментарии появятся в следующем обновлении!');
             };
 
             window.openProfile = function(userId) {
@@ -932,6 +1124,7 @@
                             <div style="width: 100px; height: 100px; border-radius: 50%; background: ${user.avatarColor}; margin: 0 auto 1rem; display: flex; align-items: center; justify-content: center; font-size: 3rem; border: 3px solid #ffaa66;">${user.avatar}</div>
                             <h3>${user.name}</h3>
                             <p style="color: #b99e7c;">Постов: ${user.posts || 0}</p>
+                            <p style="color: #b99e7c;">В пещере с: ${user.registered || 'неизвестно'}</p>
                             ${user.id !== currentUser?.id ? '<button class="modal-btn" style="margin-top: 1rem;" onclick="window.startChat(\'' + user.id + '\', \'' + user.name + '\')">✉️ Написать</button>' : ''}
                         </div>
                     `;
@@ -1096,7 +1289,45 @@
                 });
             });
 
+            // Настройки
+            document.getElementById('settingsBtn').addEventListener('click', () => {
+                if (!currentUser) return;
+                document.getElementById('settingsModal').classList.add('active');
+                overlay.classList.add('active');
+            });
+
+            document.getElementById('settingsSaveBtn').addEventListener('click', () => {
+                if (!currentUser) return;
+                
+                const newName = document.getElementById('settingsName').value.trim();
+                const newAvatar = document.getElementById('settingsAvatar').value;
+                const newColor = document.getElementById('settingsColor').value;
+                const newPassword = document.getElementById('settingsPassword').value.trim();
+                
+                if (newName) currentUser.name = newName;
+                if (newAvatar) currentUser.avatar = newAvatar;
+                if (newColor) currentUser.avatarColor = newColor;
+                if (newPassword) currentUser.password = newPassword;
+                
+                database.ref('users/' + currentUser.id).update({
+                    name: currentUser.name,
+                    avatar: currentUser.avatar,
+                    avatarColor: currentUser.avatarColor,
+                    password: currentUser.password
+                }).then(() => {
+                    updateUI();
+                    alert('Настройки сохранены!');
+                    document.getElementById('settingsModal').classList.remove('active');
+                    overlay.classList.remove('active');
+                });
+            });
+
             // Закрытие модалок
+            document.getElementById('closeAuth').addEventListener('click', () => {
+                authModal.classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
             document.getElementById('closeProfile').addEventListener('click', () => {
                 document.getElementById('profileModal').classList.remove('active');
                 overlay.classList.remove('active');
@@ -1104,6 +1335,11 @@
             
             document.getElementById('closeSearch').addEventListener('click', () => {
                 document.getElementById('searchModal').classList.remove('active');
+                overlay.classList.remove('active');
+            });
+            
+            document.getElementById('closeSettings').addEventListener('click', () => {
+                document.getElementById('settingsModal').classList.remove('active');
                 overlay.classList.remove('active');
             });
             
@@ -1143,11 +1379,6 @@
                 document.getElementById('chatInput').value = '';
             });
 
-            // Настройки (заглушка)
-            document.getElementById('settingsBtn').addEventListener('click', () => {
-                alert('⚙️ Настройки пещеры появятся в следующем обновлении!');
-            });
-
             // Клик по профилю
             document.getElementById('userInfo').addEventListener('click', () => {
                 window.openProfile(currentUser?.id);
@@ -1159,7 +1390,7 @@
             window.likePost = window.likePost;
 
             // Старт
-            init();
+            checkRemembered();
         })();
     </script>
 </body>
