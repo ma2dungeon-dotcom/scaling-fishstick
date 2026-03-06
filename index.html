@@ -2,90 +2,65 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>CAVE-NET | NEON ABYSS & MAGIC</title>
+    <title>CAVE-NET | OFFLINE EMPIRE</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
         :root {
-            --dark: #050505; --neon-orange: #ff6600; --neon-glow: 0 0 15px #ff6600;
-            --blood: #8b0000; --abyss: #4b0082;
-            /* *** НОВОЕ: ЦВЕТ ДЛЯ МАГИИ *** */
-            --magic-cyan: #00ffff; --magic-glow: 0 0 15px #00ffff;
+            --neon: #ff6600; --glow: 0 0 20px #ff6600; --dark: #050505;
+            --rainbow: linear-gradient(45deg, red, orange, yellow, green, blue, indigo, violet);
         }
-        body { background: var(--dark); color: #eee; font-family: 'Segoe UI', monospace; margin: 0; overflow-x: hidden; }
+        body { background: var(--dark); color: #eee; font-family: 'Courier New', monospace; margin: 0; overflow: hidden; }
         
-        /* Глобальный Неон */
-        .neon-border { border: 1px solid var(--neon-orange); box-shadow: var(--neon-glow); }
-        .neon-text { color: var(--neon-orange); text-shadow: var(--neon-glow); }
-        /* *** НОВОЕ: НЕОН ДЛЯ МАГИИ *** */
-        .magic-text { color: var(--magic-cyan); text-shadow: var(--magic-glow); }
-        .magic-border { border: 1px solid var(--magic-cyan); box-shadow: var(--magic-glow); }
-
+        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; opacity: 0.5; }
         header { 
-            background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--neon-orange); 
-            padding: 15px 25px; display: flex; align-items: center; justify-content: space-between;
-            position: sticky; top: 0; z-index: 1000; box-shadow: 0 0 20px rgba(255,102,0,0.3);
+            background: rgba(0,0,0,0.95); border-bottom: 2px solid var(--neon); 
+            padding: 10px 30px; display: flex; align-items: center; justify-content: space-between;
+            box-shadow: var(--glow); position: relative; z-index: 10;
         }
 
-        /* Поиск */
-        .search-box { position: relative; width: 350px; }
+        .logo { display: flex; align-items: center; gap: 10px; font-size: 24px; color: var(--neon); font-weight: bold; }
+        .skeleton-icon { font-size: 35px; filter: drop-shadow(var(--glow)); }
+
         .search-box input { 
-            width: 100%; background: #111; border: 1px solid var(--neon-orange); 
-            color: #fff; padding: 8px 15px; border-radius: 20px; outline: none;
-        }
-        #search-results { 
-            position: absolute; top: 45px; width: 100%; background: #000; 
-            border: 1px solid var(--neon-orange); border-radius: 10px; display: none; z-index: 1100;
+            background: #000; border: 1px solid var(--neon); color: #fff; 
+            padding: 8px 15px; border-radius: 20px; width: 200px; outline: none;
         }
 
-        .container { display: flex; max-width: 1400px; margin: 25px auto; gap: 25px; }
-        nav { width: 250px; }
+        .container { display: flex; height: calc(100vh - 70px); }
+        nav { width: 220px; background: rgba(10,10,10,0.9); border-right: 1px solid #333; padding: 20px; overflow-y: auto; }
         nav div { 
-            padding: 15px; background: #111; margin-bottom: 10px; cursor: pointer; 
-            border-radius: 5px; transition: 0.3s; border: 1px solid #222;
+            padding: 15px; border: 1px solid #222; margin-bottom: 10px; cursor: pointer; 
+            transition: 0.3s; text-align: center; border-radius: 5px;
         }
-        nav div:hover, nav div.active { border-color: var(--neon-orange); box-shadow: var(--neon-glow); transform: translateX(5px); }
+        nav div:hover, nav div.active { border-color: var(--neon); box-shadow: var(--glow); background: #1a0a00; }
 
-        .main { flex-grow: 1; position: relative; }
-        .page { display: none; background: rgba(10,10,10,0.95); padding: 25px; border-radius: 10px; min-height: 700px; }
-        .active { display: block; border: 1px solid #333; }
+        main { flex-grow: 1; padding: 30px; overflow-y: auto; background: rgba(0,0,0,0.6); }
+        .page { display: none; }
+        .active-page { display: block; }
+
+        .card { background: #111; border: 1px solid #333; padding: 20px; border-radius: 10px; margin-bottom: 20px; position: relative; }
+        .btn { 
+            background: #000; color: #fff; border: 1px solid var(--neon); 
+            padding: 10px 20px; cursor: pointer; font-weight: bold; border-radius: 5px;
+        }
+        .btn:hover { background: var(--neon); color: #000; box-shadow: var(--glow); }
 
         /* Рамки */
-        .av-container { position: relative; display: inline-block; padding: 6px; border-radius: 50%; }
-        .f-none { border: 2px solid #333; }
-        .f-soul { border: 3px solid var(--abyss); box-shadow: 0 0 20px var(--abyss); animation: soul-pulse 2s infinite; }
-        .f-fire { border: 3px solid var(--neon-orange); box-shadow: var(--neon-glow); }
-        @keyframes soul-pulse { 0% { opacity: 0.7; transform: scale(1); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.7; transform: scale(1); } }
+        .av-wrap { width: 80px; height: 80px; position: relative; border-radius: 50%; padding: 5px; margin: 0 auto; }
+        .f-none { border: 2px solid #444; }
+        .f-neon { border: 2px solid var(--neon); box-shadow: var(--glow); }
+        .f-rainbow { background: var(--rainbow); animation: rainbow-rot 2s linear infinite; }
+        @keyframes rainbow-rot { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; background: #222; }
 
-        /* Сетка магазина и кнопок */
-        .card { background: #111; border: 1px solid #333; padding: 20px; margin-bottom: 20px; border-radius: 8px; transition: 0.3s; }
-        .card:hover { border-color: var(--neon-orange); }
-        .btn { 
-            background: #222; color: #fff; border: 1px solid var(--neon-orange); 
-            padding: 10px 20px; cursor: pointer; border-radius: 5px; font-weight: bold;
-        }
-        .btn:hover { background: var(--neon-orange); color: #000; box-shadow: var(--neon-glow); }
+        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .auth-form { width: 350px; padding: 40px; border: 2px solid var(--neon); text-align: center; box-shadow: var(--glow); }
+        input[type="text"], input[type="password"] { width: 100%; padding: 10px; margin: 10px 0; background: #111; border: 1px solid #444; color: #fff; }
 
-        /* 3D Босс контейнер */
-        #boss-3d-container { width: 100%; height: 400px; background: radial-gradient(circle, #200, #000); border-radius: 15px; margin: 20px 0; border: 1px solid var(--blood); }
-
-        /* ЛС Чат */
-        #chat-window { 
-            position: fixed; bottom: 20px; right: 20px; width: 350px; height: 450px; 
-            background: #000; border: 2px solid var(--neon-orange); display: none; flex-direction: column; z-index: 2000;
-        }
-        .chat-header { background: var(--neon-orange); color: #000; padding: 10px; font-weight: bold; display: flex; justify-content: space-between; }
-        .chat-messages { flex-grow: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
-        .emoji-bar { padding: 5px; background: #111; border-top: 1px solid #333; }
-        .emoji-btn { cursor: pointer; font-size: 20px; padding: 3px; }
-
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-
-        /* Авторизация */
-        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
-        .auth-box { background: #000; padding: 50px; border: 2px solid var(--neon-orange); box-shadow: var(--neon-glow); border-radius: 20px; text-align: center; }
-        input { background: #111; border: 1px solid #444; color: white; padding: 12px; margin: 8px 0; border-radius: 5px; width: 250px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+        th, td { border: 1px solid #333; padding: 10px; text-align: left; }
     </style>
 </head>
 <body>
@@ -93,419 +68,264 @@
 <canvas id="bg-canvas"></canvas>
 
 <div id="auth-overlay">
-    <div class="auth-box">
-        <h1 class="neon-text">CAVE-NET</h1>
-        <input type="text" id="auth-login" placeholder="Имя души"><br>
-        <input type="password" id="auth-pass" placeholder="Код доступа"><br>
-        <button class="btn" onclick="tryAuth('login')">ВОЙТИ</button>
-        <button class="btn" style="border-color:#555" onclick="tryAuth('reg')">СОЗДАТЬ</button>
+    <div class="auth-form">
+        <div class="skeleton-icon">💀</div>
+        <h2 style="color:var(--neon)">CAVE-NET</h2>
+        <input type="text" id="auth-l" placeholder="Твоё Имя">
+        <input type="password" id="auth-p" placeholder="Твой Код">
+        <label><input type="checkbox" id="auth-save" checked> Запомнить сущность</label><br><br>
+        <button class="btn" onclick="auth('login')">ВОЙТИ</button>
+        <button class="btn" onclick="auth('reg')" style="border-color:#555">СОЗДАТЬ</button>
     </div>
 </div>
 
 <header>
-    <div class="neon-text" style="font-size: 28px; font-weight: bold; letter-spacing: 3px;">CAVE-NET</div>
-    <div class="search-box">
-        <input type="text" id="global-search" placeholder="Поиск по Бездне..." onkeyup="searchSystem()">
-        <div id="search-results"></div>
+    <div class="logo">
+        <span class="skeleton-icon">💀</span>
+        <span>CAVE-NET</span>
     </div>
-    <div class="neon-text">🦴 <span id="u-bones">0</span> | <span id="u-name">Скиталец</span></div>
+    <div class="search-box">
+        <input type="text" id="g-search" placeholder="Поиск (Enter)..." onkeypress="if(event.key==='Enter') searchUser()">
+    </div>
+    <div style="font-size:14px; color:var(--neon)">🦴 <span id="stat-bones">0</span> | <span id="stat-name">...</span></div>
 </header>
 
 <div class="container">
     <nav>
-        <div onclick="showPage('feed-page')" class="active">📜 Лента</div>
+        <div onclick="showP('feed')" class="active">📜 Бездна</div>
         <div onclick="openMyProfile()">👤 Мой Грот</div>
-        <div onclick="showPage('friends-page')">👥 Друзья</div>
-        <div onclick="showPage('clans-page')">🛡️ Кланы</div>
-        <div onclick="showPage('boss-page')">👹 ОХОТА</div>
-        <div onclick="showPage('shop-page')">💎 Лавка</div>
-        <div onclick="showPage('settings-page')">⚙️ Настройки</div>
+        <div onclick="showP('clans')">🛡️ Кланы</div>
+        <div onclick="showP('clean')">⚔️ Зачистка</div>
+        <div onclick="showP('shop')">💎 Лавка</div>
+        <div onclick="showP('adm')">⚙️ Админка</div>
     </nav>
 
-    <main class="main">
-        <section id="feed-page" class="page active">
-            <div class="card neon-border">
-                <input type="text" id="post-input" style="width:75%" placeholder="Нацарапать на стене...">
+    <main>
+        <section id="feed" class="page active-page">
+            <div class="card">
+                <input type="text" id="post-in" style="width:80%; background:transparent; border:none; border-bottom:1px solid var(--neon); color:#fff;" placeholder="Напиши на камне...">
                 <button class="btn" onclick="sendPost()">📢</button>
             </div>
-            <div id="global-feed"></div>
+            <div id="feed-list"></div>
         </section>
 
-        <section id="boss-page" class="page">
-            <h2 class="neon-text" style="text-align: center;">ДРЕВНИЙ ПОВЕЛИТЕЛЬ</h2>
-            <div id="boss-3d-container"></div>
-            <div style="width:100%; height:20px; border:1px solid #fff; margin-bottom:10px;">
-                <div id="boss-hp-bar" style="height:100%; background:linear-gradient(90deg, #ff0000, #ff6600); width:100%;"></div>
-            </div>
-            <div style="text-align: center;">
-                <button class="btn" style="font-size:24px" onclick="hitBoss()">УДАРИТЬ! ⚔️</button>
-                <p id="boss-log"></p>
-                <p id="magic-log" class="magic-text" style="font-size: 14px; margin-top: 10px;"></p>
-            </div>
-        </section>
-
-        <section id="clans-page" class="page">
-            <h2>Ваш Клан</h2>
-            <div id="clan-view">
-                <div class="card">
-                    <p>Вы не состоите в клане.</p>
-                    <input type="text" id="clan-name-in" placeholder="Название (2000 костей)">
-                    <button class="btn" onclick="createClan()">Основать</button>
-                </div>
-                <div id="clan-list"></div>
-            </div>
-        </section>
-
-        <section id="shop-page" class="page">
+        <section id="clean" class="page">
+            <h2 style="color:var(--neon)">КОРПУС ЗАЧИСТКИ</h2>
+            <p id="offline-report" style="color:var(--neon); font-weight:bold;"></p>
             <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                <div class="card neon-border">
-                    <h3 style="color:var(--abyss)">РАМКА ДУШИ</h3>
-                    <p>Мистическое свечение</p>
-                    <button class="btn" onclick="buyItem('f-soul', 3000)">3000 🦴</button>
+                <div class="card">
+                    <h3>🕵️ Агент "Тень"</h3>
+                    <p>Добыча: 5 🦴 / 10 сек (Работает оффлайн!)</p>
+                    <p>Цена: 2000 🦴</p>
+                    <button class="btn" onclick="buyAgent('shadow', 2000)">Нанять</button>
                 </div>
-                <div class="card neon-border">
-                    <h3 style="color:var(--neon-orange)">МЕЧ ПУСТОТЫ</h3>
-                    <p>Урон x10</p>
-                    <button class="btn" onclick="buyItem('sword', 5000)">5000 🦴</button>
+                <div class="card">
+                    <h3>🏹 Истребитель</h3>
+                    <p>Урон: 100 HP / 5 сек (Только онлайн)</p>
+                    <p>Цена: 4000 🦴</p>
+                    <button class="btn" onclick="buyAgent('slayer', 4000)">Нанять</button>
                 </div>
-                <div class="card magic-border">
-                    <h3 class="magic-text">МАГИЧЕСКИЙ ПОСОХ</h3>
-                    <p>Автоматический урон</p>
-                    <button class="btn" style="border-color:var(--magic-cyan)" onclick="buyItem('staff', 7000)"><span class="magic-text">7000 🦴</span></button>
-                </div>
+            </div>
+            <div id="agent-status" class="card">Агенты не найдены.</div>
+        </section>
+
+        <section id="clans" class="page">
+            <h2>ПОИСК СОЮЗОВ</h2>
+            <input type="text" id="clan-q" placeholder="Название клана..." onkeyup="filterClans()" style="width:100%; padding:10px; background:#111; color:#fff; border:1px solid var(--neon);">
+            <div id="clan-results" style="margin-top:20px;"></div>
+        </section>
+
+        <section id="shop" class="page">
+            <h2>АРТЕФАКТЫ</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                <div class="card"><h3>Неон</h3><p>1000 🦴</p><button class="btn" onclick="buyShop('f-neon', 1000)">Купить</button></div>
+                <div class="card" style="border:1px solid violet"><h3>РАДУГА</h3><p>20000 🦴</p><button class="btn" onclick="buyShop('f-rainbow', 20000)">Купить</button></div>
             </div>
         </section>
 
-        <section id="friends-page" class="page">
-            <h2>Ваши соратники</h2>
-            <div id="friends-list"></div>
+        <section id="adm" class="page">
+            <h2>ГЛАЗ ДЕМИУРГА</h2>
+            <input type="password" id="adm-key" placeholder="Ключ доступа">
+            <button class="btn" onclick="loadAdm()">Открыть</button>
+            <div id="adm-data"></div>
         </section>
 
-        <section id="profile-page" class="page">
-            <div style="text-align: center;">
-                <div id="prof-frame" class="av-container">
-                    <img id="prof-av" class="avatar" style="width:150px; height:150px; border-radius:50%">
-                </div>
-                <h2 id="prof-nick" class="neon-text">...</h2>
-                <div id="prof-btns"></div>
-                <div class="card" style="margin-top:20px; text-align:left">
-                    <h4>Стена отзывов</h4>
-                    <div id="prof-comments"></div>
-                </div>
-            </div>
-        </section>
-
-        <section id="settings-page" class="page">
-            <div class="card">
-                <h3>Перерождение</h3>
-                <input type="text" id="set-nick" placeholder="Новый ник"><br>
-                <input type="text" id="set-av" placeholder="URL аватара"><br>
-                <button class="btn" onclick="updateProfile()">Сохранить</button>
-            </div>
-            <div class="card">
-                <h3>Админ-вход</h3>
-                <input type="password" id="adm-pass" placeholder="Пароль">
-                <button class="btn" onclick="checkAdmin()">Войти</button>
-            </div>
-            <div id="admin-panel" style="display:none" class="card neon-border">
-                <h2 style="color:red">КОНСОЛЬ БОГА</h2>
-                <button class="btn" onclick="db.ref('users/'+curUser.id+'/bones').transaction(b=>b+10000)">+10000 Костей</button>
-                <div id="admin-users"></div>
-            </div>
+        <section id="prof" class="page">
+            <div id="p-content" style="text-align:center"></div>
         </section>
     </main>
 </div>
 
-<div id="chat-window">
-    <div class="chat-header">
-        <span id="chat-target">Чат</span>
-        <span onclick="document.getElementById('chat-window').style.display='none'" style="cursor:pointer">✖</span>
-    </div>
-    <div id="chat-msgs" class="chat-messages"></div>
-    <div class="emoji-bar" id="emoji-list"></div>
-    <div style="display:flex; padding:10px;">
-        <input type="text" id="chat-in" style="flex-grow:1; width:auto; margin:0" placeholder="Тьма услышит...">
-        <button class="btn" onclick="sendMsg()">></button>
-    </div>
-</div>
-
 <script>
-    // --- ИНИЦИАЛИЗАЦИЯ ---
-    // ЗАМЕНИ НА СВОИ ДАННЫЕ FIREBASE
     const firebaseConfig = { databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    let curUser = null;
-    let viewedUID = null;
-    let activeChatKey = null;
-    /* *** НОВОЕ: ИНТЕРВАЛ МАГИИ *** */
-    let magicInterval = null;
+    let cur = null;
+    let onlineRef = null;
 
-    // --- АВТОРИЗАЦИЯ ---
-    function tryAuth(mode) {
-        const l = document.getElementById('auth-login').value.trim();
-        const p = document.getElementById('auth-pass').value.trim();
-        if(!l || !p) return;
+    // --- ЛОГИКА АВТОРИЗАЦИИ ---
+    window.onload = () => {
+        const saved = localStorage.getItem('cave_v2_user');
+        if(saved) {
+            const parsed = JSON.parse(saved);
+            db.ref('users/' + parsed.id).once('value', s => {
+                if(s.exists()) login(parsed.id, s.val());
+            });
+        }
+    };
+
+    function auth(mode) {
+        const l = document.getElementById('auth-l').value;
+        const p = document.getElementById('auth-p').value;
+        if(!l || !p) return alert("Пустота требует имени!");
 
         if(mode === 'reg') {
-            const newUser = { nick: l, pass: p, bones: 500, frame: 'f-none', av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${l}`, sword: false, friends: {}, staff: false }; // *** НОВОЕ: ДОБАВЛЕНО STAFF: FALSE ***
-            const ref = db.ref('users').push(newUser);
-            startSession(ref.key, newUser);
+            const id = db.ref('users').push().key;
+            const data = { id, nick: l, pass: p, bones: 500, frame: 'f-none', av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${l}`, agents: { shadow: 0, slayer: 0 }, lastActive: Date.now() };
+            db.ref('users/' + id).set(data);
+            login(id, data);
         } else {
             db.ref('users').once('value', s => {
+                let found = false;
                 s.forEach(c => {
-                    if(c.val().nick === l && c.val().pass === p) startSession(c.key, c.val());
+                    const u = c.val();
+                    if(u.nick === l && u.pass === p) { login(c.key, u); found = true; }
                 });
+                if(!found) alert("Тень не узнает тебя.");
             });
         }
     }
 
-    function startSession(id, data) {
-        curUser = { id, ...data };
+    function login(id, data) {
+        cur = { id, ...data };
+        if(document.getElementById('auth-save').checked) {
+            localStorage.setItem('cave_v2_user', JSON.stringify({id: id}));
+        }
         document.getElementById('auth-overlay').style.display = 'none';
         
-        // Синхронизация данных
-        db.ref('users/' + id).on('value', s => {
-            curUser = { id, ...s.val() };
-            document.getElementById('u-bones').innerText = curUser.bones;
-            document.getElementById('u-name').innerText = curUser.nick;
-            /* *** НОВОЕ: ЗАПУСК МАГИИ *** */
-            checkMagicAutoAttack();
+        // Расчет Оффлайна
+        calculateOffline(data);
+        initSync();
+    }
+
+    function calculateOffline(data) {
+        if(!data.lastActive || !data.agents?.shadow) return;
+        const now = Date.now();
+        const diffSec = Math.floor((now - data.lastActive) / 1000);
+        const cycles = Math.floor(diffSec / 10); // Раз в 10 секунд
+        
+        if(cycles > 0) {
+            const total = cycles * (data.agents.shadow * 5);
+            db.ref(`users/${cur.id}/bones`).transaction(b => (b || 0) + total);
+            document.getElementById('offline-report').innerText = `Пока тебя не было, Наемники добыли ${total} 🦴 за ${Math.floor(diffSec/60)} мин!`;
+            setTimeout(() => document.getElementById('offline-report').innerText = "", 10000);
+        }
+    }
+
+    function initSync() {
+        db.ref('users/' + cur.id).on('value', s => {
+            cur = { id: cur.id, ...s.val() };
+            document.getElementById('stat-bones').innerText = cur.bones;
+            document.getElementById('stat-name').innerText = cur.nick;
+            document.getElementById('agent-status').innerText = `Агенты: Тень (${cur.agents?.shadow || 0}), Истребитель (${cur.agents?.slayer || 0})`;
+            // Обновляем время активности каждые 30 секунд
+            db.ref(`users/${cur.id}/lastActive`).set(Date.now());
         });
+
+        setInterval(() => {
+            if(cur.agents?.shadow > 0) db.ref(`users/${cur.id}/bones`).transaction(b => b + (cur.agents.shadow * 5));
+        }, 10000);
 
         loadFeed();
-        syncBoss();
-        init3D();
-        initEmoji();
-        startBots();
     }
 
-    /* *** НОВОЕ: ЛОГИКА АВТОМАТИЧЕСКОЙ АТАКИ МАГИЕЙ *** */
-    function checkMagicAutoAttack() {
-        // Если посох есть и интервал еще не запущен
-        if (curUser.staff && !magicInterval) {
-            document.getElementById('magic-log').innerText = "✨ Посох пульсирует магией...";
-            magicInterval = setInterval(() => {
-                // Наносим автоматический урон. Сделаем его 30.
-                const magicDmg = 30;
-                db.ref('global_boss/hp').transaction(h => (h || 1000000) - magicDmg);
-                
-                // Визуальный эффект попадания магии
-                document.getElementById('boss-log').innerText = "💥 Магия посоха поразила босса!";
-                setTimeout(() => document.getElementById('boss-log').innerText = "", 1000);
-
-                // Случайный шанс получить кость за магический удар (меньше, чем за ручной)
-                if (Math.random() < 0.1) { // 10% шанс
-                    db.ref('users/' + curUser.id + '/bones').transaction(b => b + 1);
-                    document.getElementById('magic-log').innerText = "✨ Посох добыл 1🦴!";
-                    setTimeout(() => document.getElementById('magic-log').innerText = "✨ Посох пульсирует магией...", 1500);
-                }
-            }, 3000); // Каждые 3 секунды
-        } else if (!curUser.staff && magicInterval) {
-            // Если посох пропал (например, при админском сбросе), останавливаем атаку
-            clearInterval(magicInterval);
-            magicInterval = null;
-            document.getElementById('magic-log').innerText = "";
-        }
-    }
-
-    // --- ПОИСК (РАБОЧИЙ) ---
-    function searchSystem() {
-        const q = document.getElementById('global-search').value.toLowerCase();
-        const res = document.getElementById('search-results');
-        if(q.length < 1) { res.style.display='none'; return; }
-
+    // --- ПОИСК И КЛАНЫ ---
+    function searchUser() {
+        const q = document.getElementById('g-search').value.toLowerCase();
         db.ref('users').once('value', s => {
-            let h = '';
             s.forEach(c => {
-                if(c.val().nick.toLowerCase().includes(q)) {
-                    h += `<div class="card" style="margin:5px; cursor:pointer" onclick="openProfile('${c.key}')">${c.val().nick}</div>`;
-                }
+                if(c.val().nick.toLowerCase() === q) openProf(c.key, c.val());
             });
-            res.innerHTML = h;
-            res.style.display = h ? 'block' : 'none';
         });
     }
 
-    // --- ПРОФИЛЬ И ДРУЗЬЯ ---
-    function openProfile(uid) {
-        viewedUID = uid;
-        document.getElementById('search-results').style.display='none';
-        showPage('profile-page');
-        
-        db.ref('users/' + uid).on('value', s => {
-            const u = s.val();
-            document.getElementById('prof-nick').innerText = u.nick;
-            document.getElementById('prof-av').src = u.av;
-            document.getElementById('prof-frame').className = "av-container " + (u.frame || 'f-none');
-            
-            let btns = '';
-            if(uid !== curUser.id) {
-                btns += `<button class="btn" onclick="addFriend('${uid}')">👥 В Друзья</button> `;
-                btns += `<button class="btn" onclick="openChat('${uid}', '${u.nick}')">✉️ Написать</button>`;
-            }
-            document.getElementById('prof-btns').innerHTML = btns;
-        });
+    function buyAgent(type, cost) {
+        if(cur.bones < cost) return alert("Недостаточно костей!");
+        db.ref(`users/${cur.id}/bones`).transaction(b => b - cost);
+        db.ref(`users/${cur.id}/agents/${type}`).transaction(a => (a || 0) + 1);
     }
 
-    function addFriend(uid) {
-        db.ref(`users/${curUser.id}/friends/${uid}`).set(true);
-        alert("Запрос отправлен (добавлено в список)");
+    function buyShop(f, cost) {
+        if(cur.bones < cost) return alert("Мало костей!");
+        db.ref(`users/${cur.id}`).update({ bones: cur.bones - cost, frame: f });
     }
 
-    function openMyProfile() { openProfile(curUser.id); }
-
-    // --- ЧАТ И СМАЙЛИКИ ---
-    function initEmoji() {
-        const emojis = ['💀','🔥','🦴','⚔️','🌑','☣️','👑','💎', '✨']; // *** НОВОЕ: ДОБАВЛЕН СМАЙЛИК ✨ ***
-        const bar = document.getElementById('emoji-list');
-        emojis.forEach(e => {
-            bar.innerHTML += `<span class="emoji-btn" onclick="document.getElementById('chat-in').value += '${e}'">${e}</span>`;
-        });
+    function openMyProfile() { openProf(cur.id, cur); }
+    function openProf(id, data) {
+        showP('prof');
+        document.getElementById('p-content').innerHTML = `
+            <div class="av-wrap ${data.frame}"><img src="${data.av}" class="avatar"></div>
+            <h2 class="logo">${data.nick}</h2>
+            <p>Статус: ${id === cur.id ? 'Владелец Грота' : 'Странник'}</p>
+        `;
     }
 
-    function openChat(uid, nick) {
-        activeChatKey = [curUser.id, uid].sort().join("_");
-        document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('chat-target').innerText = nick;
-        
-        db.ref('chats/' + activeChatKey).limitToLast(20).on('value', s => {
-            const box = document.getElementById('chat-msgs');
-            box.innerHTML = '';
-            s.forEach(m => {
-                const d = m.val();
-                const isMe = d.from === curUser.nick;
-                box.innerHTML += `<div style="align-self:${isMe?'flex-end':'flex-start'}; background:${isMe?'#333':'var(--blood)'}; padding:8px; border-radius:10px; max-width:80%">${d.text}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-    }
-
-    function sendMsg() {
-        const t = document.getElementById('chat-in').value;
-        if(!t || !activeChatKey) return;
-        db.ref('chats/' + activeChatKey).push({ from: curUser.nick, text: t, time: Date.now() });
-        document.getElementById('chat-in').value = '';
-    }
-
-    // --- 3D БОСС ---
-    let bossMesh;
-    function init3D() {
-        const container = document.getElementById('boss-3d-container');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        container.appendChild(renderer.domElement);
-
-        // Создаем страшную фигуру
-        const group = new THREE.Group();
-        const mat = new THREE.MeshPhongMaterial({ color: 0x330000, emissive: 0xff0000, emissiveIntensity: 0.5, wireframe: true });
-        bossMesh = new THREE.Mesh(new THREE.TorusKnotGeometry(1, 0.4, 100, 16), mat);
-        group.add(bossMesh);
-        scene.add(group);
-
-        const light = new THREE.PointLight(0xff6600, 2, 50);
-        light.position.set(5, 5, 5);
-        scene.add(light);
-        camera.position.z = 3;
-
-        function animate() {
-            requestAnimationFrame(animate);
-            bossMesh.rotation.y += 0.01;
-            bossMesh.rotation.z += 0.005;
-            const s = 1 + Math.sin(Date.now()*0.005)*0.1;
-            bossMesh.scale.set(s,s,s);
-            renderer.render(scene, camera);
-        }
-        animate();
-    }
-
-    function hitBoss() {
-        const dmg = curUser.sword ? 100 : 10;
-        db.ref('global_boss/hp').transaction(h => (h || 1000000) - dmg);
-        const reward = Math.floor(Math.random()*5);
-        if(reward > 0) db.ref('users/'+curUser.id+'/bones').transaction(b => b + reward);
-        document.getElementById('boss-log').innerText = `Урон: ${dmg} | Найдено: ${reward}🦴`;
-    }
-
-    function syncBoss() {
-        db.ref('global_boss/hp').on('value', s => {
-            const hp = s.val() || 1000000;
-            document.getElementById('boss-hp-bar').style.width = (hp/1000000*100) + "%";
-        });
-    }
-
-    // --- ВСПОМОГАТЕЛЬНОЕ ---
-    function showPage(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    function showP(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
         document.querySelectorAll('nav div').forEach(d => d.classList.remove('active'));
-        document.getElementById(id).classList.add('active');
+        document.getElementById(id).classList.add('active-page');
     }
 
-    function buyItem(type, cost) {
-        if(curUser.bones < cost) return alert("Мало костей!");
-        let up = { bones: curUser.bones - cost };
-        if(type.startsWith('f-')) up.frame = type;
-        if(type === 'sword') up.sword = true;
-        /* *** НОВОЕ: ЛОГИКА ПОКУПКИ ПОСОХА *** */
-        if(type === 'staff') {
-            if(curUser.staff) return alert("У вас уже есть этот посох.");
-            up.staff = true;
-        }
-        db.ref('users/' + curUser.id).update(up);
-        alert("Приобретено!");
+    // --- АДМИНКА ---
+    function loadAdm() {
+        if(document.getElementById('adm-key').value !== 'ADMINHACKER') return;
+        db.ref('users').on('value', s => {
+            let h = '<table><tr><th>ID</th><th>Ник</th><th>Кости</th><th>Бан</th></tr>';
+            s.forEach(c => {
+                const u = c.val();
+                h += `<tr><td>${c.key.slice(-5)}</td><td>${u.nick}</td><td>${u.bones}</td><td><button onclick="ban('${c.key}')">X</button></td></tr>`;
+            });
+            document.getElementById('adm-data').innerHTML = h + '</table>';
+        });
     }
-
-    function checkAdmin() {
-        if(document.getElementById('adm-pass').value === 'ADMINHACKER') {
-            document.getElementById('admin-panel').style.display = 'block';
-        }
-    }
+    function ban(uid) { if(confirm("Удалить?")) db.ref('users/' + uid).remove(); }
 
     function loadFeed() {
-        db.ref('posts').limitToLast(20).on('value', s => {
-            const f = document.getElementById('global-feed'); f.innerHTML = '';
-            s.forEach(c => {
-                const p = c.val();
-                f.innerHTML = `<div class="card neon-border"><b>${p.nick}:</b> ${p.text}</div>` + f.innerHTML;
-            });
+        db.ref('posts').limitToLast(15).on('value', s => {
+            const list = document.getElementById('feed-list'); list.innerHTML = '';
+            s.forEach(c => { list.innerHTML = `<div class="card"><b>${c.val().nick}:</b> ${c.val().text}</div>` + list.innerHTML; });
         });
     }
-
     function sendPost() {
-        const t = document.getElementById('post-input').value;
-        if(!t) return;
-        db.ref('posts').push({ nick: curUser.nick, text: t, time: Date.now() });
-        document.getElementById('post-input').value = '';
+        const t = document.getElementById('post-in').value;
+        if(t) db.ref('posts').push({ nick: cur.nick, text: t });
+        document.getElementById('post-in').value = '';
     }
 
-    // Фон (Скелеты)
-    const bgScene = new THREE.Scene();
-    const bgCam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-    const bgRen = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true });
-    bgRen.setSize(window.innerWidth, window.innerHeight);
-    const skulls = [];
-    for(let i=0; i<15; i++) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color: 0xff6600, wireframe: true}));
-        m.position.set(Math.random()*40-20, Math.random()*40-20, Math.random()*20-30);
-        skulls.push(m); bgScene.add(m);
-    }
-    function bgAnim() {
-        requestAnimationFrame(bgAnim);
-        skulls.forEach(s => { s.rotation.x += 0.01; s.rotation.y += 0.01; });
-        bgRen.render(bgScene, bgCam);
-    }
-    bgAnim();
+    // --- 3D ФОН (МНОГО ФИГУР) ---
+    const scene = new THREE.Scene();
+    const camera = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+    const renderer = new THREE.WebGLRenderer({ canvas: document.getElementById('bg-canvas'), alpha: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
 
-    function startBots() {
-        setInterval(() => {
-            if(Math.random() > 0.7) {
-                db.ref('posts').push({ nick: "🤖 Бродяга", text: "Слышу крики Босса в глубине...", time: Date.now() });
-            }
-        }, 30000);
+    const shapes = [];
+    const geometry = new THREE.TorusGeometry(0.7, 0.2, 16, 50);
+    const material = new THREE.MeshBasicMaterial({ color: 0xff6600, wireframe: true });
+
+    for(let i=0; i<60; i++) {
+        const s = new THREE.Mesh(geometry, material);
+        s.position.set(Math.random()*60-30, Math.random()*60-30, Math.random()*40-50);
+        scene.add(s);
+        shapes.push(s);
     }
+
+    function animate() {
+        requestAnimationFrame(animate);
+        shapes.forEach(s => { s.rotation.x += 0.01; s.rotation.y += 0.01; });
+        renderer.render(scene, camera);
+    }
+    animate();
 </script>
 </body>
 </html>
