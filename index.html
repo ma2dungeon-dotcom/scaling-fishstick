@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAVE-NET | Опасность во тьме</title>
+    <title>CAVE-NET | Хроники Бездны</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
     <style>
         :root {
             --dark-stone: #0f0f0f;
@@ -14,344 +18,292 @@
             --text-grey: #a0a0a0;
         }
 
-        body, html {
-            margin: 0;
-            padding: 0;
-            background-color: var(--dark-stone);
-            color: white;
-            font-family: 'Courier New', Courier, monospace;
-            overflow-x: hidden;
-        }
+        body, html { margin: 0; padding: 0; background: var(--dark-stone); color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
+        
+        /* Визуализация рамок */
+        .avatar-container { position: relative; display: inline-block; }
+        .frame-none { border: 2px solid #444; }
+        .frame-gold { border: 4px solid var(--cave-gold); box-shadow: 0 0 10px var(--cave-gold); }
+        .frame-fire { border: 4px solid var(--danger-orange); box-shadow: 0 0 15px red; animation: pulse 1.5s infinite; }
+        
+        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
 
-        /* Эффект мерцания факела по краям */
-        body::before {
-            content: "";
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            box-shadow: inset 0 0 150px rgba(0,0,0,0.9), inset 0 0 50px rgba(255,69,0,0.1);
-            pointer-events: none;
-            z-index: 10;
-        }
+        header { background: rgba(20, 20, 20, 0.9); border-bottom: 2px solid var(--blood-red); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
+        .container { display: flex; max-width: 1200px; margin: 20px auto; gap: 20px; }
+        nav { width: 220px; flex-shrink: 0; }
+        nav li { padding: 12px; margin-bottom: 5px; background: #1a1a1a; cursor: pointer; border-left: 3px solid transparent; }
+        nav li:hover, nav li.active { border-left-color: var(--danger-orange); background: #252525; }
 
-        /* Навигация а-ля ВК */
-        header {
-            background: rgba(20, 20, 20, 0.9);
-            border-bottom: 2px solid var(--blood-red);
-            padding: 10px 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-
-        .logo { color: var(--blood-red); font-weight: bold; font-size: 24px; text-shadow: 2px 2px 5px black; }
-
-        .container {
-            display: flex;
-            max-width: 1200px;
-            margin: 20px auto;
-            gap: 20px;
-        }
-
-        /* Боковое меню */
-        nav {
-            width: 200px;
-            flex-shrink: 0;
-        }
-
-        nav ul { list-style: none; padding: 0; }
-        nav li {
-            padding: 12px;
-            margin-bottom: 5px;
-            background: #1a1a1a;
-            border-left: 3px solid transparent;
-            cursor: pointer;
-            transition: 0.3s;
-        }
-        nav li:hover { background: #252525; border-left-color: var(--danger-orange); }
-        nav li.active { border-left-color: var(--blood-red); background: #221010; }
-
-        /* Контентные зоны */
-        .main-content { flex-grow: 1; min-height: 800px; }
+        .main-content { flex-grow: 1; }
         .page { display: none; }
         .page.active { display: block; }
 
-        /* Секция рекомендаций с 3D черепом */
-        #recommendations {
-            position: relative;
-            background: linear-gradient(135deg, #151515, #0a0a0a);
-            border: 1px solid #333;
-            border-radius: 8px;
-            padding: 20px;
-            min-height: 500px;
-            overflow: hidden;
-        }
+        .card { background: rgba(30, 30, 30, 0.8); border: 1px solid #444; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
+        .avatar { width: 50px; height: 50px; object-fit: cover; }
+        
+        #skull-container { position: absolute; top: 0; right: 0; width: 300px; height: 300px; z-index: 1; pointer-events: none; }
+        .shake { animation: shake-anim 0.4s both; }
+        @keyframes shake-anim { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 40%, 60% { transform: translate3d(-4px, 0, 0); } }
 
-        #skull-container {
-            position: absolute;
-            top: 0; right: 0;
-            width: 400px; height: 400px;
-            z-index: 1;
-            pointer-events: none;
-        }
-
-        .shake { animation: shake-anim 0.4s cubic-bezier(.36,.07,.19,.97) both; }
-        @keyframes shake-anim {
-            10%, 90% { transform: translate3d(-1px, 0, 0); }
-            20%, 80% { transform: translate3d(2px, 0, 0); }
-            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
-            40%, 60% { transform: translate3d(4px, 0, 0); }
-        }
-
-        /* Посты и Карточки */
-        .card {
-            background: rgba(30, 30, 30, 0.8);
-            border: 1px solid #444;
-            padding: 15px;
-            margin-bottom: 20px;
-            border-radius: 4px;
-            position: relative;
-            z-index: 2;
-        }
-
-        .avatar {
-            width: 50px; height: 50px;
-            border-radius: 4px;
-            background: #444;
-            display: inline-block;
-            vertical-align: middle;
-            margin-right: 10px;
-            border: 1px solid var(--blood-red);
-            object-fit: cover;
-        }
-
-        /* Профиль */
-        .profile-header {
-            background: url('https://images.unsplash.com/photo-1502481851512-e9e2529bbbf9?q=80&w=1000&auto=format&fit=crop') center/cover;
-            height: 200px;
-            border-radius: 8px 8px 0 0;
-            position: relative;
-        }
-
-        .profile-info {
-            background: #1a1a1a;
-            padding: 20px;
-            border: 1px solid #333;
-            display: flex;
-            align-items: flex-end;
-            margin-top: -50px;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .main-avatar {
-            width: 120px; height: 120px;
-            border: 5px solid var(--dark-stone);
-            background: #333;
-            border-radius: 8px;
-        }
-
-        /* Головоломка */
-        .puzzle-box {
-            border: 2px dashed var(--cave-gold);
-            padding: 20px;
-            text-align: center;
-            background: #1a1600;
-        }
-
-        button {
-            background: var(--blood-red);
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            cursor: pointer;
-            font-family: inherit;
-        }
+        input, button, select { background: #000; border: 1px solid #555; color: white; padding: 10px; margin: 5px 0; font-family: inherit; }
+        button { background: var(--blood-red); cursor: pointer; }
         button:hover { background: var(--danger-orange); }
 
-        input {
-            background: #000;
-            border: 1px solid var(--text-grey);
-            color: var(--cave-gold);
-            padding: 10px;
-            margin: 10px 0;
-        }
+        .admin-panel { background: #1a0000; border: 2px solid red; padding: 15px; margin-top: 20px; display: none; }
     </style>
 </head>
 <body>
 
 <header>
-    <div class="logo">CAVE-NET</div>
-    <div id="stats">🦴 Костей: <span id="balance">0</span> | <small>Выживших: 666</small></div>
+    <div style="color: var(--blood-red); font-size: 24px; font-weight: bold;">CAVE-NET</div>
+    <div>🦴 <span id="balance">0</span> | <span id="user-display-name">Путник</span></div>
 </header>
 
 <div class="container">
     <nav>
         <ul>
-            <li onclick="showPage('recommendations')" class="active" id="btn-rec">Грот Советов</li>
-            <li onclick="showPage('profile')" id="btn-prof">Моя Расщелина</li>
-            <li onclick="showPage('puzzles')" id="btn-puz">Забытые Руны</li>
+            <li onclick="showPage('recommendations')" class="active">Грот Советов</li>
+            <li onclick="showPage('profile')">Моя Расщелина</li>
+            <li onclick="showPage('shop')">Лавка Скелета</li>
+            <li onclick="showPage('puzzles')">Забытые Руны</li>
+            <li onclick="showPage('settings')">Настройки</li>
         </ul>
     </nav>
 
     <main class="main-content">
         <section id="recommendations" class="page active">
             <div id="skull-container"></div>
-            <h2 style="position:relative; z-index:2;">Опасные рекомендации</h2>
-            
-            <div class="card">
-                <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Bones" class="avatar">
-                <strong>Старый Шахтер</strong>
-                <p>Не ходите на 7-й уровень пещер без факела. Вчера там пропало ещё двое...</p>
+            <div class="card" style="position:relative; z-index:2;">
+                <h3>Оставить надпись на стене</h3>
+                <input type="text" id="post-text" style="width:70%" placeholder="Что видишь во тьме?">
+                <button onclick="sendPost()">Выцарапать</button>
             </div>
-
-            <div class="card">
-                <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Ghost" class="avatar">
-                <strong>Призрак Лабиринта</strong>
-                <p>Кто-нибудь видел мою левую берцовую кость? Оставил у сталагмита.</p>
-            </div>
+            <div id="feed-container"></div>
         </section>
 
         <section id="profile" class="page">
-            <div class="profile-header"></div>
-            <div class="profile-info">
-                <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Hero" class="main-avatar">
-                <div style="margin-left: 20px;">
-                    <h2>Безымянный Скиталец</h2>
-                    <p style="color: var(--text-grey);">Статус: Пытаюсь выжить...</p>
+            <div class="card" style="text-align: center;">
+                <div class="avatar-container" id="profile-frame">
+                    <img id="my-avatar" class="avatar" style="width:100px; height:100px;" src="">
                 </div>
+                <h2 id="profile-nick">Ник</h2>
+                <p id="profile-id" style="font-size: 10px; color: #555;"></p>
             </div>
-            <div class="card" style="margin-top: 20px;">
-                <h3>Настенные записи</h3>
-                <p>Здесь пока пусто. Только капает вода.</p>
+        </section>
+
+        <section id="shop" class="page">
+            <h2>Лавка Скелета</h2>
+            <div style="display: flex; gap: 20px;">
+                <div class="card">
+                    <h4>Золотая рамка</h4>
+                    <p>Цена: 200 🦴</p>
+                    <button onclick="buyItem('frame-gold', 200)">Купить</button>
+                </div>
+                <div class="card">
+                    <h4>Огненная рамка</h4>
+                    <p>Цена: 500 🦴</p>
+                    <button onclick="buyItem('frame-fire', 500)">Купить</button>
+                </div>
             </div>
         </section>
 
         <section id="puzzles" class="page">
-            <div class="puzzle-box">
-                <h2>🧩 Испытание Древнего Черепа</h2>
-                <p id="puzzle-text">Загадка: "У меня нет легких, но мне нужен воздух. Я не живой, но я расту. Я не имею рта, но вода убивает меня. Что я?"</p>
-                <input type="text" id="puzzle-answer" placeholder="Введи ответ...">
-                <br>
-                <button onclick="checkPuzzle()">Произнести вслух</button>
-                <p id="puzzle-status" style="margin-top: 15px;"></p>
-                <p><small id="winners-info">Осталось наград: 10</small></p>
+            <div class="card" style="border-color: var(--cave-gold);">
+                <h3>Древнее испытание</h3>
+                <p>Загадка: "Что может путешествовать по всему миру, оставаясь в одном и том же углу?"</p>
+                <input type="text" id="puzzle-answer" placeholder="Ответ...">
+                <button onclick="solvePuzzle()">Ответить</button>
+            </div>
+        </section>
+
+        <section id="settings" class="page">
+            <div class="card">
+                <h3>Сменить имя</h3>
+                <input type="text" id="new-nick" placeholder="Новый ник">
+                <button onclick="updateNick()">Сохранить</button>
+            </div>
+            <div class="card">
+                <h3>Админ-панель</h3>
+                <input type="password" id="admin-pass" placeholder="Пароль">
+                <button onclick="checkAdmin()">Вход</button>
+                <div id="admin-area" class="admin-panel">
+                    <h4>Панель Властелина</h4>
+                    <button onclick="resetWinners()">Сбросить победителей</button>
+                    <button onclick="addBonesAdmin()">+1000 костей</button>
+                </div>
             </div>
         </section>
     </main>
 </div>
 
 <script>
-    // --- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ---
-    function showPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('nav li').forEach(l => l.classList.remove('active'));
-        document.getElementById(pageId).classList.add('active');
-        
-        if(pageId === 'recommendations') document.getElementById('btn-rec').classList.add('active');
-        if(pageId === 'profile') document.getElementById('btn-prof').classList.add('active');
-        if(pageId === 'puzzles') document.getElementById('btn-puz').classList.add('active');
+    // --- ИНИЦИАЛИЗАЦИЯ FIREBASE ---
+    const firebaseConfig = { databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // --- ЛОГИКА АККАУНТА ---
+    let userId = localStorage.getItem('cave_user_id') || 'u' + Date.now();
+    localStorage.setItem('cave_user_id', userId);
+
+    let userData = {
+        nick: "Безымянный",
+        bones: 0,
+        frame: "frame-none",
+        avatar: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userId}`
+    };
+
+    // Загрузка данных пользователя
+    db.ref('users/' + userId).on('value', (snapshot) => {
+        if(snapshot.exists()) {
+            userData = snapshot.val();
+            updateUI();
+        } else {
+            db.ref('users/' + userId).set(userData);
+        }
+    });
+
+    function updateUI() {
+        document.getElementById('balance').innerText = userData.bones;
+        document.getElementById('user-display-name').innerText = userData.nick;
+        document.getElementById('profile-nick').innerText = userData.nick;
+        document.getElementById('my-avatar').src = userData.avatar;
+        document.getElementById('profile-id').innerText = "ID: " + userId;
+        document.getElementById('profile-frame').className = "avatar-container " + (userData.frame || 'frame-none');
     }
 
-    // --- 3D ГРАФИКА (ЧЕРЕП) ---
+    // --- ПОСТЫ И БОТЫ ---
+    function sendPost() {
+        const text = document.getElementById('post-text').value;
+        if(!text) return;
+        db.ref('posts').push({
+            uid: userId,
+            nick: userData.nick,
+            text: text,
+            frame: userData.frame,
+            avatar: userData.avatar,
+            time: Date.now()
+        });
+        document.getElementById('post-text').value = "";
+    }
+
+    // Загрузка ленты
+    db.ref('posts').limitToLast(10).on('value', (snapshot) => {
+        const feed = document.getElementById('feed-container');
+        feed.innerHTML = "";
+        snapshot.forEach((child) => {
+            const post = child.val();
+            feed.innerHTML = `
+                <div class="card">
+                    <div class="avatar-container ${post.frame}">
+                        <img src="${post.avatar}" class="avatar">
+                    </div>
+                    <strong>${post.nick}:</strong> ${post.text}
+                </div>` + feed.innerHTML;
+        });
+    });
+
+    // Боты (появляются раз в 30 секунд, если страница открыта)
+    const botPhrases = ["Тут кто-то есть...", "Слышите этот скрежет?", "Я нашел блестящий камушек!", "В темноте светятся глаза..."];
+    setInterval(() => {
+        if(Math.random() > 0.7) {
+            const botNick = "Тень_" + Math.floor(Math.random()*100);
+            db.ref('posts').push({
+                nick: "🤖 " + botNick,
+                text: botPhrases[Math.floor(Math.random()*botPhrases.length)],
+                frame: "frame-none",
+                avatar: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${botNick}`,
+                time: Date.now()
+            });
+        }
+    }, 30000);
+
+    // --- МАГАЗИН И НАСТРОЙКИ ---
+    function buyItem(id, price) {
+        if(userData.bones >= price) {
+            db.ref('users/' + userId).update({
+                bones: userData.bones - price,
+                frame: id
+            });
+            alert("Обновка куплена!");
+        } else {
+            alert("Недостаточно костей!");
+        }
+    }
+
+    function updateNick() {
+        const newNick = document.getElementById('new-nick').value;
+        if(newNick) db.ref('users/' + userId).update({ nick: newNick });
+    }
+
+    // --- ГОЛОВОЛОМКА ---
+    function solvePuzzle() {
+        const ans = document.getElementById('puzzle-answer').value.toLowerCase().trim();
+        if(ans === "марка" || ans === "почтовая марка") {
+            db.ref('winners').once('value', (snap) => {
+                const count = snap.numChildren();
+                if(count < 10) {
+                    const reward = Math.floor(Math.random() * 490) + 10;
+                    db.ref('winners/' + userId).set(true);
+                    db.ref('users/' + userId + '/bones').transaction(b => (b || 0) + reward);
+                    alert(`Верно! Получено ${reward} костей!`);
+                } else {
+                    alert("Все награды разобраны!");
+                }
+            });
+        }
+    }
+
+    // --- АДМИНКА ---
+    function checkAdmin() {
+        if(document.getElementById('admin-pass').value === "ADMINHACKER") {
+            document.getElementById('admin-area').style.display = "block";
+        }
+    }
+    function resetWinners() { db.ref('winners').remove(); alert("Победители сброшены"); }
+    function addBonesAdmin() { db.ref('users/' + userId + '/bones').transaction(b => b + 1000); }
+
+    // --- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ---
+    function showPage(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+        document.querySelectorAll('nav li').forEach(l => l.classList.remove('active'));
+        document.getElementById(id).classList.add('active');
+    }
+
+    // --- 3D ЧЕРЕП (Three.js) ---
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
-    const renderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
-    
-    const container = document.getElementById('skull-container');
-    renderer.setSize(400, 400);
-    container.appendChild(renderer.domElement);
+    const renderer = new THREE.WebGLRenderer({ alpha: true });
+    const skullCont = document.getElementById('skull-container');
+    renderer.setSize(300, 300);
+    skullCont.appendChild(renderer.domElement);
 
-    // Группа для сборки черепа из примитивов (так как мы в одном файле без внешних моделей)
-    const skullGroup = new THREE.Group();
+    const skull = new THREE.Group();
+    const mat = new THREE.MeshPhongMaterial({ color: 0xcccccc });
+    const head = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), mat);
+    skull.add(head);
+    const jaw = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 0.8), mat);
+    jaw.position.y = -0.7;
+    skull.add(jaw);
+    scene.add(skull);
 
-    const boneMat = new THREE.MeshPhongMaterial({ color: 0xe0e0e0, shininess: 100 });
-    
-    // Основная черепная коробка
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1.2, 32, 32), boneMat);
-    skullGroup.add(head);
-
-    // Челюсть
-    const jaw = new THREE.Mesh(new THREE.BoxGeometry(1.2, 0.8, 1), boneMat);
-    jaw.position.y = -0.8;
-    jaw.position.z = 0.2;
-    skullGroup.add(jaw);
-
-    // Глазницы (пустота)
-    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
-    const eyeL = new THREE.Mesh(new THREE.SphereGeometry(0.3, 16, 16), eyeMat);
-    eyeL.position.set(-0.4, 0, 1);
-    skullGroup.add(eyeL);
-
-    const eyeR = eyeL.clone();
-    eyeR.position.x = 0.4;
-    skullGroup.add(eyeR);
-
-    scene.add(skullGroup);
-
-    // Свет
-    const light = new THREE.PointLight(0xff4500, 2, 50);
-    light.position.set(2, 2, 5);
+    const light = new THREE.PointLight(0xff0000, 2, 50);
+    light.position.set(2, 2, 2);
     scene.add(light);
-    scene.add(new THREE.AmbientLight(0x404040));
-
-    camera.position.z = 5;
+    camera.position.z = 4;
 
     function animate() {
         requestAnimationFrame(animate);
-        skullGroup.rotation.y += 0.01;
-        skullGroup.rotation.x = Math.sin(Date.now() * 0.001) * 0.2;
+        skull.rotation.y += 0.02;
         renderer.render(scene, camera);
     }
     animate();
 
-    // Тряска каждые 5 секунд
     setInterval(() => {
-        container.classList.add('shake');
-        setTimeout(() => container.classList.remove('shake'), 400);
+        skullCont.classList.add('shake');
+        setTimeout(() => skullCont.classList.remove('shake'), 400);
     }, 5000);
-
-    // --- ЛОГИКА ГОЛОВОЛОМКИ ---
-    let winnersLeft = 10;
-    let balance = 0;
-    let solved = false;
-
-    function checkPuzzle() {
-        if(solved) {
-            alert("Ты уже разгадал эту тайну!");
-            return;
-        }
-
-        const ans = document.getElementById('puzzle-answer').value.toLowerCase().trim();
-        const status = document.getElementById('puzzle-status');
-
-        if (ans === "огонь" || ans === "костер" || ans === "пламя") {
-            if (winnersLeft > 0) {
-                const reward = Math.floor(Math.random() * (500 - 10 + 1)) + 10;
-                balance += reward;
-                winnersLeft--;
-                
-                solved = true;
-                document.getElementById('balance').innerText = balance;
-                document.getElementById('winners-info').innerText = `Осталось наград: ${winnersLeft}`;
-                
-                status.style.color = "var(--cave-gold)";
-                status.innerText = `СТЕНЫ РАЗДВИГАЮТСЯ! Ты получил ${reward} валюты.`;
-                
-                // Эффект вспышки
-                document.body.style.backgroundColor = "#440000";
-                setTimeout(() => document.body.style.backgroundColor = "var(--dark-stone)", 200);
-            } else {
-                status.innerText = "Ты опоздал. Древние сокровища исчерпаны.";
-            }
-        } else {
-            status.style.color = "red";
-            status.innerText = "Тьма смеется над тобой... Неверно.";
-        }
-    }
 </script>
 
 </body>
 </html>
-
