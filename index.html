@@ -2,308 +2,451 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CAVE-NET | Хроники Бездны</title>
-    
+    <title>CAVE-NET | Эпоха Кланов</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-
     <style>
         :root {
-            --dark-stone: #0f0f0f;
-            --blood-red: #660000;
-            --danger-orange: #ff4500;
-            --cave-gold: #ffd700;
-            --text-grey: #a0a0a0;
+            --dark: #070707; --rock: #151515; --blood: #7b0000; --fire: #e25822; --gold: #ffd700; --abyss: #4b0082;
         }
-
-        body, html { margin: 0; padding: 0; background: var(--dark-stone); color: white; font-family: 'Courier New', monospace; overflow-x: hidden; }
+        body { background: var(--dark); color: #ddd; font-family: 'Courier New', monospace; margin: 0; overflow-x: hidden; }
         
-        /* Визуализация рамок */
-        .avatar-container { position: relative; display: inline-block; }
-        .frame-none { border: 2px solid #444; }
-        .frame-gold { border: 4px solid var(--cave-gold); box-shadow: 0 0 10px var(--cave-gold); }
-        .frame-fire { border: 4px solid var(--danger-orange); box-shadow: 0 0 15px red; animation: pulse 1.5s infinite; }
+        /* Визуальный эффект пепла */
+        .embers { position: fixed; inset: 0; pointer-events: none; z-index: 1; background: radial-gradient(circle at 50% -20%, #221100, transparent); }
+
+        /* Рамки */
+        .av-wrap { position: relative; display: inline-block; padding: 4px; border-radius: 4px; background: #222; }
+        .f-none { border: 1px solid #333; }
+        .f-stone { border: 3px solid #555; box-shadow: inset 0 0 10px #000; }
+        .f-gold { border: 3px solid var(--gold); box-shadow: 0 0 15px var(--gold); }
+        .f-fire { border: 3px solid var(--fire); animation: fire-flicker 0.2s infinite; }
+        .f-abyss { border: 4px double var(--abyss); box-shadow: 0 0 30px var(--abyss); animation: abyss-rot 5s infinite linear; }
+        @keyframes fire-flicker { 0% { opacity: 0.8; } 100% { opacity: 1; box-shadow: 0 0 20px red; } }
+        @keyframes abyss-rot { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+
+        /* Навигация и Шапка */
+        header { background: #000; border-bottom: 2px solid var(--blood); padding: 10px 20px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 1000; box-shadow: 0 5px 15px rgba(0,0,0,0.8); }
+        .search-bar input { background: #111; border: 1px solid var(--blood); color: white; padding: 5px 10px; width: 250px; }
         
-        @keyframes pulse { 0% { opacity: 0.8; } 50% { opacity: 1; } 100% { opacity: 0.8; } }
-
-        header { background: rgba(20, 20, 20, 0.9); border-bottom: 2px solid var(--blood-red); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .container { display: flex; max-width: 1200px; margin: 20px auto; gap: 20px; }
-        nav { width: 220px; flex-shrink: 0; }
-        nav li { padding: 12px; margin-bottom: 5px; background: #1a1a1a; cursor: pointer; border-left: 3px solid transparent; }
-        nav li:hover, nav li.active { border-left-color: var(--danger-orange); background: #252525; }
-
-        .main-content { flex-grow: 1; }
-        .page { display: none; }
-        .page.active { display: block; }
-
-        .card { background: rgba(30, 30, 30, 0.8); border: 1px solid #444; padding: 15px; margin-bottom: 20px; border-radius: 4px; }
-        .avatar { width: 50px; height: 50px; object-fit: cover; }
+        .container { display: flex; max-width: 1300px; margin: 20px auto; gap: 20px; position: relative; z-index: 2; }
+        nav { width: 220px; }
+        nav div { padding: 12px; background: var(--rock); margin-bottom: 6px; cursor: pointer; border-left: 4px solid #333; transition: 0.2s; }
+        nav div:hover { background: #222; border-left-color: var(--fire); }
+        nav div.active { border-left-color: var(--blood); background: #251010; }
         
-        #skull-container { position: absolute; top: 0; right: 0; width: 300px; height: 300px; z-index: 1; pointer-events: none; }
-        .shake { animation: shake-anim 0.4s both; }
-        @keyframes shake-anim { 10%, 90% { transform: translate3d(-1px, 0, 0); } 20%, 80% { transform: translate3d(2px, 0, 0); } 40%, 60% { transform: translate3d(-4px, 0, 0); } }
+        .main { flex-grow: 1; }
+        .page { display: none; background: rgba(21, 21, 21, 0.9); padding: 20px; border-radius: 8px; border: 1px solid #333; min-height: 700px; }
+        .active { display: block; }
 
-        input, button, select { background: #000; border: 1px solid #555; color: white; padding: 10px; margin: 5px 0; font-family: inherit; }
-        button { background: var(--blood-red); cursor: pointer; }
-        button:hover { background: var(--danger-orange); }
+        /* Рейд-Босс */
+        #boss-area { text-align: center; border: 2px solid var(--blood); padding: 20px; background: url('https://www.transparenttextures.com/patterns/black-rock.png'); }
+        .hp-bar { width: 100%; height: 25px; background: #222; border: 1px solid #fff; margin: 10px 0; position: relative; }
+        #hp-fill { height: 100%; background: linear-gradient(to right, #7b0000, #ff0000); width: 100%; transition: 0.3s; }
 
-        .admin-panel { background: #1a0000; border: 2px solid red; padding: 15px; margin-top: 20px; display: none; }
+        /* Поп-ап авторизации */
+        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 9999; display: flex; align-items: center; justify-content: center; }
+        .auth-box { background: #111; border: 3px solid var(--blood); padding: 40px; border-radius: 15px; text-align: center; }
+
+        .card { background: #1a1a1a; border: 1px solid #333; padding: 15px; margin-bottom: 15px; border-radius: 5px; }
+        .btn { background: var(--blood); color: white; border: none; padding: 10px 18px; cursor: pointer; border-radius: 3px; font-family: inherit; }
+        .btn:hover { background: var(--fire); transform: translateY(-1px); }
+        input { background: #000; border: 1px solid #444; color: #fff; padding: 10px; margin: 5px 0; width: 90%; }
+        
+        .avatar { width: 65px; height: 65px; cursor: pointer; border-radius: 3px; }
+        #skull-3d { position: absolute; top: -50px; right: 0; width: 200px; height: 200px; pointer-events: none; }
     </style>
 </head>
 <body>
 
+<div class="embers"></div>
+
+<div id="auth-overlay">
+    <div class="auth-box">
+        <h1 style="color:var(--blood); margin:0;">CAVE NET</h1>
+        <p style="font-size: 12px; letter-spacing: 2px;">ПОГРУЖЕНИЕ ВО ТЬМУ</p>
+        <input type="text" id="auth-login" placeholder="Имя Скитальца"><br>
+        <input type="password" id="auth-pass" placeholder="Тайный шифр"><br>
+        <button class="btn" onclick="tryAuth('login')">ВОЙТИ</button>
+        <button class="btn" style="background:#333" onclick="tryAuth('reg')">СОЗДАТЬ ТЕЛО</button>
+    </div>
+</div>
+
 <header>
-    <div style="color: var(--blood-red); font-size: 24px; font-weight: bold;">CAVE-NET</div>
-    <div>🦴 <span id="balance">0</span> | <span id="user-display-name">Путник</span></div>
+    <div onclick="showPage('recommendations')" style="cursor:pointer; color:var(--blood); font-size:24px; font-weight:bold; text-shadow: 0 0 10px red;">CAVE-NET</div>
+    <div style="position:relative">
+        <input type="text" id="global-search" placeholder="Найти брата по крови..." onkeyup="searchUsers()" style="background:#111; border:1px solid #444; color:#fff; padding:5px 10px; width:300px;">
+        <div id="search-results" style="position:absolute; background:#111; width:100%; z-index:1001;"></div>
+    </div>
+    <div style="font-weight:bold">🦴 <span id="user-bones" style="color:var(--gold)">0</span> | <span id="my-name">...</span></div>
 </header>
 
 <div class="container">
-    <nav>
-        <ul>
-            <li onclick="showPage('recommendations')" class="active">Грот Советов</li>
-            <li onclick="showPage('profile')">Моя Расщелина</li>
-            <li onclick="showPage('shop')">Лавка Скелета</li>
-            <li onclick="showPage('puzzles')">Забытые Руны</li>
-            <li onclick="showPage('settings')">Настройки</li>
-        </ul>
+    <nav id="main-nav">
+        <div onclick="showPage('recommendations')" class="active">📜 Грот Советов</div>
+        <div onclick="openMyProfile()">👤 Моя Пещера</div>
+        <div onclick="showPage('clans')">🛡️ Кланы Бездны</div>
+        <div onclick="showPage('raids')">👹 Охота на Ужас</div>
+        <div onclick="showPage('shop')">💎 Лавка Костей</div>
+        <div onclick="showPage('settings')">⚙️ Настройки</div>
     </nav>
 
-    <main class="main-content">
+    <main class="main">
         <section id="recommendations" class="page active">
-            <div id="skull-container"></div>
-            <div class="card" style="position:relative; z-index:2;">
-                <h3>Оставить надпись на стене</h3>
-                <input type="text" id="post-text" style="width:70%" placeholder="Что видишь во тьме?">
-                <button onclick="sendPost()">Выцарапать</button>
+            <div id="skull-3d"></div>
+            <div class="card">
+                <h3>Оставить след</h3>
+                <input type="text" id="post-input" placeholder="Что происходит в глубинах?">
+                <button class="btn" onclick="createPost()">📢 Отправить</button>
             </div>
-            <div id="feed-container"></div>
+            <div id="feed"></div>
         </section>
 
-        <section id="profile" class="page">
-            <div class="card" style="text-align: center;">
-                <div class="avatar-container" id="profile-frame">
-                    <img id="my-avatar" class="avatar" style="width:100px; height:100px;" src="">
+        <section id="clans" class="page">
+            <h2>Кланы Пещер</h2>
+            <div id="clan-status">
+                <div class="card">
+                    <h4>Основать новый клан</h4>
+                    <p>Стоимость: 2000 🦴</p>
+                    <input type="text" id="new-clan-name" placeholder="Название клана">
+                    <button class="btn" onclick="createClan()">Создать</button>
                 </div>
-                <h2 id="profile-nick">Ник</h2>
-                <p id="profile-id" style="font-size: 10px; color: #555;"></p>
+                <div id="clan-list"></div>
+            </div>
+            <div id="clan-room" style="display:none">
+                <h2 id="cur-clan-name">Клан</h2>
+                <div class="card" id="clan-chat" style="height:300px; overflow-y:auto; background:#000;"></div>
+                <input type="text" id="clan-msg-input" placeholder="Сообщение клану...">
+                <button class="btn" onclick="sendClanMsg()">🗣️</button>
+                <button class="btn" style="background:#333" onclick="leaveClan()">Покинуть клан</button>
+            </div>
+        </section>
+
+        <section id="raids" class="page">
+            <div id="boss-area">
+                <h1 style="color:var(--fire)">ДРЕВНИЙ УЖАС ПУСТОТЫ</h1>
+                <img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=Monster" style="width:200px; filter: grayscale(1) sepia(1) hue-rotate(-50deg);">
+                <div class="hp-bar"><div id="hp-fill"></div></div>
+                <p>HP: <span id="boss-hp">???</span></p>
+                <button class="btn" style="padding:20px 40px; font-size:20px;" onclick="attackBoss()">УДАРИТЬ! ⚔️</button>
+                <p id="raid-log" style="font-size:12px; color:var(--fire)"></p>
+            </div>
+        </section>
+
+        <section id="profile-page" class="page">
+            <div style="text-align: center;">
+                <div class="av-wrap" id="p-frame">
+                    <img id="p-avatar" class="avatar" style="width:130px; height:130px;">
+                </div>
+                <h2 id="p-nick" style="margin:10px 0;">Ник</h2>
+                <div id="p-actions"></div>
+                <div style="margin:15px 0;">
+                    <span onclick="rateProfile('like')" style="cursor:pointer; font-size:20px;">🔥 <span id="p-likes">0</span></span>
+                    &nbsp;&nbsp;
+                    <span onclick="rateProfile('dislike')" style="cursor:pointer; font-size:20px;">💀 <span id="p-dislikes">0</span></span>
+                </div>
+                <div class="card" style="text-align:left;">
+                    <h4>Надписи на входе</h4>
+                    <div id="p-comments" style="max-height:200px; overflow-y:auto; margin-bottom:10px;"></div>
+                    <input type="text" id="comm-input" placeholder="Оставить отзыв...">
+                    <button class="btn" onclick="addComment()">✍️ Писать</button>
+                </div>
             </div>
         </section>
 
         <section id="shop" class="page">
-            <h2>Лавка Скелета</h2>
-            <div style="display: flex; gap: 20px;">
-                <div class="card">
-                    <h4>Золотая рамка</h4>
-                    <p>Цена: 200 🦴</p>
-                    <button onclick="buyItem('frame-gold', 200)">Купить</button>
+            <h2>Лавка Черепа</h2>
+            <div style="display:grid; grid-template-columns: 1fr 1fr; gap:15px;">
+                <div class="card"><h4>Каменная оправа</h4><p>100 🦴</p><button class="btn" onclick="buy('f-stone', 100)">Купить</button></div>
+                <div class="card"><h4>Золотое сияние</h4><p>800 🦴</p><button class="btn" onclick="buy('f-gold', 800)">Купить</button></div>
+                <div class="card"><h4>Пламя Бездны</h4><p>2500 🦴</p><button class="btn" onclick="buy('f-fire', 2500)">Купить</button></div>
+                <div class="card" style="border: 2px solid var(--abyss)">
+                    <h4 style="color:var(--abyss)">ДУША ПЕРВОРОДНОГО</h4><p>12,000 🦴</p>
+                    <button class="btn" style="background:var(--abyss)" onclick="buy('f-abyss', 12000)">ПОГЛОТИТЬ</button>
                 </div>
-                <div class="card">
-                    <h4>Огненная рамка</h4>
-                    <p>Цена: 500 🦴</p>
-                    <button onclick="buyItem('frame-fire', 500)">Купить</button>
-                </div>
-            </div>
-        </section>
-
-        <section id="puzzles" class="page">
-            <div class="card" style="border-color: var(--cave-gold);">
-                <h3>Древнее испытание</h3>
-                <p>Загадка: "Что может путешествовать по всему миру, оставаясь в одном и том же углу?"</p>
-                <input type="text" id="puzzle-answer" placeholder="Ответ...">
-                <button onclick="solvePuzzle()">Ответить</button>
             </div>
         </section>
 
         <section id="settings" class="page">
             <div class="card">
-                <h3>Сменить имя</h3>
-                <input type="text" id="new-nick" placeholder="Новый ник">
-                <button onclick="updateNick()">Сохранить</button>
+                <h3>Перерождение</h3>
+                <p>Новое имя:</p><input type="text" id="set-nick">
+                <p>Лик (URL аватара):</p><input type="text" id="set-av">
+                <button class="btn" onclick="saveSettings()">Сохранить изменения</button>
             </div>
-            <div class="card">
-                <h3>Админ-панель</h3>
-                <input type="password" id="admin-pass" placeholder="Пароль">
-                <button onclick="checkAdmin()">Вход</button>
-                <div id="admin-area" class="admin-panel">
-                    <h4>Панель Властелина</h4>
-                    <button onclick="resetWinners()">Сбросить победителей</button>
-                    <button onclick="addBonesAdmin()">+1000 костей</button>
-                </div>
+            <div id="admin-zone" style="display:none" class="card">
+                <h3 style="color:red">ГЛАЗ ДЕМИУРГА</h3>
+                <div id="admin-user-list"></div>
             </div>
         </section>
     </main>
 </div>
 
 <script>
-    // --- ИНИЦИАЛИЗАЦИЯ FIREBASE ---
+    // --- FIREBASE CONFIG ---
     const firebaseConfig = { databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
-    // --- ЛОГИКА АККАУНТА ---
-    let userId = localStorage.getItem('cave_user_id') || 'u' + Date.now();
-    localStorage.setItem('cave_user_id', userId);
+    let curUser = null;
+    let viewedUserId = null;
 
-    let userData = {
-        nick: "Безымянный",
-        bones: 0,
-        frame: "frame-none",
-        avatar: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${userId}`
-    };
+    // --- АУТЕНТИФИКАЦИЯ ---
+    function tryAuth(type) {
+        const loginVal = document.getElementById('auth-login').value.trim();
+        const passVal = document.getElementById('auth-pass').value.trim();
+        if(!loginVal || !passVal) return alert("Заполни поля!");
 
-    // Загрузка данных пользователя
-    db.ref('users/' + userId).on('value', (snapshot) => {
-        if(snapshot.exists()) {
-            userData = snapshot.val();
-            updateUI();
-        } else {
-            db.ref('users/' + userId).set(userData);
-        }
-    });
-
-    function updateUI() {
-        document.getElementById('balance').innerText = userData.bones;
-        document.getElementById('user-display-name').innerText = userData.nick;
-        document.getElementById('profile-nick').innerText = userData.nick;
-        document.getElementById('my-avatar').src = userData.avatar;
-        document.getElementById('profile-id').innerText = "ID: " + userId;
-        document.getElementById('profile-frame').className = "avatar-container " + (userData.frame || 'frame-none');
-    }
-
-    // --- ПОСТЫ И БОТЫ ---
-    function sendPost() {
-        const text = document.getElementById('post-text').value;
-        if(!text) return;
-        db.ref('posts').push({
-            uid: userId,
-            nick: userData.nick,
-            text: text,
-            frame: userData.frame,
-            avatar: userData.avatar,
-            time: Date.now()
-        });
-        document.getElementById('post-text').value = "";
-    }
-
-    // Загрузка ленты
-    db.ref('posts').limitToLast(10).on('value', (snapshot) => {
-        const feed = document.getElementById('feed-container');
-        feed.innerHTML = "";
-        snapshot.forEach((child) => {
-            const post = child.val();
-            feed.innerHTML = `
-                <div class="card">
-                    <div class="avatar-container ${post.frame}">
-                        <img src="${post.avatar}" class="avatar">
-                    </div>
-                    <strong>${post.nick}:</strong> ${post.text}
-                </div>` + feed.innerHTML;
-        });
-    });
-
-    // Боты (появляются раз в 30 секунд, если страница открыта)
-    const botPhrases = ["Тут кто-то есть...", "Слышите этот скрежет?", "Я нашел блестящий камушек!", "В темноте светятся глаза..."];
-    setInterval(() => {
-        if(Math.random() > 0.7) {
-            const botNick = "Тень_" + Math.floor(Math.random()*100);
-            db.ref('posts').push({
-                nick: "🤖 " + botNick,
-                text: botPhrases[Math.floor(Math.random()*botPhrases.length)],
-                frame: "frame-none",
-                avatar: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${botNick}`,
-                time: Date.now()
-            });
-        }
-    }, 30000);
-
-    // --- МАГАЗИН И НАСТРОЙКИ ---
-    function buyItem(id, price) {
-        if(userData.bones >= price) {
-            db.ref('users/' + userId).update({
-                bones: userData.bones - price,
-                frame: id
-            });
-            alert("Обновка куплена!");
-        } else {
-            alert("Недостаточно костей!");
-        }
-    }
-
-    function updateNick() {
-        const newNick = document.getElementById('new-nick').value;
-        if(newNick) db.ref('users/' + userId).update({ nick: newNick });
-    }
-
-    // --- ГОЛОВОЛОМКА ---
-    function solvePuzzle() {
-        const ans = document.getElementById('puzzle-answer').value.toLowerCase().trim();
-        if(ans === "марка" || ans === "почтовая марка") {
-            db.ref('winners').once('value', (snap) => {
-                const count = snap.numChildren();
-                if(count < 10) {
-                    const reward = Math.floor(Math.random() * 490) + 10;
-                    db.ref('winners/' + userId).set(true);
-                    db.ref('users/' + userId + '/bones').transaction(b => (b || 0) + reward);
-                    alert(`Верно! Получено ${reward} костей!`);
-                } else {
-                    alert("Все награды разобраны!");
+        if(type === 'reg') {
+            db.ref('users').orderByChild('nick').equalTo(loginVal).once('value', s => {
+                if(s.exists()) alert("Это имя уже занято!");
+                else {
+                    const newUser = {
+                        nick: loginVal, pass: passVal, bones: 250, frame: 'f-none', 
+                        av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${loginVal}`,
+                        likes: 0, dislikes: 0, clan: ""
+                    };
+                    const ref = db.ref('users').push(newUser);
+                    doLogin(ref.key, newUser);
                 }
             });
+        } else {
+            db.ref('users').once('value', s => {
+                let found = false;
+                s.forEach(child => {
+                    const u = child.val();
+                    if(u.nick === loginVal && u.pass === passVal) {
+                        doLogin(child.key, u);
+                        found = true;
+                    }
+                });
+                if(!found) alert("Неверные данные!");
+            });
         }
     }
 
-    // --- АДМИНКА ---
-    function checkAdmin() {
-        if(document.getElementById('admin-pass').value === "ADMINHACKER") {
-            document.getElementById('admin-area').style.display = "block";
-        }
+    function doLogin(id, data) {
+        curUser = { id, ...data };
+        document.getElementById('auth-overlay').style.display = 'none';
+        initSync();
+        if(data.pass === 'ADMINHACKER' || data.nick === 'ADMINHACKER') showAdmin();
     }
-    function resetWinners() { db.ref('winners').remove(); alert("Победители сброшены"); }
-    function addBonesAdmin() { db.ref('users/' + userId + '/bones').transaction(b => b + 1000); }
 
-    // --- ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ ---
+    function initSync() {
+        db.ref('users/' + curUser.id).on('value', s => {
+            curUser = { id: curUser.id, ...s.val() };
+            document.getElementById('user-bones').innerText = curUser.bones;
+            document.getElementById('my-name').innerText = curUser.nick;
+            document.getElementById('set-nick').value = curUser.nick;
+            document.getElementById('set-av').value = curUser.av;
+            checkClanState();
+        });
+        loadPosts();
+        syncBoss();
+    }
+
+    // --- НАВИГАЦИЯ ---
     function showPage(id) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('nav li').forEach(l => l.classList.remove('active'));
+        document.querySelectorAll('nav div').forEach(d => d.classList.remove('active'));
         document.getElementById(id).classList.add('active');
+        const navItem = Array.from(document.querySelectorAll('nav div')).find(d => d.onclick.toString().includes(id));
+        if(navItem) navItem.classList.add('active');
     }
 
-    // --- 3D ЧЕРЕП (Three.js) ---
+    function openProfile(uid) {
+        viewedUserId = uid;
+        showPage('profile-page');
+        db.ref('users/' + uid).on('value', s => {
+            const u = s.val();
+            if(!u) return;
+            document.getElementById('p-nick').innerText = u.nick;
+            document.getElementById('p-avatar').src = u.av;
+            document.getElementById('p-frame').className = 'av-wrap ' + (u.frame || 'f-none');
+            document.getElementById('p-likes').innerText = u.likes || 0;
+            document.getElementById('p-dislikes').innerText = u.dislikes || 0;
+            document.getElementById('p-actions').innerHTML = uid !== curUser.id ? `<button class="btn">Написать (ЛС)</button>` : '';
+        });
+        loadComments(uid);
+    }
+    function openMyProfile() { openProfile(curUser.id); }
+
+    // --- КЛАНЫ ---
+    function checkClanState() {
+        if(curUser.clan) {
+            document.getElementById('clan-status').style.display = 'none';
+            document.getElementById('clan-room').style.display = 'block';
+            db.ref('clans/' + curUser.clan).on('value', s => {
+                if(s.exists()) {
+                    document.getElementById('cur-clan-name').innerText = "Клан: " + s.val().name;
+                    loadClanChat(curUser.clan);
+                }
+            });
+        } else {
+            document.getElementById('clan-status').style.display = 'block';
+            document.getElementById('clan-room').style.display = 'none';
+            loadClanList();
+        }
+    }
+
+    function createClan() {
+        const name = document.getElementById('new-clan-name').value;
+        if(name.length < 3) return alert("Слишком короткое имя!");
+        if(curUser.bones < 2000) return alert("Нужно 2000 костей!");
+        
+        const clanRef = db.ref('clans').push({ name: name, owner: curUser.id });
+        db.ref('users/' + curUser.id).update({ bones: curUser.bones - 2000, clan: clanRef.key });
+    }
+
+    function loadClanList() {
+        db.ref('clans').once('value', s => {
+            const list = document.getElementById('clan-list');
+            list.innerHTML = "<h4>Доступные кланы:</h4>";
+            s.forEach(c => {
+                list.innerHTML += `<div class="card">${c.val().name} <button class="btn" onclick="joinClan('${c.key}')">Вступить</button></div>`;
+            });
+        });
+    }
+
+    function joinClan(cid) {
+        db.ref('users/' + curUser.id).update({ clan: cid });
+    }
+
+    function loadClanChat(cid) {
+        db.ref('clan_chats/' + cid).limitToLast(15).on('value', s => {
+            const chat = document.getElementById('clan-chat');
+            chat.innerHTML = "";
+            s.forEach(m => {
+                const d = m.val();
+                chat.innerHTML += `<div style="padding:5px; border-bottom:1px solid #222"><b>${d.nick}:</b> ${d.text}</div>`;
+            });
+            chat.scrollTop = chat.scrollHeight;
+        });
+    }
+
+    function sendClanMsg() {
+        const txt = document.getElementById('clan-msg-input').value;
+        if(!txt) return;
+        db.ref('clan_chats/' + curUser.clan).push({ nick: curUser.nick, text: txt });
+        document.getElementById('clan-msg-input').value = "";
+    }
+
+    function leaveClan() {
+        db.ref('users/' + curUser.id).update({ clan: "" });
+    }
+
+    // --- РЕЙД БОСС ---
+    function syncBoss() {
+        db.ref('global_boss').on('value', s => {
+            if(!s.exists()) db.ref('global_boss').set({ hp: 1000000 });
+            else {
+                const hp = s.val().hp;
+                document.getElementById('boss-hp').innerText = hp;
+                document.getElementById('hp-fill').style.width = (hp / 1000000 * 100) + "%";
+                if(hp <= 0) {
+                    alert("БОСС ПОВЕРЖЕН! Возрождение...");
+                    db.ref('global_boss').set({ hp: 1000000 });
+                }
+            }
+        });
+    }
+
+    function attackBoss() {
+        const dmg = Math.floor(Math.random() * 50) + 10;
+        db.ref('global_boss/hp').transaction(h => h - dmg);
+        const reward = Math.floor(Math.random() * 3); // 0-2 кости за удар
+        if(reward > 0) db.ref('users/' + curUser.id + '/bones').transaction(b => b + reward);
+        document.getElementById('raid-log').innerText = `Ты нанес ${dmg} урона и нашел ${reward}🦴!`;
+    }
+
+    // --- ЛЕНТА, ПОИСК, МАГАЗИН (Базовое) ---
+    function createPost() {
+        const t = document.getElementById('post-input').value;
+        if(!t) return;
+        db.ref('posts').push({ uid: curUser.id, nick: curUser.nick, av: curUser.av, frame: curUser.frame, text: t, time: Date.now() });
+        document.getElementById('post-input').value = "";
+    }
+
+    function loadPosts() {
+        db.ref('posts').limitToLast(15).on('value', s => {
+            const feed = document.getElementById('feed');
+            feed.innerHTML = "";
+            s.forEach(c => {
+                const p = c.val();
+                feed.innerHTML = `<div class="card"><div class="av-wrap ${p.frame}"><img src="${p.av}" class="avatar" onclick="openProfile('${p.uid}')"></div> <b>${p.nick}:</b> ${p.text}</div>` + feed.innerHTML;
+            });
+        });
+    }
+
+    function buy(f, c) {
+        if(curUser.bones >= c) db.ref('users/' + curUser.id).update({ bones: curUser.bones - c, frame: f });
+        else alert("Недостаточно костей!");
+    }
+
+    function saveSettings() {
+        db.ref('users/' + curUser.id).update({ nick: document.getElementById('set-nick').value, av: document.getElementById('set-av').value });
+        alert("Обновлено!");
+    }
+
+    function rateProfile(type) {
+        if(viewedUserId === curUser.id) return;
+        db.ref(`users/${viewedUserId}/${type}s`).transaction(v => (v || 0) + 1);
+    }
+
+    function addComment() {
+        const t = document.getElementById('comm-input').value;
+        if(!t) return;
+        db.ref(`comments/${viewedUserId}`).push({ nick: curUser.nick, text: t });
+        document.getElementById('comm-input').value = "";
+    }
+
+    function loadComments(uid) {
+        db.ref(`comments/${uid}`).on('value', s => {
+            const b = document.getElementById('p-comments'); b.innerHTML = "";
+            s.forEach(c => { b.innerHTML = `<div style="font-size:11px; margin-bottom:5px"><b>${c.val().nick}:</b> ${c.val().text}</div>` + b.innerHTML; });
+        });
+    }
+
+    function searchUsers() {
+        const q = document.getElementById('global-search').value.toLowerCase();
+        const res = document.getElementById('search-results');
+        if(q.length < 2) { res.innerHTML = ""; return; }
+        db.ref('users').once('value', s => {
+            let h = "";
+            s.forEach(c => { if(c.val().nick.toLowerCase().includes(q)) h += `<div class="card" style="margin:0; cursor:pointer;" onclick="openProfile('${c.key}')">${c.val().nick}</div>`; });
+            res.innerHTML = h;
+        });
+    }
+
+    function showAdmin() {
+        document.getElementById('admin-zone').style.display = 'block';
+        db.ref('users').on('value', s => {
+            const l = document.getElementById('admin-user-list'); l.innerHTML = "";
+            s.forEach(c => { l.innerHTML += `<div>${c.val().nick} <button class="btn" onclick="db.ref('users/${c.key}/bones').transaction(b=>b+1000)">+1000🦴</button></div>`; });
+        });
+    }
+
+    // --- 3D ЧЕРЕП ---
     const scene = new THREE.Scene();
-    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 1000);
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
     const renderer = new THREE.WebGLRenderer({ alpha: true });
-    const skullCont = document.getElementById('skull-container');
-    renderer.setSize(300, 300);
-    skullCont.appendChild(renderer.domElement);
-
-    const skull = new THREE.Group();
-    const mat = new THREE.MeshPhongMaterial({ color: 0xcccccc });
-    const head = new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), mat);
-    skull.add(head);
-    const jaw = new THREE.Mesh(new THREE.BoxGeometry(1, 0.5, 0.8), mat);
-    jaw.position.y = -0.7;
-    skull.add(jaw);
-    scene.add(skull);
-
-    const light = new THREE.PointLight(0xff0000, 2, 50);
-    light.position.set(2, 2, 2);
-    scene.add(light);
+    const skullDiv = document.getElementById('skull-3d');
+    renderer.setSize(200, 200);
+    skullDiv.appendChild(renderer.domElement);
+    const skullG = new THREE.Group();
+    const boneM = new THREE.MeshPhongMaterial({ color: 0xaaaaaa });
+    skullG.add(new THREE.Mesh(new THREE.SphereGeometry(1, 16, 16), boneM));
+    const jawM = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.6, 0.8), boneM);
+    jawM.position.y = -0.8;
+    skullG.add(jawM);
+    scene.add(skullG);
+    const light = new THREE.PointLight(0xff0000, 2, 20); light.position.set(2,2,2);
+    scene.add(light); scene.add(new THREE.AmbientLight(0x333333));
     camera.position.z = 4;
-
-    function animate() {
-        requestAnimationFrame(animate);
-        skull.rotation.y += 0.02;
-        renderer.render(scene, camera);
-    }
-    animate();
-
-    setInterval(() => {
-        skullCont.classList.add('shake');
-        setTimeout(() => skullCont.classList.remove('shake'), 400);
-    }, 5000);
+    function anim() { requestAnimationFrame(anim); skullG.rotation.y += 0.015; renderer.render(scene, camera); }
+    anim();
+    setInterval(() => { skullDiv.style.transform = "translateX(5px)"; setTimeout(()=>skullDiv.style.transform="translateX(0)", 100); }, 5000);
 </script>
-
 </body>
 </html>
+
