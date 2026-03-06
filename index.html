@@ -2,49 +2,75 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>CAVE-NET | ZOMBIE SLAYER EDITION</title>
+    <title>CAVE-NET | NEON OVERLORD</title>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <style>
-        :root { --neon: #ff6600; --glow: 0 0 20px #ff6600; --dark: #050505; --glass: rgba(15, 15, 15, 0.9); }
+        :root {
+            --neon: #ff6600; --glow: 0 0 20px #ff6600; --dark: #050505;
+            --rainbow: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff);
+            --glass: rgba(20, 20, 20, 0.85);
+        }
         body { background: var(--dark); color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
+        
         #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
 
-        header { background: var(--glass); border-bottom: 2px solid var(--neon); padding: 10px 30px; display: flex; align-items: center; justify-content: space-between; backdrop-filter: blur(10px); z-index: 100; position: relative; }
+        /* Футуристичная Регистрация */
+        #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #221100, #000); z-index: 10000; display: flex; align-items: center; justify-content: center; }
+        .auth-form { 
+            width: 380px; padding: 40px; background: var(--glass); border: 1px solid var(--neon); 
+            border-radius: 40px; text-align: center; box-shadow: var(--glow); backdrop-filter: blur(10px);
+        }
+        .auth-form input { 
+            width: 85%; padding: 15px; margin: 10px 0; background: rgba(0,0,0,0.5); 
+            border: 1px solid #444; color: #fff; border-radius: 20px; outline: none; transition: 0.3s;
+        }
+        .auth-form input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
+
+        header { 
+            background: var(--glass); border-bottom: 1px solid var(--neon); 
+            padding: 10px 30px; display: flex; align-items: center; justify-content: space-between;
+            backdrop-filter: blur(5px); position: relative; z-index: 10;
+        }
+
         .container { display: flex; height: calc(100vh - 70px); }
-        nav { width: 220px; background: rgba(0,0,0,0.8); padding: 20px; border-right: 1px solid #333; }
-        nav div { padding: 12px; margin-bottom: 10px; cursor: pointer; border-radius: 15px; border: 1px solid transparent; transition: 0.3s; text-align: center; font-weight: bold; }
-        nav div:hover, nav div.active { border-color: var(--neon); box-shadow: var(--glow); color: var(--neon); }
+        nav { width: 240px; background: rgba(0,0,0,0.8); padding: 20px; border-right: 1px solid #222; }
+        nav div { 
+            padding: 14px; margin-bottom: 12px; cursor: pointer; transition: 0.4s; 
+            border-radius: 15px; border: 1px solid transparent; text-align: center; font-weight: bold;
+        }
+        nav div:hover, nav div.active { background: rgba(255,102,0,0.1); border-color: var(--neon); box-shadow: var(--glow); color: var(--neon); }
 
-        main { flex-grow: 1; padding: 25px; overflow-y: auto; position: relative; }
-        .page { display: none; animation: fadeIn 0.4s; }
+        main { flex-grow: 1; padding: 25px; overflow-y: auto; }
+        .page { display: none; animation: fadeIn 0.5s; }
         .active-page { display: block; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
-        .card { background: var(--glass); border: 1px solid #333; padding: 20px; border-radius: 25px; margin-bottom: 15px; }
-        .btn { background: #111; color: #fff; border: 1px solid var(--neon); padding: 10px 20px; cursor: pointer; border-radius: 15px; font-weight: bold; }
+        .card { background: var(--glass); border: 1px solid #333; padding: 20px; border-radius: 25px; margin-bottom: 20px; backdrop-filter: blur(5px); }
+        .btn { 
+            background: #111; color: #fff; border: 1px solid var(--neon); 
+            padding: 10px 18px; cursor: pointer; border-radius: 15px; transition: 0.3s;
+        }
         .btn:hover { background: var(--neon); color: #000; box-shadow: var(--glow); }
 
-        /* Аватарки */
-        .av-mini { width: 40px; height: 40px; border-radius: 50%; border: 1px solid var(--neon); cursor: pointer; }
-        .av-main { width: 120px; height: 120px; border-radius: 50%; margin-bottom: 15px; }
-        
-        /* Зомби Режим */
-        #zombie-cave { width: 100%; height: 500px; background: url('https://i.imgur.com/8QpXW3n.jpeg') center/cover; border-radius: 30px; position: relative; overflow: hidden; border: 3px solid #1a0f00; cursor: crosshair; }
-        .zombie { position: absolute; width: 80px; height: 80px; cursor: pointer; animation: zombiePop 0.5s ease-out; transition: 0.2s; filter: drop-shadow(0 0 10px green); }
-        @keyframes zombiePop { from { transform: scale(0); } to { transform: scale(1); } }
+        /* Аватарки и Рамки */
+        .av-box { width: 100px; height: 100px; margin: 0 auto 15px; position: relative; padding: 6px; border-radius: 50%; }
+        .f-none { border: 2px solid #444; }
+        .f-neon { border: 3px solid var(--neon); box-shadow: var(--glow); }
+        .f-soul { border: 3px solid #8000ff; box-shadow: 0 0 20px #8000ff; }
+        .f-blood { border: 3px solid #ff0000; box-shadow: 0 0 20px #ff0000; }
+        .f-rainbow { background: var(--rainbow); animation: rainbow-anim 3s linear infinite; padding: 4px; }
+        @keyframes rainbow-anim { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
+        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; }
 
-        /* Торговец */
-        .merchant-box { display: flex; align-items: center; gap: 20px; background: rgba(255,102,0,0.05); border: 1px dashed var(--neon); padding: 15px; border-radius: 20px; margin-bottom: 20px; }
-        #merchant-bubble { background: #fff; color: #000; padding: 10px; border-radius: 15px; position: relative; font-weight: bold; font-size: 14px; }
+        /* Чат */
+        #chat-window { 
+            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; 
+            background: #000; border: 2px solid var(--neon); border-radius: 20px; display: none; flex-direction: column; z-index: 5000;
+        }
 
-        /* Регистрация */
-        #auth-overlay { position: fixed; inset: 0; background: #000; z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .auth-card { width: 350px; padding: 40px; background: var(--glass); border: 1px solid var(--neon); border-radius: 40px; text-align: center; box-shadow: var(--glow); }
-        .auth-card input { width: 90%; padding: 12px; margin: 8px 0; border-radius: 20px; border: 1px solid #444; background: #000; color: #fff; text-align: center; }
-
-        #chat-window { position: fixed; bottom: 20px; right: 20px; width: 300px; height: 400px; background: #000; border: 2px solid var(--neon); border-radius: 20px; display: none; flex-direction: column; z-index: 500; }
+        #boss-3d-container { width: 100%; height: 300px; border-radius: 20px; background: radial-gradient(circle, #300, #000); }
     </style>
 </head>
 <body>
@@ -52,172 +78,263 @@
 <canvas id="bg-canvas"></canvas>
 
 <div id="auth-overlay">
-    <div class="auth-card">
-        <h1 style="color:var(--neon)">CAVE-NET</h1>
-        <input type="text" id="auth-l" placeholder="Имя Скитальца">
-        <input type="password" id="auth-p" placeholder="Тайный Код">
-        <div style="margin:10px;"><label><input type="checkbox" id="auth-save" checked> Запомнить</label></div>
-        <button class="btn" style="width:100%" onclick="auth('login')">ВОЙТИ</button>
-        <button onclick="auth('reg')" style="background:none; border:none; color:#555; margin-top:15px; cursor:pointer">Создать сущность</button>
+    <div class="auth-form">
+        <h1 style="color:var(--neon); letter-spacing:5px;">CAVE-NET</h1>
+        <input type="text" id="auth-l" placeholder="Логин Души">
+        <input type="password" id="auth-p" placeholder="Код Доступа">
+        <div style="margin:10px 0;"><label><input type="checkbox" id="auth-save" checked> Запомнить сущность</label></div>
+        <button class="btn" onclick="auth('login')" style="width:100%">ВОЙТИ</button>
+        <button onclick="auth('reg')" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Создать новую душу</button>
     </div>
 </div>
 
 <header>
-    <div style="display:flex; align-items:center; gap:10px;"><span style="font-size:30px">💀</span> <b style="color:var(--neon); font-size:22px">CAVE-NET</b></div>
-    <input type="text" id="g-search" placeholder="Поиск (Enter)..." onkeypress="if(event.key==='Enter') searchUser()" style="background:#000; border:1px solid var(--neon); color:#fff; padding:8px 20px; border-radius:20px; width:250px;">
-    <div>🦴 <span id="stat-bones" style="color:var(--neon); font-weight:bold">0</span> | <span id="stat-name">...</span></div>
+    <div style="display:flex; align-items:center; gap:15px;">
+        <span style="font-size:35px;">💀</span>
+        <b style="color:var(--neon); font-size:24px;">CAVE-NET</b>
+    </div>
+    <div style="flex-grow:1; text-align:center;">
+        <input type="text" id="g-search" placeholder="Поиск жителей (Enter)..." onkeypress="if(event.key==='Enter') searchUser()" 
+        style="background:rgba(0,0,0,0.5); border:1px solid var(--neon); color:#fff; padding:10px 20px; border-radius:25px; width:300px;">
+    </div>
+    <div style="font-size:16px;">🦴 <span id="stat-bones" style="color:var(--neon)">0</span> | <span id="stat-name">...</span></div>
 </header>
 
 <div class="container">
     <nav>
         <div onclick="showP('feed')" class="active">📜 Бездна</div>
-        <div onclick="showP('zombie')">🧟 Убийца Зомби</div>
-        <div onclick="showP('boss')">👹 Рейд</div>
-        <div onclick="showP('shop')">💎 Лавка</div>
+        <div onclick="openMyProfile()">👤 Мой Грот</div>
         <div onclick="showP('clans')">🛡️ Кланы</div>
         <div onclick="showP('clean')">⚔️ Зачистка</div>
-        <div onclick="openMyProfile()">👤 Профиль</div>
+        <div onclick="showP('boss')">👹 Рейд</div>
+        <div onclick="showP('shop')">💎 Лавка</div>
+        <div onclick="showP('adm')">⚙️ Админка</div>
     </nav>
 
     <main>
         <section id="feed" class="page active-page">
-            <div class="card"><input type="text" id="post-in" style="width:80%; background:none; border:none; border-bottom:1px solid var(--neon); color:#fff;" placeholder="Твой крик в пустоту..."> <button class="btn" onclick="sendPost()">📢</button></div>
+            <div class="card">
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="post-in" style="flex-grow:1; background:none; border:none; border-bottom:1px solid var(--neon); color:#fff;" placeholder="Оставь свой след...">
+                    <button class="btn" onclick="sendPost()">📢</button>
+                </div>
+            </div>
             <div id="feed-list"></div>
         </section>
 
-        <section id="zombie" class="page">
-            <div class="card">
-                <h2>ПЕЩЕРА ТРУПОВ</h2>
-                <p>Кликай на зомби, чтобы добыть их кости (25-100 🦴)</p>
-                <div id="zombie-cave"></div>
-            </div>
-        </section>
-
         <section id="boss" class="page">
-            <div class="card" style="text-align:center">
-                <h2 id="boss-name" style="color:var(--neon)">ДРЕВНИЙ ПОВЕЛИТЕЛЬ</h2>
-                <div id="boss-3d-container" style="height:300px;"></div>
-                <div style="width:100%; height:15px; background:#222; border-radius:10px; margin:15px 0;"><div id="boss-hp-bar" style="height:100%; width:100%; background:linear-gradient(90deg, #ff0000, #ff6600); border-radius:10px; transition:0.3s;"></div></div>
-                <button class="btn" style="font-size:22px; padding:15px 50px" onclick="hitBoss()">УДАРИТЬ ⚔️</button>
-                <p id="boss-log"></p>
+            <div class="card" style="text-align:center;">
+                <h2 style="color:var(--neon)">ДРЕВНИЙ ПАЛАЧ</h2>
+                <div id="boss-3d-container"></div>
+                <div style="width:100%; height:10px; background:#222; border-radius:5px; margin:15px 0;">
+                    <div id="boss-hp-bar" style="height:100%; width:100%; background:var(--neon); transition:0.3s; border-radius:5px;"></div>
+                </div>
+                <button class="btn" style="font-size:20px; padding:15px 40px;" onclick="hitBoss()">УДАРИТЬ ⚔️</button>
+                <p id="boss-log" style="margin-top:10px;"></p>
             </div>
         </section>
 
         <section id="shop" class="page">
-            <div class="merchant-box">
-                <span style="font-size:50px">💀</span>
-                <div>
-                    <b style="color:var(--neon)">Костяной Джек:</b>
-                    <div id="merchant-bubble">Добро пожаловать в мой уголок...</div>
-                </div>
-            </div>
-            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap:15px;">
-                <div class="card"><h3>🗡️ Меч</h3><p>Урон x100</p><button class="btn" onclick="buyItem('sword', 5000)">5000 🦴</button></div>
+            <h2 style="color:var(--neon)">АРТЕФАКТЫ И ОБЛИКИ</h2>
+            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
+                <div class="card"><h3>🗡️ Меч Пустоты</h3><p>Урон x10</p><button class="btn" onclick="buyItem('sword', 5000)">5000 🦴</button></div>
+                <div class="card"><h3>📜 Свиток Знаний</h3><p>Доход x2</p><button class="btn" onclick="buyItem('scroll', 3000)">3000 🦴</button></div>
                 <div class="card"><h3>✨ Посох</h3><p>Авто-атака</p><button class="btn" onclick="buyItem('staff', 7000)">7000 🦴</button></div>
-                <div class="card"><h3>📜 Свиток</h3><p>Удача x2</p><button class="btn" onclick="buyItem('scroll', 3000)">3000 🦴</button></div>
-                <div class="card"><h3>🌈 РАДУГА</h3><p>Легенда</p><button class="btn" onclick="buyItem('f-rainbow', 20000)">20000 🦴</button></div>
-                <div class="card"><h3>🟠 Неон</h3><p>Облик</p><button class="btn" onclick="buyItem('f-neon', 1000)">1000 🦴</button></div>
-            </div>
-        </section>
-
-        <section id="clean" class="page">
-            <div class="card">
-                <h2>ОТРЯДЫ ОХОТНИКОВ</h2>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div class="card"><h3>🕵️ Наемник</h3><p>+10 🦴 / 10 сек</p><button class="btn" onclick="buyAgent('shadow', 2500)">2500 🦴</button></div>
-                    <div class="card"><h3>🏹 Истребитель</h3><p>Урон Боссу (-100 HP)</p><button class="btn" onclick="buyAgent('slayer', 4500)">4500 🦴</button></div>
-                </div>
+                <div class="card"><h3>🟠 Неон Рамка</h3><p>Облик</p><button class="btn" onclick="buyItem('f-neon', 1000)">1000 🦴</button></div>
+                <div class="card"><h3>🟣 Рамка Души</h3><p>Облик</p><button class="btn" onclick="buyItem('f-soul', 3000)">3000 🦴</button></div>
+                <div class="card"><h3>🔴 Рамка Крови</h3><p>Облик</p><button class="btn" onclick="buyItem('f-blood', 5000)">5000 🦴</button></div>
+                <div class="card" style="border:1px solid violet;"><h3>🌈 РАДУГА</h3><p>Легенда</p><button class="btn" onclick="buyItem('f-rainbow', 20000)">20000 🦴</button></div>
             </div>
         </section>
 
         <section id="prof" class="page">
-            <div id="p-content" class="card" style="text-align:center"></div>
+            <div id="p-content" class="card" style="text-align:center;"></div>
+        </section>
+
+        <section id="clans" class="page">
+            <div class="card">
+                <h3>СОЮЗЫ БЕЗДНЫ</h3>
+                <div style="display:flex; gap:10px;">
+                    <input type="text" id="clan-n" style="flex-grow:1; background:#000; border:1px solid #333; color:#fff; border-radius:10px; padding:5px 10px;" placeholder="Название союза...">
+                    <button class="btn" onclick="createClan()">Создать (5000 🦴)</button>
+                </div>
+            </div>
+            <div id="clan-list"></div>
+        </section>
+
+        <section id="clean" class="page">
+            <div class="card">
+                <h2>ОТРЯДЫ ЗАЧИСТКИ</h2>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
+                    <div class="card"><h3>🕵️ Наемник</h3><p>5 🦴 / 10 сек</p><button class="btn" onclick="buyAgent('shadow', 2000)">2000 🦴</button></div>
+                    <div class="card"><h3>🏹 Истребитель</h3><p>Авто-урон</p><button class="btn" onclick="buyAgent('slayer', 4000)">4000 🦴</button></div>
+                </div>
+                <p id="clean-status"></p>
+            </div>
+        </section>
+
+        <section id="adm" class="page">
+            <div class="card">
+                <h3>КОНСОЛЬ БОГА</h3>
+                <input type="password" id="adm-key" placeholder="Пароль">
+                <button class="btn" onclick="loadAdm()">Войти</button>
+                <div id="adm-data" style="margin-top:20px;"></div>
+            </div>
         </section>
     </main>
 </div>
 
+<div id="chat-window">
+    <div style="padding:10px; background:var(--neon); color:#000; border-radius:15px 15px 0 0; font-weight:bold; display:flex; justify-content:space-between;">
+        <span id="chat-user">Чат</span>
+        <span onclick="document.getElementById('chat-window').style.display='none'" style="cursor:pointer">✖</span>
+    </div>
+    <div id="chat-msgs" style="flex-grow:1; overflow-y:auto; padding:10px; font-size:14px;"></div>
+    <div style="display:flex; padding:10px; gap:5px;">
+        <input type="text" id="chat-in" style="flex-grow:1; background:#111; border:1px solid #333; color:#fff; border-radius:10px; padding:5px;">
+        <button class="btn" onclick="sendMsg()">></button>
+    </div>
+</div>
+
 <script>
+    // --- ИНИЦИАЛИЗАЦИЯ ---
     const firebaseConfig = { databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" };
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
     let cur = null;
+    let activeChatUID = null;
 
     // --- АВТОРИЗАЦИЯ ---
+    window.onload = () => {
+        const saved = localStorage.getItem('cave_v3_user');
+        if(saved) {
+            const p = JSON.parse(saved);
+            db.ref('users/' + p.id).once('value', s => { if(s.exists()) login(p.id, s.val()); });
+        }
+    };
+
     function auth(mode) {
         const l = document.getElementById('auth-l').value;
         const p = document.getElementById('auth-p').value;
         if(!l || !p) return;
+
         if(mode === 'reg') {
             const id = db.ref('users').push().key;
-            const data = { id, nick: l, pass: p, bones: 1000, frame: 'f-none', av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${l}`, agents: {shadow:0, slayer:0}, inventory:{sword:false, staff:false}, likes:0 };
-            db.ref('users/' + id).set(data); login(id, data);
+            const data = { 
+                id, nick: l, pass: p, bones: 500, frame: 'f-none', 
+                av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${l}`,
+                agents: { shadow: 0, slayer: 0 }, lastActive: Date.now(),
+                likes: 0, dislikes: 0, inventory: { sword: false, scroll: false, staff: false }
+            };
+            db.ref('users/' + id).set(data);
+            login(id, data);
         } else {
             db.ref('users').once('value', s => {
-                s.forEach(c => { if(c.val().nick === l && c.val().pass === p) login(c.key, c.val()); });
+                let f = false;
+                s.forEach(c => { if(c.val().nick === l && c.val().pass === p) { login(c.key, c.val()); f = true; } });
+                if(!f) alert("Тень не узнает тебя");
             });
         }
     }
 
     function login(id, data) {
         cur = { id, ...data };
-        localStorage.setItem('cave_v4_user', JSON.stringify({id}));
+        if(document.getElementById('auth-save').checked) localStorage.setItem('cave_v3_user', JSON.stringify({id}));
         document.getElementById('auth-overlay').style.display = 'none';
-        initGame();
+        
+        // Оффлайн доход
+        const diff = Math.floor((Date.now() - (data.lastActive || Date.now())) / 10000);
+        if(diff > 0 && data.agents?.shadow > 0) {
+            const reward = diff * (data.agents.shadow * 5);
+            db.ref(`users/${id}/bones`).transaction(b => b + reward);
+            alert(`Агенты принесли ${reward} 🦴 пока тебя не было!`);
+        }
+        
+        initSync();
     }
 
-    function initGame() {
-        db.ref('users/' + cur.id).on('value', s => { cur = { id: cur.id, ...s.val() }; document.getElementById('stat-bones').innerText = cur.bones; document.getElementById('stat-name').innerText = cur.nick; });
-        setInterval(() => { if(cur.agents?.shadow > 0) db.ref(`users/${cur.id}/bones`).transaction(b => b + (cur.agents.shadow * 10)); }, 10000);
-        setInterval(() => { if(cur.inventory?.staff) hitBoss(true); }, 3000);
-        startMerchant();
-        spawnZombie();
-        init3D();
+    function initSync() {
+        db.ref('users/' + cur.id).on('value', s => {
+            cur = { id: cur.id, ...s.val() };
+            document.getElementById('stat-bones').innerText = cur.bones;
+            document.getElementById('stat-name').innerText = cur.nick;
+        });
+
+        // Циклы
+        setInterval(() => {
+            if(cur.agents?.shadow > 0) db.ref(`users/${cur.id}/bones`).transaction(b => b + (cur.agents.shadow * 5));
+            db.ref(`users/${cur.id}/lastActive`).set(Date.now());
+        }, 10000);
+
+        setInterval(() => {
+            if(cur.inventory?.staff) hitBoss(true);
+        }, 3000);
+
         loadFeed();
+        init3D();
         syncBoss();
     }
 
-    // --- ЗОМБИ РЕЖИМ ---
-    function spawnZombie() {
-        setInterval(() => {
-            if(document.getElementById('zombie').classList.contains('active-page')) {
-                const z = document.createElement('img');
-                z.src = "https://api.dicebear.com/7.x/bottts/svg?seed=" + Math.random();
-                z.className = "zombie";
-                z.style.top = Math.random() * 80 + "%";
-                z.style.left = Math.random() * 90 + "%";
-                z.onclick = () => {
-                    const reward = Math.floor(Math.random() * 75) + 25;
-                    db.ref(`users/${cur.id}/bones`).transaction(b => b + reward);
-                    z.remove();
-                };
-                document.getElementById('zombie-cave').appendChild(z);
-                setTimeout(() => z.remove(), 2000);
-            }
-        }, 1500);
-    }
-
-    // --- ТОРГОВЕЦ ---
-    function startMerchant() {
-        const phrases = ["Свежие кости, подходи!", "Твоя душа пахнет... костями.", "Хочешь Меч Пустоты?", "Я видел как падали империи...", "Джек всегда честен!"];
-        setInterval(() => {
-            document.getElementById('merchant-bubble').innerText = phrases[Math.floor(Math.random()*phrases.length)];
-        }, 10000);
-    }
-
-    // --- МАГАЗИН И АГЕНТЫ ---
+    // --- МАГАЗИН И ИНВЕНТАРЬ ---
     function buyItem(item, cost) {
         if(cur.bones < cost) return alert("Мало костей!");
         let upd = { bones: cur.bones - cost };
         if(item.startsWith('f-')) upd.frame = item;
         else upd[`inventory/${item}`] = true;
         db.ref('users/' + cur.id).update(upd);
+        alert("Приобретено!");
     }
 
-    function buyAgent(type, cost) {
-        if(cur.bones < cost) return alert("Мало костей!");
-        db.ref(`users/${cur.id}/bones`).transaction(b => b - cost);
-        db.ref(`users/${cur.id}/agents/${type}`).transaction(a => (a || 0) + 1);
+    // --- ПРОФИЛИ И СОЦИАЛКА ---
+    function openMyProfile() { openUser(cur.id); }
+
+    function openUser(uid) {
+        showP('prof');
+        db.ref('users/' + uid).once('value', s => {
+            const u = s.val();
+            const isMe = uid === cur.id;
+            document.getElementById('p-content').innerHTML = `
+                <div class="av-box ${u.frame}"><img src="${u.av}" class="avatar"></div>
+                <h2>${u.nick}</h2>
+                <div style="margin:15px 0;">
+                    <span onclick="vote('${uid}','likes')" style="cursor:pointer">❤️ ${u.likes || 0}</span> | 
+                    <span onclick="vote('${uid}','dislikes')" style="cursor:pointer">👎 ${u.dislikes || 0}</span>
+                </div>
+                ${!isMe ? `
+                    <button class="btn" onclick="addFriend('${uid}')">Добавить в друзья</button>
+                    <button class="btn" onclick="openChat('${uid}','${u.nick}')">Написать</button>
+                ` : `<p>Это ваше личное логово</p>`}
+            `;
+        });
+    }
+
+    function vote(uid, type) {
+        db.ref(`users/${uid}/${type}`).transaction(v => (v || 0) + 1);
+        openUser(uid);
+    }
+
+    // --- ЧАТ ---
+    function openChat(uid, nick) {
+        activeChatUID = uid;
+        const key = [cur.id, uid].sort().join("_");
+        document.getElementById('chat-window').style.display = 'flex';
+        document.getElementById('chat-user').innerText = nick;
+        db.ref('chats/' + key).on('value', s => {
+            const box = document.getElementById('chat-msgs'); box.innerHTML = '';
+            s.forEach(m => {
+                const d = m.val();
+                box.innerHTML += `<div style="margin-bottom:5px; color:${d.f === cur.nick ? '#ff6600' : '#fff'}"><b>${d.f}:</b> ${d.t}</div>`;
+            });
+            box.scrollTop = box.scrollHeight;
+        });
+    }
+
+    function sendMsg() {
+        const t = document.getElementById('chat-in').value;
+        const key = [cur.id, activeChatUID].sort().join("_");
+        if(t) db.ref('chats/' + key).push({ f: cur.nick, t });
+        document.getElementById('chat-in').value = '';
     }
 
     // --- БОСС ---
@@ -228,68 +345,93 @@
         });
     }
 
-    function hitBoss(auto = false) {
-        const dmg = cur.inventory?.sword ? 1000 : 100;
-        db.ref('boss/hp').transaction(h => (h || 1000000) - dmg);
-        if(!auto) {
-            const r = Math.floor(Math.random()*50) + 10;
+    function hitBoss(isAuto = false) {
+        const multi = cur.inventory?.sword ? 100 : 10;
+        db.ref('boss/hp').transaction(h => (h || 1000000) - multi);
+        if(!isAuto) {
+            const r = Math.floor(Math.random()*5);
             db.ref(`users/${cur.id}/bones`).transaction(b => b + r);
-            document.getElementById('boss-log').innerText = `Урон: ${dmg} | +${r} 🦴`;
+            document.getElementById('boss-log').innerText = `Урон: ${multi} | Получено: ${r} 🦴`;
         }
     }
 
-    // --- СОЦИАЛКА ---
+    // --- ВСПОМОГАТЕЛЬНОЕ ---
+    function showP(id) {
+        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
+        document.getElementById(id).classList.add('active-page');
+    }
+
+    function searchUser() {
+        const q = document.getElementById('g-search').value.toLowerCase();
+        db.ref('users').once('value', s => {
+            s.forEach(c => { if(c.val().nick.toLowerCase() === q) openUser(c.key); });
+        });
+    }
+
     function loadFeed() {
-        db.ref('posts').limitToLast(15).on('value', s => {
-            const list = document.getElementById('feed-list'); list.innerHTML = '';
+        db.ref('posts').limitToLast(10).on('value', s => {
+            const l = document.getElementById('feed-list'); l.innerHTML = '';
             s.forEach(c => {
                 const p = c.val();
-                list.innerHTML = `
-                    <div class="card" style="display:flex; gap:15px; align-items:center">
-                        <img src="${p.av}" class="av-mini" onclick="openUser('${p.uid}')">
-                        <div><b>${p.nick}:</b> ${p.text}</div>
-                    </div>` + list.innerHTML;
+                l.innerHTML = `<div class="card"><b>${p.nick}:</b> ${p.text}</div>` + l.innerHTML;
             });
         });
     }
 
     function sendPost() {
         const t = document.getElementById('post-in').value;
-        if(t) db.ref('posts').push({ nick: cur.nick, text: t, av: cur.av, uid: cur.id });
+        if(t) db.ref('posts').push({ nick: cur.nick, text: t });
         document.getElementById('post-in').value = '';
     }
 
-    function openUser(uid) {
-        showP('prof');
-        db.ref('users/' + uid).once('value', s => {
-            const u = s.val();
-            document.getElementById('p-content').innerHTML = `
-                <img src="${u.av}" class="av-main" style="border:4px solid ${u.frame === 'f-rainbow' ? 'violet' : 'var(--neon)'}">
-                <h2>${u.nick}</h2>
-                <button class="btn" onclick="alert('Чат временно в тумане...')">Написать</button>
-            `;
-        });
-    }
-
-    function openMyProfile() { openUser(cur.id); }
-
-    function showP(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(id).classList.add('active-page');
-        document.querySelectorAll('nav div').forEach(d => d.classList.remove('active'));
-    }
-
-    // --- 3D ---
+    // --- 3D ГРАФИКА ---
+    let bossObj;
     function init3D() {
-        const bCon = document.getElementById('boss-3d-container');
-        const sc = new THREE.Scene();
-        const cam = new THREE.PerspectiveCamera(75, bCon.clientWidth/300, 0.1, 1000);
-        const ren = new THREE.WebGLRenderer({ alpha: true });
-        ren.setSize(bCon.clientWidth, 300); bCon.innerHTML = ''; bCon.appendChild(ren.domElement);
-        const geo = new THREE.OctahedronGeometry(1.5, 0);
-        const mat = new THREE.MeshNormalMaterial({ wireframe: true });
-        const mesh = new THREE.Mesh(geo, mat); sc.add(mesh); cam.position.z = 4;
-        function anim() { requestAnimationFrame(anim); mesh.rotation.y += 0.02; ren.render(sc, cam); } anim();
+        const container = document.getElementById('boss-3d-container');
+        const bgCon = document.getElementById('bg-canvas');
+        
+        // Фон
+        const bgScene = new THREE.Scene();
+        const bgCam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
+        const bgRen = new THREE.WebGLRenderer({ canvas: bgCon, alpha: true });
+        bgRen.setSize(window.innerWidth, window.innerHeight);
+        
+        const cubes = [];
+        for(let i=0; i<60; i++) {
+            const m = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color: 0xff6600, wireframe: true}));
+            m.position.set(Math.random()*60-30, Math.random()*60-30, Math.random()*20-40);
+            bgScene.add(m); cubes.push(m);
+        }
+
+        // Босс
+        const bScene = new THREE.Scene();
+        const bCam = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
+        const bRen = new THREE.WebGLRenderer({ alpha: true });
+        bRen.setSize(container.clientWidth, container.clientHeight);
+        container.innerHTML = ''; container.appendChild(bRen.domElement);
+        bossObj = new THREE.Mesh(new THREE.TorusKnotGeometry(1, 0.3, 100, 16), new THREE.MeshNormalMaterial({wireframe: true}));
+        bScene.add(bossObj); bCam.position.z = 3;
+
+        function anim() {
+            requestAnimationFrame(anim);
+            cubes.forEach(c => { c.rotation.x += 0.01; c.rotation.y += 0.01; });
+            bossObj.rotation.y += 0.02;
+            bgRen.render(bgScene, bgCam);
+            bRen.render(bScene, bCam);
+        }
+        anim();
+    }
+
+    function loadAdm() {
+        if(document.getElementById('adm-key').value === 'ADMINHACKER') {
+            db.ref('users').once('value', s => {
+                let h = '<table><tr><th>Ник</th><th>Bones</th><th>Удалить</th></tr>';
+                s.forEach(c => {
+                    h += `<tr><td>${c.val().nick}</td><td>${c.val().bones}</td><td><button onclick="db.ref('users/${c.key}').remove()">X</button></td></tr>`;
+                });
+                document.getElementById('adm-data').innerHTML = h + '</table>';
+            });
+        }
     }
 </script>
 </body>
