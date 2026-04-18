@@ -1,289 +1,154 @@
-import os
-
-# Define the HTML content with fixes and new skins
-html_content = """
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Murder Mystery 2D - CAVE-NET Edition</title>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-body { background: #0a0a1a; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-canvas { display: block; cursor: crosshair; outline: none; }
-#ui-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10; }
-#ui-overlay > * { pointer-events: auto; }
-#skin-panel {
-    position: absolute; top: 10px; right: 10px;
-    background: rgba(0,0,0,0.9); border: 2px solid #ff6600;
-    border-radius: 12px; padding: 15px; color: white;
-    min-width: 240px; max-height: 85vh; overflow-y: auto;
-}
-#skin-panel h3 { text-align: center; margin-bottom: 12px; color: #ff6600; text-transform: uppercase; letter-spacing: 1px; }
-.skin-option {
-    display: flex; align-items: center; gap: 12px;
-    padding: 10px; margin: 6px 0; border-radius: 8px;
-    cursor: pointer; transition: 0.2s; border: 1px solid rgba(255,255,255,0.1);
-}
-.skin-option:hover { background: rgba(255,102,0,0.2); border-color: #ff6600; }
-.skin-option.selected { border-color: #ff6600; background: rgba(255,102,0,0.3); box-shadow: inset 0 0 10px #ff6600; }
-.skin-preview { width: 42px; height: 42px; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
-#role-display {
-    position: absolute; top: 20px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.9); border-radius: 12px; padding: 15px 30px;
-    color: white; font-size: 20px; font-weight: bold; display: none;
-    border: 2px solid; text-shadow: 0 0 15px currentColor;
-}
-#start-btn {
-    position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
-    background: linear-gradient(135deg, #ff6600, #cc4400);
-    color: white; border: none; padding: 18px 60px; font-size: 24px;
-    border-radius: 40px; cursor: pointer; font-weight: bold;
-    box-shadow: 0 0 25px rgba(255,102,0,0.5); transition: 0.3s;
-}
-#start-btn:hover { transform: translateX(-50%) scale(1.08); box-shadow: 0 0 35px rgba(255,102,0,0.8); }
-#round-result {
-    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
-    background: rgba(0,0,0,0.95); border-radius: 20px; padding: 50px;
-    color: white; text-align: center; display: none; border: 3px solid; z-index: 100;
-}
-#instructions {
-    position: absolute; bottom: 120px; left: 50%; transform: translateX(-50%);
-    background: rgba(0,0,0,0.8); border-radius: 10px; padding: 10px 20px;
-    color: #ffaa00; font-size: 14px; text-align: center; border: 1px solid #ff6600;
-}
-#kill-cooldown, #alive-count {
-    position: absolute; background: rgba(0,0,0,0.85); border-radius: 8px;
-    padding: 10px; color: white; font-size: 14px; border: 1px solid #ff6600;
-}
-#kill-cooldown { bottom: 20px; right: 20px; min-width: 150px; text-align: center; }
-#alive-count { top: 10px; left: 10px; }
-#db-status { position: absolute; bottom: 10px; left: 10px; font-size: 10px; color: #555; }
-</style>
+    <meta charset="UTF-8">
+    <title>2D Bloxburg Clone</title>
+    <style>
+        body { margin: 0; overflow: hidden; font-family: sans-serif; }
+        canvas { display: block; background: #7cfc00; }
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255, 255, 255, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            pointer-events: none;
+        }
+        .weather-info {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.6);
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
-<canvas id="gameCanvas" tabindex="1"></canvas>
-<div id="ui-overlay">
-    <div id="skin-panel">
-        <h3>🔪 Арсенал</h3>
-        <div id="skin-list"></div>
+
+<div id="ui">
+    <div id="money">Деньги: $0</div>
+    <div id="house">Уровень дома: 1</div>
+    <div style="margin-top: 10px; font-size: 12px;">
+        Управление: <b>WASD</b> или <b>Стрелки</b><br>
+        Работа: Подойди к <b>Желтому кругу</b><br>
+        Магазин: Подойди к <b>Серому зданию</b> (нужно $150)
     </div>
-    <div id="role-display"></div>
-    <button id="start-btn" onclick="startGame()">НАЧАТЬ ИГРУ</button>
-    <div id="round-result">
-        <h1 id="result-title"></h1>
-        <p id="result-text"></p>
-        <button onclick="backToLobby()" style="margin-top:20px; padding:10px 30px; cursor:pointer;">В ЛОББИ</button>
-    </div>
-    <div id="instructions">Управление: WASD или Стрелки | Мышь: Атака/Выстрел</div>
-    <div id="kill-cooldown" style="display:none"></div>
-    <div id="alive-count" style="display:none"></div>
-    <div id="db-status">DB: offline</div>
 </div>
 
+<div class="weather-info" id="weatherLabel">Погода: Солнечно</div>
+
+<canvas id="gameCanvas"></canvas>
+
 <script>
-// ============ CONFIG & DATA ============
-const SKINS = [
-    { id: 'classic', name: 'Classic', color: '#cccccc', tip: '⚔️', desc: 'Стандартный нож', bg: '#444' },
-    { id: 'neon_skeleton', name: 'Neon Skeleton', color: '#ff6600', tip: '💀', desc: 'Стиль CAVE-NET', bg: '#111', glow: '#ff6600' },
-    { id: 'void', name: 'Void Blade', color: '#1a1a1a', tip: '🌑', desc: 'Клинок бездны', bg: '#000', glow: '#4400ff' },
-    { id: 'emerald', name: 'Emerald', color: '#00ff44', tip: '💎', desc: 'Изумрудная ярость', bg: '#003311', glow: '#00ff00' },
-    { id: 'gold', name: 'Golden King', color: '#ffcc00', tip: '👑', desc: 'Золото королей', bg: '#443300', glow: '#ffff00' },
-    { id: 'blood', name: 'Bloodlust', color: '#ff0044', tip: '🩸', desc: 'Пропитан кровью', bg: '#330000', glow: '#ff0000' },
-    { id: 'ice', name: 'Ice Shard', color: '#00ccff', tip: '❄️', desc: 'Замораживающий', bg: '#002244', glow: '#00ffff' },
+const canvas = document.getElementById("gameCanvas");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Состояние игры
+let player = { x: 100, y: 100, size: 30, speed: 5 };
+let money = 0;
+let houseLevel = 1;
+let lastWorkTime = 0;
+
+// Погода
+const weatherTypes = [
+    { name: "Солнечно", color: "#7cfc00" }, 
+    { name: "Дождь", color: "#4682B4" }, 
+    { name: "Снег", color: "#F0F8FF" }
 ];
+let currentWeatherIdx = 0;
 
-const MAP = {
-    width: 1600, height: 1200,
-    walls: [
-        {x:0, y:0, w:1600, h:20}, {x:0, y:1180, w:1600, h:20},
-        {x:0, y:0, w:20, h:1200}, {x:1580, y:0, w:20, h:1200},
-        {x:400, y:20, w:20, h:400}, {x:400, y:600, w:20, h:580},
-        {x:20, y:400, w:400, h:20}, {x:800, y:200, w:20, h:800},
-        {x:800, y:500, w:400, h:20}, {x:1200, y:20, w:20, h:500}
-    ]
-};
+// Объекты мира
+const shop = { x: canvas.width - 250, y: 100, w: 150, h: 100 };
+const workZone = { x: 100, y: canvas.height - 150, r: 40 };
 
-// ============ GAME ENGINE ============
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-let gameState = 'lobby';
-let selectedSkin = 'neon_skeleton';
+// Управление
 let keys = {};
-let player = { x: 800, y: 600, size: 18, speed: 5, alive: true, role: 'innocent', cooldown: 0 };
-let bots = [];
-let particles = [];
-let camera = { x: 800, y: 600 };
+window.addEventListener("keydown", (e) => keys[e.code] = true);
+window.addEventListener("keyup", (e) => keys[e.code] = false);
 
-// FIX: Keyboard Map (Supports RU and EN)
-const keyMap = {
-    'w': 'up', 'ц': 'up', 'arrowup': 'up',
-    's': 'down', 'ы': 'down', 'arrowdown': 'down',
-    'a': 'left', 'ф': 'left', 'arrowleft': 'left',
-    'd': 'right', 'в': 'right', 'arrowright': 'right'
-};
-
-window.addEventListener('keydown', (e) => { 
-    const key = keyMap[e.key.toLowerCase()];
-    if(key) { keys[key] = true; e.preventDefault(); }
-});
-window.addEventListener('keyup', (e) => {
-    const key = keyMap[e.key.toLowerCase()];
-    if(key) keys[key] = false;
-});
-
-function resize() {
-    canvas.width = window.innerWidth;
-    canvas.height = window.innerHeight;
-}
-window.addEventListener('resize', resize);
-resize();
-
-// ============ LOGIC ============
-function buildSkins() {
-    const list = document.getElementById('skin-list');
-    list.innerHTML = '';
-    SKINS.forEach(s => {
-        const div = document.createElement('div');
-        div.className = 'skin-option' + (s.id === selectedSkin ? ' selected' : '');
-        div.innerHTML = `<div class="skin-preview" style="background:${s.bg}">${s.tip}</div>
-                         <div><div style="font-weight:bold;color:${s.color}">${s.name}</div>
-                         <div style="font-size:10px;opacity:0.6">${s.desc}</div></div>`;
-        div.onclick = () => {
-            selectedSkin = s.id;
-            buildSkins();
-        };
-        list.appendChild(div);
-    });
-}
-
-function startGame() {
-    gameState = 'playing';
-    player.x = 100 + Math.random() * 1400;
-    player.y = 100 + Math.random() * 1000;
-    player.alive = true;
-    player.cooldown = 0;
-    
-    // Assign Roles
-    const roles = ['murder', 'sheriff', 'innocent', 'innocent', 'innocent', 'innocent'];
-    player.role = roles[Math.floor(Math.random() * roles.length)];
-    
-    bots = [];
-    for(let i=0; i<8; i++) {
-        bots.push({
-            x: 100 + Math.random() * 1400, y: 100 + Math.random() * 1000,
-            size: 18, alive: true, color: `hsl(${Math.random()*360}, 60%, 50%)`,
-            role: 'innocent', targetX: Math.random()*1600, targetY: Math.random()*1200
-        });
-    }
-
-    document.getElementById('start-btn').style.display = 'none';
-    document.getElementById('skin-panel').style.display = 'none';
-    const rd = document.getElementById('role-display');
-    rd.style.display = 'block';
-    rd.style.borderColor = player.role === 'murder' ? '#ff0000' : (player.role === 'sheriff' ? '#00aaff' : '#00ff44');
-    rd.textContent = player.role.toUpperCase();
-    
-    document.getElementById('alive-count').style.display = 'block';
-    if(player.role !== 'innocent') document.getElementById('kill-cooldown').style.display = 'block';
-    
-    canvas.focus();
-}
+// Логика погоды (каждые 3 минуты = 180 000 мс)
+setInterval(() => {
+    currentWeatherIdx = (currentWeatherIdx + 1) % weatherTypes.length;
+    document.getElementById("weatherLabel").innerText = "Погода: " + weatherTypes[currentWeatherIdx].name;
+}, 180000); 
 
 function update() {
-    if(gameState !== 'playing') return;
+    // Движение
+    if (keys["KeyW"] || keys["ArrowUp"]) player.y -= player.speed;
+    if (keys["KeyS"] || keys["ArrowDown"]) player.y += player.speed;
+    if (keys["KeyA"] || keys["ArrowLeft"]) player.x -= player.speed;
+    if (keys["KeyD"] || keys["ArrowRight"]) player.x += player.speed;
 
-    let dx = 0, dy = 0;
-    if(keys['up']) dy = -1;
-    if(keys['down']) dy = 1;
-    if(keys['left']) dx = -1;
-    if(keys['right']) dx = 1;
+    // Проверка работы (желтая зона)
+    let distWork = Math.hypot(player.x - workZone.x, player.y - workZone.y);
+    if (distWork < workZone.r && Date.now() - lastWorkTime > 500) {
+        money += 10;
+        lastWorkTime = Date.now();
+    }
 
-    if(dx !== 0 && dy !== 0) { dx *= 0.707; dy *= 0.707; }
-
-    const nx = player.x + dx * player.speed;
-    const ny = player.y + dy * player.speed;
-
-    if(!checkWall(nx, player.y)) player.x = nx;
-    if(!checkWall(player.x, ny)) player.y = ny;
-
-    camera.x += (player.x - camera.x) * 0.1;
-    camera.y += (player.y - camera.y) * 0.1;
-
-    if(player.cooldown > 0) player.cooldown--;
-    
-    // HUD
-    document.getElementById('alive-count').textContent = `Живых: ${bots.filter(b=>b.alive).length + (player.alive?1:0)}`;
-    if(player.cooldown > 0) document.getElementById('kill-cooldown').textContent = `Перезарядка: ${(player.cooldown/60).toFixed(1)}с`;
-    else document.getElementById('kill-cooldown').textContent = `ГОТОВ К АТАКЕ`;
-}
-
-function checkWall(x, y) {
-    return MAP.walls.some(w => x+15 > w.x && x-15 < w.x+w.w && y+15 > w.y && y-15 < w.y+w.h);
-}
-
-// ============ RENDER ============
-function draw() {
-    ctx.fillStyle = '#0a0a1a';
-    ctx.fillRect(0,0,canvas.width, canvas.height);
-
-    ctx.save();
-    ctx.translate(canvas.width/2 - camera.x, canvas.height/2 - camera.y);
-
-    // Draw Map
-    ctx.fillStyle = '#161625';
-    ctx.fillRect(0,0, MAP.width, MAP.height);
-    ctx.strokeStyle = '#ff6600';
-    ctx.lineWidth = 2;
-    MAP.walls.forEach(w => ctx.strokeRect(w.x, w.y, w.w, w.h));
-
-    // Draw Player
-    if(player.alive) {
-        ctx.fillStyle = '#ff6600';
-        ctx.beginPath(); ctx.arc(player.x, player.y, player.size, 0, Math.PI*2); ctx.fill();
-        ctx.strokeStyle = 'white'; ctx.lineWidth = 3; ctx.stroke();
-        
-        // Draw Knife if Murder
-        if(player.role === 'murder') {
-            const skin = SKINS.find(s => s.id === selectedSkin);
-            ctx.fillStyle = skin.color;
-            ctx.shadowBlur = 10; ctx.shadowColor = skin.glow || skin.color;
-            ctx.fillRect(player.x + 15, player.y - 5, 20, 10);
-            ctx.shadowBlur = 0;
+    // Проверка магазина
+    if (player.x > shop.x && player.x < shop.x + shop.w && player.y > shop.y && player.y < shop.y + shop.h) {
+        if (money >= 150) {
+            money -= 150;
+            houseLevel++;
+            player.x -= 50; // Отталкиваем игрока, чтобы не купил всё сразу
         }
     }
 
-    // Draw Bots
-    bots.forEach(b => {
-        if(!b.alive) return;
-        ctx.fillStyle = b.color;
-        ctx.beginPath(); ctx.arc(b.x, b.y, b.size, 0, Math.PI*2); ctx.fill();
+    // Обновление интерфейса
+    document.getElementById("money").innerText = `Деньги: $${money}`;
+    document.getElementById("house").innerText = `Уровень дома: ${houseLevel}`;
+}
+
+function draw() {
+    // Фон (Погода)
+    ctx.fillStyle = weatherTypes[currentWeatherIdx].color;
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // Рисуем работу (Зона заработка)
+    ctx.fillStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(workZone.x, workZone.y, workZone.r, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = "black";
+    ctx.fillText("РАБОТА (Стой тут)", workZone.x - 40, workZone.y + 60);
+
+    // Рисуем магазин
+    ctx.fillStyle = "#808080";
+    ctx.fillRect(shop.x, shop.y, shop.w, shop.h);
+    ctx.fillStyle = "white";
+    ctx.fillText("МАГАЗИН (Апгрейд $150)", shop.x + 10, shop.y + 50);
+
+    // Рисуем ДОМ (растет с уровнем)
+    let hSize = 60 + (houseLevel * 20);
+    ctx.fillStyle = "#8B4513";
+    ctx.fillRect(canvas.width/2 - hSize/2, canvas.height/2 - hSize/2, hSize, hSize);
+    // Крыша
+    ctx.fillStyle = "#A52A2A";
+    ctx.beginPath();
+    ctx.moveTo(canvas.width/2 - hSize/2, canvas.height/2 - hSize/2);
+    ctx.lineTo(canvas.width/2 + hSize/2, canvas.height/2 - hSize/2);
+    ctx.lineTo(canvas.width/2, canvas.height/2 - hSize);
+    ctx.fill();
+
+    // Рисуем игрока
+    ctx.fillStyle = "blue";
+    ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
+
+    requestAnimationFrame(() => {
+        update();
+        draw();
     });
-
-    ctx.restore();
 }
 
-function loop() {
-    update();
-    draw();
-    requestAnimationFrame(loop);
-}
-
-function backToLobby() {
-    location.reload();
-}
-
-buildSkins();
-loop();
+draw();
 </script>
 </body>
 </html>
-"""
-
-# Save to file
-with open("mm2_cavenet.html", "w", encoding="utf-8") as f:
-    f.write(html_content)
 
