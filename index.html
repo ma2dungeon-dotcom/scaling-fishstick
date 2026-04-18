@@ -2,138 +2,177 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Super 2D Life Sim</title>
+    <title>Bloxburg 2D: Extreme Edition</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #333; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Verdana', sans-serif; }
         #ui {
-            position: absolute; top: 15px; left: 15px;
-            background: rgba(255, 255, 255, 0.95); padding: 20px;
-            border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            pointer-events: none; z-index: 100; min-width: 200px;
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255, 255, 255, 0.9); padding: 15px;
+            border-radius: 10px; z-index: 100; border: 2px solid #333;
         }
-        .stat { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
-        .hint { font-size: 12px; color: #7f8c8d; margin-top: 10px; }
+        .stat { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 4px; }
         #win {
-            display: none; position: absolute; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); background: gold;
-            padding: 50px; border-radius: 20px; text-align: center;
-            font-size: 30px; box-shadow: 0 0 50px rgba(255,215,0,0.5); z-index: 1000;
+            display: none; position: fixed; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: #f1c40f;
+            padding: 40px; border-radius: 20px; font-size: 40px; font-weight: bold;
+            box-shadow: 0 0 100px rgba(0,0,0,0.5); z-index: 1000;
         }
+        #eventLog { color: #e74c3c; font-weight: bold; }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div id="moneyLabel" class="stat">💰 Деньги: $0</div>
-    <div id="jobLabel" class="stat">💼 Множитель: x1.0</div>
-    <div id="locLabel" style="color: #3498db; font-weight: bold;">📍 Улица</div>
-    <div id="progressLabel" class="stat" style="font-size: 14px; margin-top:10px;">Прогресс города: 0%</div>
-    <div class="hint"><b>WASD</b> - Ходить | <b>E</b> - Взаимодействие<br><b>Задание:</b> Скупай всё в городе!</div>
+    <div class="stat" id="moneyLabel">💰 Деньги: $0</div>
+    <div class="stat" id="weaponLabel">🔫 Оружие: Кулаки</div>
+    <div class="stat" id="progressLabel">🏠 Мебель: 0 / 25</div>
+    <div id="eventLog">Событие: Нет</div>
+    <div style="font-size: 10px; color: #666; margin-top: 5px;">
+        WASD - Ходить/Прыгать | E - Взаимодействие | Space - Атака
+    </div>
 </div>
 
-<div id="win">🏆 ГОРОД ПОКОРЕН! <br> <span style="font-size: 18px;">Вы купили всё имущество!</span></div>
-
+<div id="win">🏆 ИГРА ПРОЙДЕНА!</div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Константы
-const W_SIZE = 3000;
-const INT_SIZE = 800;
-let money = 250;
-let playerColor = "#3498db";
-let locationState = "street";
-let multiplier = 1.0;
-let hasDelivery = false;
-
-// Состояние владения
-let items = {
-    furniture: 0, // max 6
-    pets: { cat: false, dog: false },
-    totalToWin: 9 // 6 мебели + 2 питомца + 1 стиль
+// Состояние игры
+let state = {
+    loc: "street", // street, house, shop_f, shop_w, forest
+    money: 1000,
+    items: 0,
+    weapon: { name: "Кулаки", dmg: 10, range: 40 },
+    multiplier: 1,
+    event: "Нет",
+    won: false
 };
 
-// Игрок
-let player = { x: 1500, y: 1500, size: 30, speed: 6 };
-let camera = { x: 0, y: 0 };
+// Константы
+const W_SIZE = 2500;
+const furniturePrices = Array.from({length: 25}, (_, i) => (i + 1) * 150);
 
-// Объекты города (x, y, w, h, color, name, type)
+// Игрок
+let p = { x: 1250, y: 1250, vx: 0, vy: 0, size: 30, color: "#3498db" };
+let camera = { x: 0, y: 0 };
+let enemies = [];
+
+// Здания
 const buildings = [
-    {x: 1300, y: 1300, w: 250, h: 200, c: "#8b4513", n: "МОЙ ДОМ", t: "house"},
-    {x: 1700, y: 1300, w: 200, h: 180, c: "#95a5a6", n: "МЕБЕЛЬ", t: "shop_f"},
-    {x: 1300, y: 1700, w: 200, h: 150, c: "#e67e22", n: "ПИТОМЦЫ", t: "shop_p"},
-    {x: 1700, y: 1700, w: 200, h: 150, c: "#9b59b6", n: "ОДЕЖДА", t: "shop_c"},
-    {x: 1000, y: 1000, w: 300, h: 100, c: "#f1c40f", n: "СКЛАД (РАБОТА)", t: "work_delivery"},
-    {x: 2000, y: 2000, w: 100, h: 100, c: "#e74c3c", n: "ДОСТАВИТЬ СЮДА", t: "dropoff"}
+    {x: 1100, y: 1100, w: 200, h: 180, c: "#8b4513", n: "ДОМ", t: "house"},
+    {x: 1400, y: 1100, w: 200, h: 180, c: "#95a5a6", n: "МЕБЕЛЬ", t: "shop_f"},
+    {x: 1100, y: 1400, w: 200, h: 180, c: "#34495e", n: "ОРУЖИЕ", t: "shop_w"},
+    {x: 1400, y: 1400, w: 200, h: 180, c: "#27ae60", n: "ЛЕС (ОХОТА)", t: "forest"}
 ];
 
+// Управление
 let keys = {};
-window.onkeydown = (e) => { keys[e.code] = true; if(e.code === 'KeyE') handleAction(); };
+window.onkeydown = (e) => { 
+    keys[e.code] = true; 
+    if(e.code === 'KeyE') interact();
+    if(e.code === 'Space') attack();
+};
 window.onkeyup = (e) => keys[e.code] = false;
 
-function handleAction() {
-    if (locationState === "street") {
+function interact() {
+    if (state.loc === "street") {
         buildings.forEach(b => {
-            if (player.x > b.x && player.x < b.x + b.w && Math.abs(player.y - (b.y + b.h)) < 50) {
-                if(b.t.startsWith("shop") || b.t === "house") {
-                    locationState = b.t;
-                    player.x = 400; player.y = 700;
-                }
+            if (p.x > b.x && p.x < b.x + b.w && Math.abs(p.y - (b.y + b.h)) < 50) {
+                state.loc = b.t;
+                if(b.t === "forest") { p.x = 100; p.y = 500; spawnEnemies(); }
+                else { p.x = 400; p.y = 750; }
             }
         });
-        // Мини-игра доставка
-        let b = buildings[4]; // склад
-        if (player.x > b.x && player.x < b.x + b.w && Math.abs(player.y - (b.y + b.h)) < 50) {
-            hasDelivery = true;
-            alert("Посылка получена! Вези её в КРАСНУЮ зону на карте!");
-        }
-        let d = buildings[5]; // сдача
-        if (hasDelivery && player.x > d.x && player.x < d.x + d.w && Math.abs(player.y - (d.y + d.h)) < 50) {
-            let reward = 200 * multiplier;
-            money += reward;
-            hasDelivery = false;
-            alert("Доставлено! Получено $" + reward);
-        }
     } else {
-        if (player.y > 750) { locationState = "street"; player.y += 100; player.x = 1500; }
+        if (p.y > 760 || p.x < 0) { state.loc = "street"; p.x = 1250; p.y = 1350; }
     }
 }
 
+function spawnEnemies() {
+    enemies = [
+        {x: 500, y: 550, hp: 30, val: 50, type: "Волк", c: "#7f8c8d"},
+        {x: 900, y: 550, hp: 60, val: 150, type: "Кабан", c: "#5d4037"},
+        {x: 1300, y: 550, hp: 100, val: 500, type: "Медведь", c: "#3e2723"}
+    ];
+}
+
+function attack() {
+    if(state.loc !== "forest") return;
+    enemies.forEach(en => {
+        let dist = Math.abs(p.x - en.x);
+        if(dist < state.weapon.range) {
+            en.hp -= state.weapon.dmg;
+            if(en.hp <= 0) {
+                state.money += en.val;
+                en.x = -1000; // Умер
+            }
+        }
+    });
+}
+
+// Рандомные ивенты
+setInterval(() => {
+    const r = Math.random();
+    if(r < 0.3) { state.event = "ДОЖДЬ (+ЗП)"; state.multiplier = 2; }
+    else if(r < 0.6) { state.event = "БУМ (ЦЕНЫ x2)"; state.multiplier = 0.5; }
+    else { state.event = "Нет"; state.multiplier = 1; }
+    document.getElementById("eventLog").innerText = "Событие: " + state.event;
+}, 180000);
+
 function update() {
-    let limit = (locationState === "street") ? W_SIZE : INT_SIZE;
-    if (keys["KeyW"] && player.y > 0) player.y -= player.speed;
-    if (keys["KeyS"] && player.y < limit) player.y += player.speed;
-    if (keys["KeyA"] && player.x > 0) player.x -= player.speed;
-    if (keys["KeyD"] && player.x < limit) player.x += player.speed;
+    const speed = 7;
+    // Логика перемещения
+    if (state.loc === "forest") { // Вид сбоку (платформер)
+        if (keys["KeyA"]) p.vx = -speed;
+        else if (keys["KeyD"]) p.vx = speed;
+        else p.vx *= 0.8;
+        
+        // Прыжок
+        if (keys["KeyW"] && p.y >= 550) p.vy = -15;
+        p.vy += 0.8; // Гравитация
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.y > 550) { p.y = 550; p.vy = 0; }
+    } else { // Вид сверху
+        if (keys["KeyW"]) p.y -= speed;
+        if (keys["KeyS"]) p.y += speed;
+        if (keys["KeyA"]) p.x -= speed;
+        if (keys["KeyD"]) p.x += speed;
+    }
 
-    // Магазин мебели
-    if (locationState === "shop_f" && player.y < 300 && money >= 100 && items.furniture < 6) {
-        items.furniture++; money -= 100; player.y += 50;
+    // Покупки в магазинах
+    if(state.loc === "shop_f" && p.y < 200) {
+        let price = furniturePrices[state.items];
+        if(state.money >= price && state.items < 25) {
+            state.money -= price;
+            state.items++;
+            p.y = 400;
+            checkWin();
+        }
     }
-    // Питомцы
-    if (locationState === "shop_p") {
-        if (player.x < 300 && !items.pets.cat && money >= 300) { items.pets.cat = true; money -= 300; multiplier += 0.2; }
-        if (player.x > 500 && !items.pets.dog && money >= 500) { items.pets.dog = true; money -= 500; multiplier += 0.5; }
-    }
-    // Одежда
-    if (locationState === "shop_c" && money >= 50) {
-        if (player.x < 200) { playerColor = "#2ecc71"; money -= 5; }
-        if (player.x > 600) { playerColor = "#e74c3c"; money -= 5; }
-    }
-
-    // UI
-    document.getElementById("moneyLabel").innerText = `💰 Деньги: $${Math.floor(money)}`;
-    document.getElementById("jobLabel").innerText = `💼 Множитель: x${multiplier.toFixed(1)}`;
-    document.getElementById("locLabel").innerText = `📍 Локация: ${locationState}`;
     
-    let prog = Math.floor(((items.furniture + (items.pets.cat?1:0) + (items.pets.dog?1:0)) / 8) * 100);
-    document.getElementById("progressLabel").innerText = `Прогресс города: ${prog}%`;
-    if (prog >= 100) document.getElementById("win").style.display = "block";
+    if(state.loc === "shop_w") {
+        if(p.x < 200 && state.money >= 500) { state.weapon = {name: "Пистолет", dmg: 30, range: 150}; state.money -= 500; p.x = 400; }
+        if(p.x > 600 && state.money >= 2000) { state.weapon = {name: "Винтовка", dmg: 100, range: 400}; state.money -= 2000; p.x = 400; }
+    }
 
-    camera.x = player.x - canvas.width/2;
-    camera.y = player.y - canvas.height/2;
+    camera.x = p.x - canvas.width/2;
+    camera.y = p.y - canvas.height/2;
+
+    document.getElementById("moneyLabel").innerText = `💰 Деньги: $${Math.floor(state.money)}`;
+    document.getElementById("weaponLabel").innerText = `🔫 Оружие: ${state.weapon.name}`;
+    document.getElementById("progressLabel").innerText = `🏠 Мебель: ${state.items} / 25`;
+}
+
+function checkWin() {
+    if(state.items >= 25 && !state.won) {
+        state.won = true;
+        const winEl = document.getElementById("win");
+        winEl.style.display = "block";
+        setTimeout(() => { winEl.style.display = "none"; }, 2000);
+    }
 }
 
 function draw() {
@@ -142,52 +181,46 @@ function draw() {
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
 
-    if (locationState === "street") {
-        // Трава и дороги
-        ctx.fillStyle = "#27ae60"; ctx.fillRect(0,0, W_SIZE, W_SIZE);
-        ctx.fillStyle = "#34495e"; ctx.fillRect(1450, 0, 100, W_SIZE); // Вертикальная дорога
-        ctx.fillRect(0, 1450, W_SIZE, 100); // Горизонтальная
-
+    if (state.loc === "street") {
+        ctx.fillStyle = (state.event === "ДОЖДЬ (+ЗП)") ? "#4682B4" : "#2ecc71";
+        ctx.fillRect(0,0, W_SIZE, W_SIZE);
         buildings.forEach(b => {
             ctx.fillStyle = b.c; ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial";
-            ctx.fillText(b.n, b.x + 10, b.y - 10);
-            // Двери
-            ctx.fillStyle = "#333"; ctx.fillRect(b.x + b.w/2 - 20, b.y + b.h - 10, 40, 10);
+            ctx.fillStyle = "white"; ctx.fillText(b.n, b.x + 10, b.y - 10);
         });
-        if(hasDelivery) { ctx.fillStyle = "white"; ctx.fillRect(player.x+10, player.y-10, 15, 15); }
+    } else if (state.loc === "forest") {
+        ctx.fillStyle = "#1e3799"; ctx.fillRect(camera.x, 0, canvas.width, canvas.height); // Небо
+        ctx.fillStyle = "#27ae60"; ctx.fillRect(-1000, 580, 5000, 500); // Земля
+        enemies.forEach(en => {
+            ctx.fillStyle = en.c; ctx.fillRect(en.x, en.y, 50, 30);
+            ctx.fillStyle = "white"; ctx.fillText(`${en.type} (HP: ${en.hp})`, en.x, en.y - 10);
+        });
     } else {
-        // Интерьеры
-        ctx.fillStyle = "#ecf0f1"; ctx.fillRect(0,0, INT_SIZE, INT_SIZE);
-        ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 10; ctx.strokeRect(0,0, INT_SIZE, INT_SIZE);
-        
-        if (locationState === "house") {
-            for(let i=0; i<items.furniture; i++) {
-                ctx.fillStyle = "#d35400"; ctx.fillRect(50 + (i*100), 100, 60, 60);
+        ctx.fillStyle = "#f3e5f5"; ctx.fillRect(0,0, 800, 800);
+        if(state.loc === "house") {
+            for(let i=0; i<state.items; i++) {
+                ctx.fillStyle = "#d35400"; 
+                ctx.fillRect(50 + (i%5)*120, 100 + Math.floor(i/5)*100, 60, 40);
+                ctx.fillStyle = "black"; ctx.font = "10px Arial";
+                ctx.fillText("Предмет "+(i+1), 50 + (i%5)*120, 95 + Math.floor(i/5)*100);
             }
-            if(items.pets.cat) { ctx.fillStyle = "orange"; ctx.beginPath(); ctx.arc(100, 400, 15, 0, 7); ctx.fill(); ctx.fillText("Кот", 90, 380); }
-            if(items.pets.dog) { ctx.fillStyle = "brown"; ctx.beginPath(); ctx.arc(200, 420, 20, 0, 7); ctx.fill(); ctx.fillText("Пёс", 190, 390); }
         }
-        
-        if (locationState === "shop_f") {
-            ctx.fillStyle = "black"; ctx.fillText("Купить мебель ($100) - Просто иди вверх", 250, 200);
+        if(state.loc === "shop_f") {
+            ctx.fillStyle = "black"; 
+            ctx.fillText(`КУПИТЬ ПРЕДМЕТ #${state.items+1} ЗА $${furniturePrices[state.items]}`, 250, 100);
+            ctx.fillRect(350, 50, 100, 50);
         }
-        if (locationState === "shop_p") {
-            ctx.fillStyle = "orange"; ctx.fillRect(100, 200, 50, 50); ctx.fillText("Кот $300 (+20%)", 80, 180);
-            ctx.fillStyle = "brown"; ctx.fillRect(600, 200, 60, 60); ctx.fillText("Пёс $500 (+50%)", 580, 180);
+        if(state.loc === "shop_w") {
+            ctx.fillStyle = "black";
+            ctx.fillText("Пистолет $500 (Лево)", 50, 200);
+            ctx.fillText("Винтовка $2000 (Право)", 550, 200);
         }
-        if (locationState === "shop_c") {
-            ctx.fillStyle = "#2ecc71"; ctx.fillRect(100, 200, 50, 50); ctx.fillText("Зеленый костюм", 80, 180);
-            ctx.fillStyle = "#e74c3c"; ctx.fillRect(600, 200, 50, 50); ctx.fillText("Красный костюм", 580, 180);
-        }
-        // Выход
-        ctx.fillStyle = "red"; ctx.fillRect(350, 780, 100, 20);
+        ctx.fillStyle = "red"; ctx.fillRect(350, 780, 100, 20); // Выход
     }
 
     // Игрок
-    ctx.fillStyle = playerColor;
-    ctx.beginPath(); ctx.roundRect(player.x-15, player.y-15, 30, 30, 5); ctx.fill();
-    ctx.fillStyle = "white"; ctx.fillRect(player.x-10, player.y-10, 8, 8); ctx.fillRect(player.x+2, player.y-10, 8, 8); // Глаза
+    ctx.fillStyle = p.color;
+    ctx.fillRect(p.x-15, p.y-15, 30, 30);
 
     ctx.restore();
     update();
