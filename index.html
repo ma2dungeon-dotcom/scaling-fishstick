@@ -2,160 +2,163 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Bloxburg 2D: Extreme Edition</title>
+    <title>Bloxburg 2D: Definitive Edition</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #1a1a1a; font-family: 'Verdana', sans-serif; }
+        body { margin: 0; overflow: hidden; background: #222; font-family: 'Segoe UI', sans-serif; }
         #ui {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(255, 255, 255, 0.9); padding: 15px;
-            border-radius: 10px; z-index: 100; border: 2px solid #333;
+            position: absolute; top: 15px; left: 15px;
+            background: rgba(255, 255, 255, 0.95); padding: 20px;
+            border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            pointer-events: none; z-index: 100;
         }
-        .stat { font-size: 14px; font-weight: bold; color: #333; margin-bottom: 4px; }
+        .stat { font-size: 16px; font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
         #win {
-            display: none; position: fixed; top: 50%; left: 50%;
-            transform: translate(-50%, -50%); background: #f1c40f;
-            padding: 40px; border-radius: 20px; font-size: 40px; font-weight: bold;
-            box-shadow: 0 0 100px rgba(0,0,0,0.5); z-index: 1000;
+            display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            background: gold; padding: 40px; border-radius: 20px; font-size: 30px; z-index: 1000;
         }
-        #eventLog { color: #e74c3c; font-weight: bold; }
+        #eventLog { color: #e74c3c; }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div class="stat" id="moneyLabel">💰 Деньги: $0</div>
-    <div class="stat" id="weaponLabel">🔫 Оружие: Кулаки</div>
-    <div class="stat" id="progressLabel">🏠 Мебель: 0 / 25</div>
-    <div id="eventLog">Событие: Нет</div>
-    <div style="font-size: 10px; color: #666; margin-top: 5px;">
-        WASD - Ходить/Прыгать | E - Взаимодействие | Space - Атака
+    <div id="moneyLabel" class="stat">💰 Деньги: $0</div>
+    <div id="weaponLabel" class="stat">🔫 Оружие: Кулаки</div>
+    <div id="itemsLabel" class="stat">🏠 Мебель: 0 / 25</div>
+    <div id="eventLog" class="stat">Событие: Нет</div>
+    <div style="font-size: 12px; color: #7f8c8d; margin-top: 10px;">
+        <b>WASD</b> - Ходить | <b>E</b> - Вход/Действие<br>
+        <b>Space</b> - Атака (в лесу) | <b>Esc</b> - Выйти из леса
     </div>
 </div>
 
-<div id="win">🏆 ИГРА ПРОЙДЕНА!</div>
+<div id="win">🏆 ГОРОД ПОКОРЕН!</div>
 <canvas id="gameCanvas"></canvas>
 
 <script>
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Состояние игры
+const W_SIZE = 3000;
+const furniturePrices = Array.from({length: 25}, (_, i) => (i + 1) * 100);
+
 let state = {
-    loc: "street", // street, house, shop_f, shop_w, forest
-    money: 1000,
+    loc: "street",
+    money: 500,
     items: 0,
-    weapon: { name: "Кулаки", dmg: 10, range: 40 },
-    multiplier: 1,
+    weapon: { name: "Кулаки", dmg: 10, range: 50 },
+    hasPackage: false,
     event: "Нет",
-    won: false
+    multiplier: 1
 };
 
-// Константы
-const W_SIZE = 2500;
-const furniturePrices = Array.from({length: 25}, (_, i) => (i + 1) * 150);
-
-// Игрок
-let p = { x: 1250, y: 1250, vx: 0, vy: 0, size: 30, color: "#3498db" };
+let p = { x: 1500, y: 1500, vx: 0, vy: 0, size: 30, color: "#3498db" };
 let camera = { x: 0, y: 0 };
 let enemies = [];
 
-// Здания
 const buildings = [
-    {x: 1100, y: 1100, w: 200, h: 180, c: "#8b4513", n: "ДОМ", t: "house"},
-    {x: 1400, y: 1100, w: 200, h: 180, c: "#95a5a6", n: "МЕБЕЛЬ", t: "shop_f"},
-    {x: 1100, y: 1400, w: 200, h: 180, c: "#34495e", n: "ОРУЖИЕ", t: "shop_w"},
-    {x: 1400, y: 1400, w: 200, h: 180, c: "#27ae60", n: "ЛЕС (ОХОТА)", t: "forest"}
+    {x: 1300, y: 1300, w: 250, h: 200, c: "#8b4513", n: "МОЙ ДОМ", t: "house"},
+    {x: 1700, y: 1300, w: 200, h: 180, c: "#95a5a6", n: "МЕБЕЛЬ", t: "shop_f"},
+    {x: 1300, y: 1700, w: 200, h: 150, c: "#34495e", n: "ОРУЖИЕ", t: "shop_w"},
+    {x: 1700, y: 1700, w: 200, h: 150, c: "#27ae60", n: "ЛЕС (ОХОТА)", t: "forest"},
+    {x: 1000, y: 1000, w: 300, h: 100, c: "#f1c40f", n: "СКЛАД (ВЗЯТЬ ГРУЗ)", t: "work"},
+    {x: 2300, y: 2300, w: 150, h: 150, c: "#e74c3c", n: "ДОСТАВКА ТУТ", t: "dropoff"}
 ];
 
-// Управление
 let keys = {};
 window.onkeydown = (e) => { 
     keys[e.code] = true; 
-    if(e.code === 'KeyE') interact();
+    if(e.code === 'KeyE') handleE();
+    if(e.code === 'Escape' && state.loc === "forest") exitForest();
     if(e.code === 'Space') attack();
 };
 window.onkeyup = (e) => keys[e.code] = false;
 
-function interact() {
+function handleE() {
     if (state.loc === "street") {
         buildings.forEach(b => {
-            if (p.x > b.x && p.x < b.x + b.w && Math.abs(p.y - (b.y + b.h)) < 50) {
-                state.loc = b.t;
-                if(b.t === "forest") { p.x = 100; p.y = 500; spawnEnemies(); }
-                else { p.x = 400; p.y = 750; }
+            if (p.x > b.x && p.x < b.x + b.w && Math.abs(p.y - (b.y + b.h)) < 60) {
+                if (b.t === "work") {
+                    state.hasPackage = true;
+                    alert("Груз взят! Вези его в КРАСНУЮ зону!");
+                } else if (b.t === "dropoff") {
+                    if (state.hasPackage) {
+                        let gain = 250 * state.multiplier;
+                        state.money += gain;
+                        state.hasPackage = false;
+                        alert("Доставлено! +$" + gain);
+                    }
+                } else {
+                    state.loc = b.t;
+                    if(b.t === "forest") spawnEnemies();
+                    p.x = 400; p.y = 700;
+                }
             }
         });
-    } else {
-        if (p.y > 760 || p.x < 0) { state.loc = "street"; p.x = 1250; p.y = 1350; }
+    } else if (p.y > 750) {
+        state.loc = "street"; p.x = 1500; p.y = 1600;
     }
 }
 
+function exitForest() { state.loc = "street"; p.x = 1800; p.y = 1800; p.vy = 0; }
+
 function spawnEnemies() {
+    p.x = 100; p.y = 550;
     enemies = [
-        {x: 500, y: 550, hp: 30, val: 50, type: "Волк", c: "#7f8c8d"},
-        {x: 900, y: 550, hp: 60, val: 150, type: "Кабан", c: "#5d4037"},
-        {x: 1300, y: 550, hp: 100, val: 500, type: "Медведь", c: "#3e2723"}
+        {x: 600, y: 550, hp: 40, dmg: 1, type: "Волк", c: "#7f8c8d", val: 100},
+        {x: 1200, y: 550, hp: 100, dmg: 2, type: "Медведь", c: "#3e2723", val: 500}
     ];
 }
 
 function attack() {
     if(state.loc !== "forest") return;
     enemies.forEach(en => {
-        let dist = Math.abs(p.x - en.x);
-        if(dist < state.weapon.range) {
+        if(Math.abs(p.x - en.x) < state.weapon.range) {
             en.hp -= state.weapon.dmg;
-            if(en.hp <= 0) {
-                state.money += en.val;
-                en.x = -1000; // Умер
-            }
+            if(en.hp <= 0) { state.money += en.val; en.x = -5000; }
         }
     });
 }
 
-// Рандомные ивенты
-setInterval(() => {
-    const r = Math.random();
-    if(r < 0.3) { state.event = "ДОЖДЬ (+ЗП)"; state.multiplier = 2; }
-    else if(r < 0.6) { state.event = "БУМ (ЦЕНЫ x2)"; state.multiplier = 0.5; }
-    else { state.event = "Нет"; state.multiplier = 1; }
-    document.getElementById("eventLog").innerText = "Событие: " + state.event;
-}, 180000);
-
 function update() {
     const speed = 7;
-    // Логика перемещения
-    if (state.loc === "forest") { // Вид сбоку (платформер)
-        if (keys["KeyA"]) p.vx = -speed;
-        else if (keys["KeyD"]) p.vx = speed;
-        else p.vx *= 0.8;
-        
-        // Прыжок
-        if (keys["KeyW"] && p.y >= 550) p.vy = -15;
-        p.vy += 0.8; // Гравитация
-        p.x += p.vx;
-        p.y += p.vy;
-        if (p.y > 550) { p.y = 550; p.vy = 0; }
-    } else { // Вид сверху
-        if (keys["KeyW"]) p.y -= speed;
-        if (keys["KeyS"]) p.y += speed;
+    if (state.loc === "forest") {
         if (keys["KeyA"]) p.x -= speed;
         if (keys["KeyD"]) p.x += speed;
+        if (keys["KeyW"] && p.y >= 550) p.vy = -15;
+        p.vy += 0.8; p.y += p.vy;
+        if (p.y > 550) { p.y = 550; p.vy = 0; }
+
+        enemies.forEach(en => {
+            let dx = p.x - en.x;
+            en.x += Math.sign(dx) * 2;
+            if(Math.abs(p.x - en.x) < 30 && Math.abs(p.y - en.y) < 30) {
+                state.money = Math.max(0, state.money - 100);
+                alert("Животное ранило тебя! Ты потерял $100 и сбежал!");
+                exitForest();
+            }
+        });
+    } else {
+        if (keys["KeyW"] && p.y > 0) p.y -= speed;
+        if (keys["KeyS"] && p.y < W_SIZE) p.y += speed;
+        if (keys["KeyA"] && p.x > 0) p.x -= speed;
+        if (keys["KeyD"] && p.x < W_SIZE) p.x += speed;
     }
 
-    // Покупки в магазинах
     if(state.loc === "shop_f" && p.y < 200) {
-        let price = furniturePrices[state.items];
-        if(state.money >= price && state.items < 25) {
-            state.money -= price;
-            state.items++;
-            p.y = 400;
-            checkWin();
+        let pr = furniturePrices[state.items];
+        if(state.money >= pr && state.items < 25) {
+            state.money -= pr; state.items++; p.y = 400;
+            if(state.items === 25) { 
+                document.getElementById("win").style.display="block"; 
+                setTimeout(()=>document.getElementById("win").style.display="none", 2000);
+            }
         }
     }
-    
+
     if(state.loc === "shop_w") {
-        if(p.x < 200 && state.money >= 500) { state.weapon = {name: "Пистолет", dmg: 30, range: 150}; state.money -= 500; p.x = 400; }
-        if(p.x > 600 && state.money >= 2000) { state.weapon = {name: "Винтовка", dmg: 100, range: 400}; state.money -= 2000; p.x = 400; }
+        if(p.x < 200 && state.money >= 1000) { state.weapon = {name: "Дробовик", dmg: 50, range: 100}; state.money -= 1000; p.x = 400; }
+        if(p.x > 600 && state.money >= 5000) { state.weapon = {name: "Снайперка", dmg: 200, range: 400}; state.money -= 5000; p.x = 400; }
     }
 
     camera.x = p.x - canvas.width/2;
@@ -163,64 +166,48 @@ function update() {
 
     document.getElementById("moneyLabel").innerText = `💰 Деньги: $${Math.floor(state.money)}`;
     document.getElementById("weaponLabel").innerText = `🔫 Оружие: ${state.weapon.name}`;
-    document.getElementById("progressLabel").innerText = `🏠 Мебель: ${state.items} / 25`;
-}
-
-function checkWin() {
-    if(state.items >= 25 && !state.won) {
-        state.won = true;
-        const winEl = document.getElementById("win");
-        winEl.style.display = "block";
-        setTimeout(() => { winEl.style.display = "none"; }, 2000);
-    }
+    document.getElementById("itemsLabel").innerText = `🏠 Мебель: ${state.items} / 25`;
 }
 
 function draw() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.save();
-    ctx.translate(-camera.x, -camera.y);
+    ctx.save(); ctx.translate(-camera.x, -camera.y);
 
     if (state.loc === "street") {
-        ctx.fillStyle = (state.event === "ДОЖДЬ (+ЗП)") ? "#4682B4" : "#2ecc71";
-        ctx.fillRect(0,0, W_SIZE, W_SIZE);
+        ctx.fillStyle = "#27ae60"; ctx.fillRect(0,0, W_SIZE, W_SIZE);
+        ctx.fillStyle = "#34495e"; ctx.fillRect(1450, 0, 100, W_SIZE); ctx.fillRect(0, 1450, W_SIZE, 100);
         buildings.forEach(b => {
-            ctx.fillStyle = b.c; ctx.fillRect(b.x, b.y, b.w, b.h);
-            ctx.fillStyle = "white"; ctx.fillText(b.n, b.x + 10, b.y - 10);
+            ctx.fillStyle = b.c; ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 15); ctx.fill();
+            ctx.fillStyle = "white"; ctx.font = "bold 18px Arial"; ctx.fillText(b.n, b.x + 10, b.y - 10);
         });
+        if(state.hasPackage) { ctx.fillStyle = "white"; ctx.fillRect(p.x+15, p.y-15, 15, 15); }
     } else if (state.loc === "forest") {
-        ctx.fillStyle = "#1e3799"; ctx.fillRect(camera.x, 0, canvas.width, canvas.height); // Небо
-        ctx.fillStyle = "#27ae60"; ctx.fillRect(-1000, 580, 5000, 500); // Земля
+        ctx.fillStyle = "#1e3799"; ctx.fillRect(camera.x, 0, canvas.width, canvas.height);
+        ctx.fillStyle = "#2ecc71"; ctx.fillRect(-1000, 580, 5000, 500);
         enemies.forEach(en => {
-            ctx.fillStyle = en.c; ctx.fillRect(en.x, en.y, 50, 30);
-            ctx.fillStyle = "white"; ctx.fillText(`${en.type} (HP: ${en.hp})`, en.x, en.y - 10);
+            ctx.fillStyle = en.c; ctx.fillRect(en.x, en.y, 50, 40);
+            ctx.fillStyle = "white"; ctx.fillText(en.type + " HP:" + en.hp, en.x, en.y - 10);
         });
     } else {
-        ctx.fillStyle = "#f3e5f5"; ctx.fillRect(0,0, 800, 800);
+        ctx.fillStyle = "#ecf0f1"; ctx.fillRect(0,0, 800, 800);
         if(state.loc === "house") {
             for(let i=0; i<state.items; i++) {
-                ctx.fillStyle = "#d35400"; 
-                ctx.fillRect(50 + (i%5)*120, 100 + Math.floor(i/5)*100, 60, 40);
-                ctx.fillStyle = "black"; ctx.font = "10px Arial";
-                ctx.fillText("Предмет "+(i+1), 50 + (i%5)*120, 95 + Math.floor(i/5)*100);
+                ctx.fillStyle = "#d35400"; ctx.fillRect(50 + (i%5)*140, 100 + Math.floor(i/5)*120, 80, 50);
             }
         }
         if(state.loc === "shop_f") {
-            ctx.fillStyle = "black"; 
-            ctx.fillText(`КУПИТЬ ПРЕДМЕТ #${state.items+1} ЗА $${furniturePrices[state.items]}`, 250, 100);
-            ctx.fillRect(350, 50, 100, 50);
+            ctx.fillStyle = "black"; ctx.fillText(`КУПИТЬ МЕБЕЛЬ #${state.items+1} ЗА $${furniturePrices[state.items]}`, 200, 150);
+            ctx.fillStyle = "gold"; ctx.fillRect(350, 50, 100, 50);
         }
         if(state.loc === "shop_w") {
-            ctx.fillStyle = "black";
-            ctx.fillText("Пистолет $500 (Лево)", 50, 200);
-            ctx.fillText("Винтовка $2000 (Право)", 550, 200);
+            ctx.fillStyle = "black"; ctx.fillText("Дробовик $1000 (Влево)", 50, 200); ctx.fillText("Снайперка $5000 (Вправо)", 500, 200);
         }
-        ctx.fillStyle = "red"; ctx.fillRect(350, 780, 100, 20); // Выход
+        ctx.fillStyle = "red"; ctx.fillRect(350, 780, 100, 20);
     }
 
-    // Игрок
-    ctx.fillStyle = p.color;
-    ctx.fillRect(p.x-15, p.y-15, 30, 30);
+    ctx.fillStyle = p.color; ctx.beginPath(); ctx.roundRect(p.x-15, p.y-15, 30, 30, 8); ctx.fill();
+    ctx.fillStyle = "white"; ctx.fillRect(p.x-10, p.y-10, 7, 7); ctx.fillRect(p.x+3, p.y-10, 7, 7);
 
     ctx.restore();
     update();
@@ -230,4 +217,3 @@ draw();
 </script>
 </body>
 </html>
-
