@@ -2,43 +2,30 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>2D Bloxburg Clone</title>
+    <title>2D Bloxburg Expansion</title>
     <style>
-        body { margin: 0; overflow: hidden; font-family: sans-serif; }
-        canvas { display: block; background: #7cfc00; }
+        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; }
+        canvas { display: block; }
         #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255, 255, 255, 0.8);
-            padding: 15px;
-            border-radius: 10px;
-            pointer-events: none;
+            position: absolute; top: 10px; left: 10px;
+            background: rgba(255, 255, 255, 0.9); padding: 15px;
+            border-radius: 10px; pointer-events: none; z-index: 10;
         }
-        .weather-info {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: rgba(0, 0, 0, 0.6);
-            color: white;
-            padding: 10px;
-            border-radius: 5px;
+        .msg {
+            position: absolute; bottom: 20px; width: 100%; text-align: center;
+            color: white; font-size: 20px; text-shadow: 2px 2px 4px #000;
         }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div id="money">Деньги: $0</div>
-    <div id="house">Уровень дома: 1</div>
-    <div style="margin-top: 10px; font-size: 12px;">
-        Управление: <b>WASD</b> или <b>Стрелки</b><br>
-        Работа: Подойди к <b>Желтому кругу</b><br>
-        Магазин: Подойди к <b>Серому зданию</b> (нужно $150)
-    </div>
+    <div id="moneyLabel">Деньги: $0</div>
+    <div id="locLabel">Локация: Улица</div>
+    <div id="itemsLabel">Мебель: 0 / 3</div>
+    <div style="font-size: 12px; color: #555;">WASD - Движение | E - Вход/Выход</div>
 </div>
-
-<div class="weather-info" id="weatherLabel">Погода: Солнечно</div>
+<div id="msgLabel" class="msg"></div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -46,107 +33,140 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
+// Настройки мира
+const WORLD_SIZE = 2000;
+const INTERIOR_SIZE = 600;
+let money = 200;
+let locationState = "street"; // street, house, shop
+let itemsOwned = { chair: false, table: false, bed: false };
 
-// Состояние игры
-let player = { x: 100, y: 100, size: 30, speed: 5 };
-let money = 0;
-let houseLevel = 1;
-let lastWorkTime = 0;
+// Игрок
+let player = { x: 1000, y: 1000, size: 30, speed: 5 };
+let camera = { x: 0, y: 0 };
+
+// Объекты на улице
+const housePos = { x: 900, y: 900, w: 200, h: 200 };
+const shopPos = { x: 1300, y: 900, w: 200, h: 150 };
+const workPos = { x: 1100, y: 1300, r: 50 };
 
 // Погода
-const weatherTypes = [
-    { name: "Солнечно", color: "#7cfc00" }, 
-    { name: "Дождь", color: "#4682B4" }, 
-    { name: "Снег", color: "#F0F8FF" }
-];
-let currentWeatherIdx = 0;
-
-// Объекты мира
-const shop = { x: canvas.width - 250, y: 100, w: 150, h: 100 };
-const workZone = { x: 100, y: canvas.height - 150, r: 40 };
+const weatherTypes = ["#7cfc00", "#4682B4", "#F0F8FF"]; // Солнце, Дождь, Снег
+let weatherIdx = 0;
+setInterval(() => { weatherIdx = (weatherIdx + 1) % weatherTypes.length; }, 180000);
 
 // Управление
 let keys = {};
-window.addEventListener("keydown", (e) => keys[e.code] = true);
-window.addEventListener("keyup", (e) => keys[e.code] = false);
+window.onkeydown = (e) => { keys[e.code] = true; if(e.code === 'KeyE') tryEnter(); };
+window.onkeyup = (e) => keys[e.code] = false;
 
-// Логика погоды (каждые 3 минуты = 180 000 мс)
-setInterval(() => {
-    currentWeatherIdx = (currentWeatherIdx + 1) % weatherTypes.length;
-    document.getElementById("weatherLabel").innerText = "Погода: " + weatherTypes[currentWeatherIdx].name;
-}, 180000); 
+function tryEnter() {
+    if (locationState === "street") {
+        if (player.x > housePos.x && player.x < housePos.x + housePos.w && Math.abs(player.y - (housePos.y + housePos.h)) < 40) {
+            locationState = "house"; player.x = 300; player.y = 500;
+        } else if (player.x > shopPos.x && player.x < shopPos.x + shopPos.w && Math.abs(player.y - (shopPos.y + shopPos.h)) < 40) {
+            locationState = "shop"; player.x = 300; player.y = 500;
+        }
+    } else {
+        if (player.y > 550) { 
+            let oldLoc = locationState;
+            locationState = "street";
+            player.y = 1120;
+            player.x = (oldLoc === "house") ? 1000 : 1400;
+        }
+    }
+}
 
 function update() {
-    // Движение
-    if (keys["KeyW"] || keys["ArrowUp"]) player.y -= player.speed;
-    if (keys["KeyS"] || keys["ArrowDown"]) player.y += player.speed;
-    if (keys["KeyA"] || keys["ArrowLeft"]) player.x -= player.speed;
-    if (keys["KeyD"] || keys["ArrowRight"]) player.x += player.speed;
+    let limit = (locationState === "street") ? WORLD_SIZE : INTERIOR_SIZE;
+    
+    if (keys["KeyW"] && player.y > 0) player.y -= player.speed;
+    if (keys["KeyS"] && player.y < limit) player.y += player.speed;
+    if (keys["KeyA"] && player.x > 0) player.x -= player.speed;
+    if (keys["KeyD"] && player.x < limit) player.x += player.speed;
 
-    // Проверка работы (желтая зона)
-    let distWork = Math.hypot(player.x - workZone.x, player.y - workZone.y);
-    if (distWork < workZone.r && Date.now() - lastWorkTime > 500) {
-        money += 10;
-        lastWorkTime = Date.now();
+    // Работа
+    if (locationState === "street") {
+        let d = Math.hypot(player.x - workPos.x, player.y - workPos.y);
+        if (d < workPos.r) money += 0.5;
     }
 
-    // Проверка магазина
-    if (player.x > shop.x && player.x < shop.x + shop.w && player.y > shop.y && player.y < shop.y + shop.h) {
-        if (money >= 150) {
-            money -= 150;
-            houseLevel++;
-            player.x -= 50; // Отталкиваем игрока, чтобы не купил всё сразу
+    // Магазин (покупка при касании предметов внутри)
+    if (locationState === "shop") {
+        if (player.y < 200) {
+            if (player.x < 200 && !itemsOwned.chair && money >= 50) { itemsOwned.chair = true; money -= 50; }
+            if (player.x > 250 && player.x < 350 && !itemsOwned.table && money >= 100) { itemsOwned.table = true; money -= 100; }
+            if (player.x > 400 && !itemsOwned.bed && money >= 200) { itemsOwned.bed = true; money -= 200; }
         }
     }
 
-    // Обновление интерфейса
-    document.getElementById("money").innerText = `Деньги: $${money}`;
-    document.getElementById("house").innerText = `Уровень дома: ${houseLevel}`;
+    // Проверка победы
+    let count = Object.values(itemsOwned).filter(v => v).length;
+    document.getElementById("itemsLabel").innerText = `Мебель: ${count} / 3`;
+    if (count === 3) document.getElementById("msgLabel").innerText = "ПОБЕДА! ВЫ ОБУСТРОИЛИ ВЕСЬ ДОМ!";
+
+    // Камера
+    camera.x = player.x - canvas.width / 2;
+    camera.y = player.y - canvas.height / 2;
+    
+    document.getElementById("moneyLabel").innerText = `Деньги: $${Math.floor(money)}`;
+    document.getElementById("locLabel").innerText = `Локация: ${locationState}`;
 }
 
 function draw() {
-    // Фон (Погода)
-    ctx.fillStyle = weatherTypes[currentWeatherIdx].color;
-    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    ctx.clearRect(0,0, canvas.width, canvas.height);
 
-    // Рисуем работу (Зона заработка)
-    ctx.fillStyle = "yellow";
-    ctx.beginPath();
-    ctx.arc(workZone.x, workZone.y, workZone.r, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = "black";
-    ctx.fillText("РАБОТА (Стой тут)", workZone.x - 40, workZone.y + 60);
+    ctx.save();
+    ctx.translate(-camera.x, -camera.y);
 
-    // Рисуем магазин
-    ctx.fillStyle = "#808080";
-    ctx.fillRect(shop.x, shop.y, shop.w, shop.h);
-    ctx.fillStyle = "white";
-    ctx.fillText("МАГАЗИН (Апгрейд $150)", shop.x + 10, shop.y + 50);
+    if (locationState === "street") {
+        // Улица
+        ctx.fillStyle = weatherTypes[weatherIdx];
+        ctx.fillRect(0,0, WORLD_SIZE, WORLD_SIZE);
+        
+        // Границы
+        ctx.strokeStyle = "red"; ctx.lineWidth = 10;
+        ctx.strokeRect(0,0, WORLD_SIZE, WORLD_SIZE);
 
-    // Рисуем ДОМ (растет с уровнем)
-    let hSize = 60 + (houseLevel * 20);
-    ctx.fillStyle = "#8B4513";
-    ctx.fillRect(canvas.width/2 - hSize/2, canvas.height/2 - hSize/2, hSize, hSize);
-    // Крыша
-    ctx.fillStyle = "#A52A2A";
-    ctx.beginPath();
-    ctx.moveTo(canvas.width/2 - hSize/2, canvas.height/2 - hSize/2);
-    ctx.lineTo(canvas.width/2 + hSize/2, canvas.height/2 - hSize/2);
-    ctx.lineTo(canvas.width/2, canvas.height/2 - hSize);
-    ctx.fill();
+        // Работа
+        ctx.fillStyle = "yellow"; ctx.beginPath();
+        ctx.arc(workPos.x, workPos.y, workPos.r, 0, 7); ctx.fill();
 
-    // Рисуем игрока
+        // Дом и Магазин
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(housePos.x, housePos.y, housePos.w, housePos.h);
+        ctx.fillStyle = "#555"; ctx.fillRect(shopPos.x, shopPos.y, shopPos.w, shopPos.h);
+        ctx.fillStyle = "white"; 
+        ctx.fillText("ДОМ (E)", housePos.x + 70, housePos.y + 220);
+        ctx.fillText("МАГАЗИН (E)", shopPos.x + 60, shopPos.y + 170);
+
+    } else {
+        // Интерьер (Общий для дома и магазина)
+        ctx.fillStyle = "#e5c4a3"; ctx.fillRect(0,0, INTERIOR_SIZE, INTERIOR_SIZE);
+        ctx.strokeStyle = "#5d4037"; ctx.lineWidth = 20; ctx.strokeRect(0,0, INTERIOR_SIZE, INTERIOR_SIZE);
+        ctx.fillStyle = "#8B4513"; ctx.fillRect(250, 580, 100, 20); // Выход
+
+        if (locationState === "house") {
+            ctx.fillStyle = "black"; ctx.fillText("ВАШ ДОМ", 270, 30);
+            if(itemsOwned.chair) { ctx.fillStyle = "orange"; ctx.fillRect(100, 100, 40, 40); }
+            if(itemsOwned.table) { ctx.fillStyle = "brown"; ctx.fillRect(250, 250, 100, 60); }
+            if(itemsOwned.bed) { ctx.fillStyle = "white"; ctx.fillRect(450, 100, 80, 120); }
+        } else {
+            ctx.fillStyle = "black"; ctx.fillText("МАГАЗИН МЕБЕЛИ", 250, 30);
+            ctx.fillStyle = "orange"; ctx.fillRect(50, 100, 40, 40); ctx.fillText("Стул $50", 50, 90);
+            ctx.fillStyle = "brown"; ctx.fillRect(270, 100, 100, 60); ctx.fillText("Стол $100", 270, 90);
+            ctx.fillStyle = "white"; ctx.fillRect(470, 100, 80, 80); ctx.fillText("Кровать $200", 470, 90);
+        }
+    }
+
+    // Игрок
     ctx.fillStyle = "blue";
     ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
-
-    requestAnimationFrame(() => {
-        update();
-        draw();
-    });
+    
+    ctx.restore();
+    update();
+    requestAnimationFrame(draw);
 }
-
 draw();
 </script>
 </body>
