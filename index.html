@@ -2,30 +2,36 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>2D Bloxburg Expansion</title>
+    <title>Super 2D Life Sim</title>
     <style>
-        body { margin: 0; overflow: hidden; background: #222; font-family: sans-serif; }
-        canvas { display: block; }
+        body { margin: 0; overflow: hidden; background: #333; font-family: 'Segoe UI', sans-serif; }
         #ui {
-            position: absolute; top: 10px; left: 10px;
-            background: rgba(255, 255, 255, 0.9); padding: 15px;
-            border-radius: 10px; pointer-events: none; z-index: 10;
+            position: absolute; top: 15px; left: 15px;
+            background: rgba(255, 255, 255, 0.95); padding: 20px;
+            border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            pointer-events: none; z-index: 100; min-width: 200px;
         }
-        .msg {
-            position: absolute; bottom: 20px; width: 100%; text-align: center;
-            color: white; font-size: 20px; text-shadow: 2px 2px 4px #000;
+        .stat { font-size: 18px; font-weight: bold; margin-bottom: 5px; color: #2c3e50; }
+        .hint { font-size: 12px; color: #7f8c8d; margin-top: 10px; }
+        #win {
+            display: none; position: absolute; top: 50%; left: 50%;
+            transform: translate(-50%, -50%); background: gold;
+            padding: 50px; border-radius: 20px; text-align: center;
+            font-size: 30px; box-shadow: 0 0 50px rgba(255,215,0,0.5); z-index: 1000;
         }
     </style>
 </head>
 <body>
 
 <div id="ui">
-    <div id="moneyLabel">Деньги: $0</div>
-    <div id="locLabel">Локация: Улица</div>
-    <div id="itemsLabel">Мебель: 0 / 3</div>
-    <div style="font-size: 12px; color: #555;">WASD - Движение | E - Вход/Выход</div>
+    <div id="moneyLabel" class="stat">💰 Деньги: $0</div>
+    <div id="jobLabel" class="stat">💼 Множитель: x1.0</div>
+    <div id="locLabel" style="color: #3498db; font-weight: bold;">📍 Улица</div>
+    <div id="progressLabel" class="stat" style="font-size: 14px; margin-top:10px;">Прогресс города: 0%</div>
+    <div class="hint"><b>WASD</b> - Ходить | <b>E</b> - Взаимодействие<br><b>Задание:</b> Скупай всё в городе!</div>
 </div>
-<div id="msgLabel" class="msg"></div>
+
+<div id="win">🏆 ГОРОД ПОКОРЕН! <br> <span style="font-size: 18px;">Вы купили всё имущество!</span></div>
 
 <canvas id="gameCanvas"></canvas>
 
@@ -33,136 +39,156 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-// Настройки мира
-const WORLD_SIZE = 2000;
-const INTERIOR_SIZE = 600;
-let money = 200;
-let locationState = "street"; // street, house, shop
-let itemsOwned = { chair: false, table: false, bed: false };
+// Константы
+const W_SIZE = 3000;
+const INT_SIZE = 800;
+let money = 250;
+let playerColor = "#3498db";
+let locationState = "street";
+let multiplier = 1.0;
+let hasDelivery = false;
+
+// Состояние владения
+let items = {
+    furniture: 0, // max 6
+    pets: { cat: false, dog: false },
+    totalToWin: 9 // 6 мебели + 2 питомца + 1 стиль
+};
 
 // Игрок
-let player = { x: 1000, y: 1000, size: 30, speed: 5 };
+let player = { x: 1500, y: 1500, size: 30, speed: 6 };
 let camera = { x: 0, y: 0 };
 
-// Объекты на улице
-const housePos = { x: 900, y: 900, w: 200, h: 200 };
-const shopPos = { x: 1300, y: 900, w: 200, h: 150 };
-const workPos = { x: 1100, y: 1300, r: 50 };
+// Объекты города (x, y, w, h, color, name, type)
+const buildings = [
+    {x: 1300, y: 1300, w: 250, h: 200, c: "#8b4513", n: "МОЙ ДОМ", t: "house"},
+    {x: 1700, y: 1300, w: 200, h: 180, c: "#95a5a6", n: "МЕБЕЛЬ", t: "shop_f"},
+    {x: 1300, y: 1700, w: 200, h: 150, c: "#e67e22", n: "ПИТОМЦЫ", t: "shop_p"},
+    {x: 1700, y: 1700, w: 200, h: 150, c: "#9b59b6", n: "ОДЕЖДА", t: "shop_c"},
+    {x: 1000, y: 1000, w: 300, h: 100, c: "#f1c40f", n: "СКЛАД (РАБОТА)", t: "work_delivery"},
+    {x: 2000, y: 2000, w: 100, h: 100, c: "#e74c3c", n: "ДОСТАВИТЬ СЮДА", t: "dropoff"}
+];
 
-// Погода
-const weatherTypes = ["#7cfc00", "#4682B4", "#F0F8FF"]; // Солнце, Дождь, Снег
-let weatherIdx = 0;
-setInterval(() => { weatherIdx = (weatherIdx + 1) % weatherTypes.length; }, 180000);
-
-// Управление
 let keys = {};
-window.onkeydown = (e) => { keys[e.code] = true; if(e.code === 'KeyE') tryEnter(); };
+window.onkeydown = (e) => { keys[e.code] = true; if(e.code === 'KeyE') handleAction(); };
 window.onkeyup = (e) => keys[e.code] = false;
 
-function tryEnter() {
+function handleAction() {
     if (locationState === "street") {
-        if (player.x > housePos.x && player.x < housePos.x + housePos.w && Math.abs(player.y - (housePos.y + housePos.h)) < 40) {
-            locationState = "house"; player.x = 300; player.y = 500;
-        } else if (player.x > shopPos.x && player.x < shopPos.x + shopPos.w && Math.abs(player.y - (shopPos.y + shopPos.h)) < 40) {
-            locationState = "shop"; player.x = 300; player.y = 500;
+        buildings.forEach(b => {
+            if (player.x > b.x && player.x < b.x + b.w && Math.abs(player.y - (b.y + b.h)) < 50) {
+                if(b.t.startsWith("shop") || b.t === "house") {
+                    locationState = b.t;
+                    player.x = 400; player.y = 700;
+                }
+            }
+        });
+        // Мини-игра доставка
+        let b = buildings[4]; // склад
+        if (player.x > b.x && player.x < b.x + b.w && Math.abs(player.y - (b.y + b.h)) < 50) {
+            hasDelivery = true;
+            alert("Посылка получена! Вези её в КРАСНУЮ зону на карте!");
+        }
+        let d = buildings[5]; // сдача
+        if (hasDelivery && player.x > d.x && player.x < d.x + d.w && Math.abs(player.y - (d.y + d.h)) < 50) {
+            let reward = 200 * multiplier;
+            money += reward;
+            hasDelivery = false;
+            alert("Доставлено! Получено $" + reward);
         }
     } else {
-        if (player.y > 550) { 
-            let oldLoc = locationState;
-            locationState = "street";
-            player.y = 1120;
-            player.x = (oldLoc === "house") ? 1000 : 1400;
-        }
+        if (player.y > 750) { locationState = "street"; player.y += 100; player.x = 1500; }
     }
 }
 
 function update() {
-    let limit = (locationState === "street") ? WORLD_SIZE : INTERIOR_SIZE;
-    
+    let limit = (locationState === "street") ? W_SIZE : INT_SIZE;
     if (keys["KeyW"] && player.y > 0) player.y -= player.speed;
     if (keys["KeyS"] && player.y < limit) player.y += player.speed;
     if (keys["KeyA"] && player.x > 0) player.x -= player.speed;
     if (keys["KeyD"] && player.x < limit) player.x += player.speed;
 
-    // Работа
-    if (locationState === "street") {
-        let d = Math.hypot(player.x - workPos.x, player.y - workPos.y);
-        if (d < workPos.r) money += 0.5;
+    // Магазин мебели
+    if (locationState === "shop_f" && player.y < 300 && money >= 100 && items.furniture < 6) {
+        items.furniture++; money -= 100; player.y += 50;
+    }
+    // Питомцы
+    if (locationState === "shop_p") {
+        if (player.x < 300 && !items.pets.cat && money >= 300) { items.pets.cat = true; money -= 300; multiplier += 0.2; }
+        if (player.x > 500 && !items.pets.dog && money >= 500) { items.pets.dog = true; money -= 500; multiplier += 0.5; }
+    }
+    // Одежда
+    if (locationState === "shop_c" && money >= 50) {
+        if (player.x < 200) { playerColor = "#2ecc71"; money -= 5; }
+        if (player.x > 600) { playerColor = "#e74c3c"; money -= 5; }
     }
 
-    // Магазин (покупка при касании предметов внутри)
-    if (locationState === "shop") {
-        if (player.y < 200) {
-            if (player.x < 200 && !itemsOwned.chair && money >= 50) { itemsOwned.chair = true; money -= 50; }
-            if (player.x > 250 && player.x < 350 && !itemsOwned.table && money >= 100) { itemsOwned.table = true; money -= 100; }
-            if (player.x > 400 && !itemsOwned.bed && money >= 200) { itemsOwned.bed = true; money -= 200; }
-        }
-    }
-
-    // Проверка победы
-    let count = Object.values(itemsOwned).filter(v => v).length;
-    document.getElementById("itemsLabel").innerText = `Мебель: ${count} / 3`;
-    if (count === 3) document.getElementById("msgLabel").innerText = "ПОБЕДА! ВЫ ОБУСТРОИЛИ ВЕСЬ ДОМ!";
-
-    // Камера
-    camera.x = player.x - canvas.width / 2;
-    camera.y = player.y - canvas.height / 2;
+    // UI
+    document.getElementById("moneyLabel").innerText = `💰 Деньги: $${Math.floor(money)}`;
+    document.getElementById("jobLabel").innerText = `💼 Множитель: x${multiplier.toFixed(1)}`;
+    document.getElementById("locLabel").innerText = `📍 Локация: ${locationState}`;
     
-    document.getElementById("moneyLabel").innerText = `Деньги: $${Math.floor(money)}`;
-    document.getElementById("locLabel").innerText = `Локация: ${locationState}`;
+    let prog = Math.floor(((items.furniture + (items.pets.cat?1:0) + (items.pets.dog?1:0)) / 8) * 100);
+    document.getElementById("progressLabel").innerText = `Прогресс города: ${prog}%`;
+    if (prog >= 100) document.getElementById("win").style.display = "block";
+
+    camera.x = player.x - canvas.width/2;
+    camera.y = player.y - canvas.height/2;
 }
 
 function draw() {
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
-    ctx.clearRect(0,0, canvas.width, canvas.height);
-
     ctx.save();
     ctx.translate(-camera.x, -camera.y);
 
     if (locationState === "street") {
-        // Улица
-        ctx.fillStyle = weatherTypes[weatherIdx];
-        ctx.fillRect(0,0, WORLD_SIZE, WORLD_SIZE);
-        
-        // Границы
-        ctx.strokeStyle = "red"; ctx.lineWidth = 10;
-        ctx.strokeRect(0,0, WORLD_SIZE, WORLD_SIZE);
+        // Трава и дороги
+        ctx.fillStyle = "#27ae60"; ctx.fillRect(0,0, W_SIZE, W_SIZE);
+        ctx.fillStyle = "#34495e"; ctx.fillRect(1450, 0, 100, W_SIZE); // Вертикальная дорога
+        ctx.fillRect(0, 1450, W_SIZE, 100); // Горизонтальная
 
-        // Работа
-        ctx.fillStyle = "yellow"; ctx.beginPath();
-        ctx.arc(workPos.x, workPos.y, workPos.r, 0, 7); ctx.fill();
-
-        // Дом и Магазин
-        ctx.fillStyle = "#8B4513"; ctx.fillRect(housePos.x, housePos.y, housePos.w, housePos.h);
-        ctx.fillStyle = "#555"; ctx.fillRect(shopPos.x, shopPos.y, shopPos.w, shopPos.h);
-        ctx.fillStyle = "white"; 
-        ctx.fillText("ДОМ (E)", housePos.x + 70, housePos.y + 220);
-        ctx.fillText("МАГАЗИН (E)", shopPos.x + 60, shopPos.y + 170);
-
+        buildings.forEach(b => {
+            ctx.fillStyle = b.c; ctx.fillRect(b.x, b.y, b.w, b.h);
+            ctx.fillStyle = "white"; ctx.font = "bold 16px Arial";
+            ctx.fillText(b.n, b.x + 10, b.y - 10);
+            // Двери
+            ctx.fillStyle = "#333"; ctx.fillRect(b.x + b.w/2 - 20, b.y + b.h - 10, 40, 10);
+        });
+        if(hasDelivery) { ctx.fillStyle = "white"; ctx.fillRect(player.x+10, player.y-10, 15, 15); }
     } else {
-        // Интерьер (Общий для дома и магазина)
-        ctx.fillStyle = "#e5c4a3"; ctx.fillRect(0,0, INTERIOR_SIZE, INTERIOR_SIZE);
-        ctx.strokeStyle = "#5d4037"; ctx.lineWidth = 20; ctx.strokeRect(0,0, INTERIOR_SIZE, INTERIOR_SIZE);
-        ctx.fillStyle = "#8B4513"; ctx.fillRect(250, 580, 100, 20); // Выход
-
+        // Интерьеры
+        ctx.fillStyle = "#ecf0f1"; ctx.fillRect(0,0, INT_SIZE, INT_SIZE);
+        ctx.strokeStyle = "#2c3e50"; ctx.lineWidth = 10; ctx.strokeRect(0,0, INT_SIZE, INT_SIZE);
+        
         if (locationState === "house") {
-            ctx.fillStyle = "black"; ctx.fillText("ВАШ ДОМ", 270, 30);
-            if(itemsOwned.chair) { ctx.fillStyle = "orange"; ctx.fillRect(100, 100, 40, 40); }
-            if(itemsOwned.table) { ctx.fillStyle = "brown"; ctx.fillRect(250, 250, 100, 60); }
-            if(itemsOwned.bed) { ctx.fillStyle = "white"; ctx.fillRect(450, 100, 80, 120); }
-        } else {
-            ctx.fillStyle = "black"; ctx.fillText("МАГАЗИН МЕБЕЛИ", 250, 30);
-            ctx.fillStyle = "orange"; ctx.fillRect(50, 100, 40, 40); ctx.fillText("Стул $50", 50, 90);
-            ctx.fillStyle = "brown"; ctx.fillRect(270, 100, 100, 60); ctx.fillText("Стол $100", 270, 90);
-            ctx.fillStyle = "white"; ctx.fillRect(470, 100, 80, 80); ctx.fillText("Кровать $200", 470, 90);
+            for(let i=0; i<items.furniture; i++) {
+                ctx.fillStyle = "#d35400"; ctx.fillRect(50 + (i*100), 100, 60, 60);
+            }
+            if(items.pets.cat) { ctx.fillStyle = "orange"; ctx.beginPath(); ctx.arc(100, 400, 15, 0, 7); ctx.fill(); ctx.fillText("Кот", 90, 380); }
+            if(items.pets.dog) { ctx.fillStyle = "brown"; ctx.beginPath(); ctx.arc(200, 420, 20, 0, 7); ctx.fill(); ctx.fillText("Пёс", 190, 390); }
         }
+        
+        if (locationState === "shop_f") {
+            ctx.fillStyle = "black"; ctx.fillText("Купить мебель ($100) - Просто иди вверх", 250, 200);
+        }
+        if (locationState === "shop_p") {
+            ctx.fillStyle = "orange"; ctx.fillRect(100, 200, 50, 50); ctx.fillText("Кот $300 (+20%)", 80, 180);
+            ctx.fillStyle = "brown"; ctx.fillRect(600, 200, 60, 60); ctx.fillText("Пёс $500 (+50%)", 580, 180);
+        }
+        if (locationState === "shop_c") {
+            ctx.fillStyle = "#2ecc71"; ctx.fillRect(100, 200, 50, 50); ctx.fillText("Зеленый костюм", 80, 180);
+            ctx.fillStyle = "#e74c3c"; ctx.fillRect(600, 200, 50, 50); ctx.fillText("Красный костюм", 580, 180);
+        }
+        // Выход
+        ctx.fillStyle = "red"; ctx.fillRect(350, 780, 100, 20);
     }
 
     // Игрок
-    ctx.fillStyle = "blue";
-    ctx.fillRect(player.x - player.size/2, player.y - player.size/2, player.size, player.size);
-    
+    ctx.fillStyle = playerColor;
+    ctx.beginPath(); ctx.roundRect(player.x-15, player.y-15, 30, 30, 5); ctx.fill();
+    ctx.fillStyle = "white"; ctx.fillRect(player.x-10, player.y-10, 8, 8); ctx.fillRect(player.x+2, player.y-10, 8, 8); // Глаза
+
     ctx.restore();
     update();
     requestAnimationFrame(draw);
