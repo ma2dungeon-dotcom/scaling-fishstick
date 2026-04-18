@@ -1,439 +1,1086 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <title>CAVE-NET | NEON OVERLORD</title>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <style>
-        :root {
-            --neon: #ff6600; --glow: 0 0 20px #ff6600; --dark: #050505;
-            --rainbow: linear-gradient(45deg, #ff0000, #ff8000, #ffff00, #00ff00, #00ffff, #0000ff, #8000ff);
-            --glass: rgba(20, 20, 20, 0.85);
-        }
-        body { background: var(--dark); color: #eee; font-family: 'Segoe UI', sans-serif; margin: 0; overflow: hidden; }
-        
-        #bg-canvas { position: fixed; top: 0; left: 0; z-index: -1; }
-
-        /* Футуристичная Регистрация */
-        #auth-overlay { position: fixed; inset: 0; background: radial-gradient(circle, #221100, #000); z-index: 10000; display: flex; align-items: center; justify-content: center; }
-        .auth-form { 
-            width: 380px; padding: 40px; background: var(--glass); border: 1px solid var(--neon); 
-            border-radius: 40px; text-align: center; box-shadow: var(--glow); backdrop-filter: blur(10px);
-        }
-        .auth-form input { 
-            width: 85%; padding: 15px; margin: 10px 0; background: rgba(0,0,0,0.5); 
-            border: 1px solid #444; color: #fff; border-radius: 20px; outline: none; transition: 0.3s;
-        }
-        .auth-form input:focus { border-color: var(--neon); box-shadow: 0 0 10px var(--neon); }
-
-        header { 
-            background: var(--glass); border-bottom: 1px solid var(--neon); 
-            padding: 10px 30px; display: flex; align-items: center; justify-content: space-between;
-            backdrop-filter: blur(5px); position: relative; z-index: 10;
-        }
-
-        .container { display: flex; height: calc(100vh - 70px); }
-        nav { width: 240px; background: rgba(0,0,0,0.8); padding: 20px; border-right: 1px solid #222; }
-        nav div { 
-            padding: 14px; margin-bottom: 12px; cursor: pointer; transition: 0.4s; 
-            border-radius: 15px; border: 1px solid transparent; text-align: center; font-weight: bold;
-        }
-        nav div:hover, nav div.active { background: rgba(255,102,0,0.1); border-color: var(--neon); box-shadow: var(--glow); color: var(--neon); }
-
-        main { flex-grow: 1; padding: 25px; overflow-y: auto; }
-        .page { display: none; animation: fadeIn 0.5s; }
-        .active-page { display: block; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
-        .card { background: var(--glass); border: 1px solid #333; padding: 20px; border-radius: 25px; margin-bottom: 20px; backdrop-filter: blur(5px); }
-        .btn { 
-            background: #111; color: #fff; border: 1px solid var(--neon); 
-            padding: 10px 18px; cursor: pointer; border-radius: 15px; transition: 0.3s;
-        }
-        .btn:hover { background: var(--neon); color: #000; box-shadow: var(--glow); }
-
-        /* Аватарки и Рамки */
-        .av-box { width: 100px; height: 100px; margin: 0 auto 15px; position: relative; padding: 6px; border-radius: 50%; }
-        .f-none { border: 2px solid #444; }
-        .f-neon { border: 3px solid var(--neon); box-shadow: var(--glow); }
-        .f-soul { border: 3px solid #8000ff; box-shadow: 0 0 20px #8000ff; }
-        .f-blood { border: 3px solid #ff0000; box-shadow: 0 0 20px #ff0000; }
-        .f-rainbow { background: var(--rainbow); animation: rainbow-anim 3s linear infinite; padding: 4px; }
-        @keyframes rainbow-anim { from { filter: hue-rotate(0deg); } to { filter: hue-rotate(360deg); } }
-        .avatar { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; background: #000; }
-
-        /* Чат */
-        #chat-window { 
-            position: fixed; bottom: 20px; right: 20px; width: 320px; height: 400px; 
-            background: #000; border: 2px solid var(--neon); border-radius: 20px; display: none; flex-direction: column; z-index: 5000;
-        }
-
-        #boss-3d-container { width: 100%; height: 300px; border-radius: 20px; background: radial-gradient(circle, #300, #000); }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Murder Mystery 2D</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #1a1a2e; overflow: hidden; font-family: 'Segoe UI', Arial, sans-serif; }
+canvas { display: block; }
+#ui-overlay {
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 10;
+}
+#ui-overlay > * { pointer-events: auto; }
+#skin-panel {
+    position: absolute; top: 10px; right: 10px;
+    background: rgba(0,0,0,0.75); border: 2px solid #e94560;
+    border-radius: 12px; padding: 15px; color: white;
+    min-width: 200px; display: none;
+}
+#skin-panel h3 { text-align: center; margin-bottom: 10px; color: #e94560; }
+.skin-option {
+    display: flex; align-items: center; gap: 10px;
+    padding: 8px; margin: 5px 0; border-radius: 8px;
+    cursor: pointer; transition: 0.2s;
+    border: 2px solid transparent;
+}
+.skin-option:hover { background: rgba(233,69,96,0.3); }
+.skin-option.selected { border-color: #e94560; background: rgba(233,69,96,0.2); }
+.skin-preview { width: 40px; height: 40px; border-radius: 8px; }
+#role-display {
+    position: absolute; top: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.8); border-radius: 12px; padding: 12px 24px;
+    color: white; font-size: 20px; font-weight: bold; display: none;
+    border: 2px solid;
+}
+#start-btn {
+    position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+    background: linear-gradient(135deg, #e94560, #c23152);
+    color: white; border: none; padding: 15px 50px; font-size: 22px;
+    border-radius: 30px; cursor: pointer; font-weight: bold;
+    box-shadow: 0 4px 20px rgba(233,69,96,0.5);
+    transition: 0.3s; display: none;
+}
+#start-btn:hover { transform: translateX(-50%) scale(1.05); box-shadow: 0 6px 30px rgba(233,69,96,0.7); }
+#game-hud {
+    position: absolute; bottom: 10px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); border-radius: 10px; padding: 10px 20px;
+    color: white; font-size: 14px; display: none;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+#round-result {
+    position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+    background: rgba(0,0,0,0.9); border-radius: 20px; padding: 40px 60px;
+    color: white; text-align: center; display: none;
+    border: 3px solid;
+}
+#round-result h1 { font-size: 48px; margin-bottom: 10px; }
+#round-result p { font-size: 18px; color: #aaa; }
+#round-result button {
+    margin-top: 20px; background: #e94560; color: white; border: none;
+    padding: 12px 40px; font-size: 18px; border-radius: 25px; cursor: pointer;
+}
+#instructions {
+    position: absolute; bottom: 60px; left: 50%; transform: translateX(-50%);
+    background: rgba(0,0,0,0.7); border-radius: 10px; padding: 10px 20px;
+    color: #aaa; font-size: 13px; display: none; text-align: center;
+}
+#kill-cooldown {
+    position: absolute; bottom: 50px; right: 20px;
+    background: rgba(0,0,0,0.8); border-radius: 10px; padding: 10px 15px;
+    color: white; font-size: 14px; display: none;
+    border: 2px solid #e94560;
+}
+#alive-count {
+    position: absolute; top: 10px; left: 10px;
+    background: rgba(0,0,0,0.7); border-radius: 10px; padding: 10px 15px;
+    color: white; font-size: 14px; display: none;
+    border: 1px solid rgba(255,255,255,0.2);
+}
+</style>
 </head>
 <body>
-
-<canvas id="bg-canvas"></canvas>
-
-<div id="auth-overlay">
-    <div class="auth-form">
-        <h1 style="color:var(--neon); letter-spacing:5px;">CAVE-NET</h1>
-        <input type="text" id="auth-l" placeholder="Логин Души">
-        <input type="password" id="auth-p" placeholder="Код Доступа">
-        <div style="margin:10px 0;"><label><input type="checkbox" id="auth-save" checked> Запомнить сущность</label></div>
-        <button class="btn" onclick="auth('login')" style="width:100%">ВОЙТИ</button>
-        <button onclick="auth('reg')" style="background:none; border:none; color:#888; margin-top:15px; cursor:pointer;">Создать новую душу</button>
+<canvas id="gameCanvas"></canvas>
+<div id="ui-overlay">
+    <div id="skin-panel">
+        <h3>🔪 Скины Ножей</h3>
+        <div id="skin-list"></div>
     </div>
-</div>
-
-<header>
-    <div style="display:flex; align-items:center; gap:15px;">
-        <span style="font-size:35px;">💀</span>
-        <b style="color:var(--neon); font-size:24px;">CAVE-NET</b>
+    <div id="role-display"></div>
+    <button id="start-btn" onclick="startGame()">▶ ИГРАТЬ</button>
+    <div id="game-hud"></div>
+    <div id="round-result">
+        <h1 id="result-title"></h1>
+        <p id="result-text"></p>
+        <button onclick="backToLobby()">В Лобби</button>
     </div>
-    <div style="flex-grow:1; text-align:center;">
-        <input type="text" id="g-search" placeholder="Поиск жителей (Enter)..." onkeypress="if(event.key==='Enter') searchUser()" 
-        style="background:rgba(0,0,0,0.5); border:1px solid var(--neon); color:#fff; padding:10px 20px; border-radius:25px; width:300px;">
-    </div>
-    <div style="font-size:16px;">🦴 <span id="stat-bones" style="color:var(--neon)">0</span> | <span id="stat-name">...</span></div>
-</header>
-
-<div class="container">
-    <nav>
-        <div onclick="showP('feed')" class="active">📜 Бездна</div>
-        <div onclick="openMyProfile()">👤 Мой Грот</div>
-        <div onclick="showP('clans')">🛡️ Кланы</div>
-        <div onclick="showP('clean')">⚔️ Зачистка</div>
-        <div onclick="showP('boss')">👹 Рейд</div>
-        <div onclick="showP('shop')">💎 Лавка</div>
-        <div onclick="showP('adm')">⚙️ Админка</div>
-    </nav>
-
-    <main>
-        <section id="feed" class="page active-page">
-            <div class="card">
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="post-in" style="flex-grow:1; background:none; border:none; border-bottom:1px solid var(--neon); color:#fff;" placeholder="Оставь свой след...">
-                    <button class="btn" onclick="sendPost()">📢</button>
-                </div>
-            </div>
-            <div id="feed-list"></div>
-        </section>
-
-        <section id="boss" class="page">
-            <div class="card" style="text-align:center;">
-                <h2 style="color:var(--neon)">ДРЕВНИЙ ПАЛАЧ</h2>
-                <div id="boss-3d-container"></div>
-                <div style="width:100%; height:10px; background:#222; border-radius:5px; margin:15px 0;">
-                    <div id="boss-hp-bar" style="height:100%; width:100%; background:var(--neon); transition:0.3s; border-radius:5px;"></div>
-                </div>
-                <button class="btn" style="font-size:20px; padding:15px 40px;" onclick="hitBoss()">УДАРИТЬ ⚔️</button>
-                <p id="boss-log" style="margin-top:10px;"></p>
-            </div>
-        </section>
-
-        <section id="shop" class="page">
-            <h2 style="color:var(--neon)">АРТЕФАКТЫ И ОБЛИКИ</h2>
-            <div style="display:grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap:15px;">
-                <div class="card"><h3>🗡️ Меч Пустоты</h3><p>Урон x10</p><button class="btn" onclick="buyItem('sword', 5000)">5000 🦴</button></div>
-                <div class="card"><h3>📜 Свиток Знаний</h3><p>Доход x2</p><button class="btn" onclick="buyItem('scroll', 3000)">3000 🦴</button></div>
-                <div class="card"><h3>✨ Посох</h3><p>Авто-атака</p><button class="btn" onclick="buyItem('staff', 7000)">7000 🦴</button></div>
-                <div class="card"><h3>🟠 Неон Рамка</h3><p>Облик</p><button class="btn" onclick="buyItem('f-neon', 1000)">1000 🦴</button></div>
-                <div class="card"><h3>🟣 Рамка Души</h3><p>Облик</p><button class="btn" onclick="buyItem('f-soul', 3000)">3000 🦴</button></div>
-                <div class="card"><h3>🔴 Рамка Крови</h3><p>Облик</p><button class="btn" onclick="buyItem('f-blood', 5000)">5000 🦴</button></div>
-                <div class="card" style="border:1px solid violet;"><h3>🌈 РАДУГА</h3><p>Легенда</p><button class="btn" onclick="buyItem('f-rainbow', 20000)">20000 🦴</button></div>
-            </div>
-        </section>
-
-        <section id="prof" class="page">
-            <div id="p-content" class="card" style="text-align:center;"></div>
-        </section>
-
-        <section id="clans" class="page">
-            <div class="card">
-                <h3>СОЮЗЫ БЕЗДНЫ</h3>
-                <div style="display:flex; gap:10px;">
-                    <input type="text" id="clan-n" style="flex-grow:1; background:#000; border:1px solid #333; color:#fff; border-radius:10px; padding:5px 10px;" placeholder="Название союза...">
-                    <button class="btn" onclick="createClan()">Создать (5000 🦴)</button>
-                </div>
-            </div>
-            <div id="clan-list"></div>
-        </section>
-
-        <section id="clean" class="page">
-            <div class="card">
-                <h2>ОТРЯДЫ ЗАЧИСТКИ</h2>
-                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:20px;">
-                    <div class="card"><h3>🕵️ Наемник</h3><p>5 🦴 / 10 сек</p><button class="btn" onclick="buyAgent('shadow', 2000)">2000 🦴</button></div>
-                    <div class="card"><h3>🏹 Истребитель</h3><p>Авто-урон</p><button class="btn" onclick="buyAgent('slayer', 4000)">4000 🦴</button></div>
-                </div>
-                <p id="clean-status"></p>
-            </div>
-        </section>
-
-        <section id="adm" class="page">
-            <div class="card">
-                <h3>КОНСОЛЬ БОГА</h3>
-                <input type="password" id="adm-key" placeholder="Пароль">
-                <button class="btn" onclick="loadAdm()">Войти</button>
-                <div id="adm-data" style="margin-top:20px;"></div>
-            </div>
-        </section>
-    </main>
-</div>
-
-<div id="chat-window">
-    <div style="padding:10px; background:var(--neon); color:#000; border-radius:15px 15px 0 0; font-weight:bold; display:flex; justify-content:space-between;">
-        <span id="chat-user">Чат</span>
-        <span onclick="document.getElementById('chat-window').style.display='none'" style="cursor:pointer">✖</span>
-    </div>
-    <div id="chat-msgs" style="flex-grow:1; overflow-y:auto; padding:10px; font-size:14px;"></div>
-    <div style="display:flex; padding:10px; gap:5px;">
-        <input type="text" id="chat-in" style="flex-grow:1; background:#111; border:1px solid #333; color:#fff; border-radius:10px; padding:5px;">
-        <button class="btn" onclick="sendMsg()">></button>
-    </div>
+    <div id="instructions"></div>
+    <div id="kill-cooldown"></div>
+    <div id="alive-count"></div>
 </div>
 
 <script>
-    // --- ИНИЦИАЛИЗАЦИЯ ---
-    const firebaseConfig = { databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com" };
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-    let cur = null;
-    let activeChatUID = null;
+function resize() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
 
-    // --- АВТОРИЗАЦИЯ ---
-    window.onload = () => {
-        const saved = localStorage.getItem('cave_v3_user');
-        if(saved) {
-            const p = JSON.parse(saved);
-            db.ref('users/' + p.id).once('value', s => { if(s.exists()) login(p.id, s.val()); });
-        }
+// ============ GAME STATE ============
+let gameState = 'lobby'; // lobby, countdown, playing, ended
+let selectedSkin = 'classic';
+let player = { x: 0, y: 0, speed: 3, size: 16, role: 'innocent', alive: true, killCooldown: 0, shootingCooldown: 0 };
+let bots = [];
+let particles = [];
+let camera = { x: 0, y: 0 };
+let keys = {};
+let mouse = { x: 0, y: 0, clicked: false };
+let countdownTimer = 0;
+let roundTimer = 0;
+
+const SKINS = [
+    { id: 'classic', name: 'Classic', color: '#cccccc', tip: '⚔️', desc: 'Обычный нож', bg: '#555' },
+    { id: 'flame', name: 'Flame', color: '#ff4400', tip: '🔥', desc: 'Огненный клинок', bg: '#cc3300' },
+    { id: 'ice', name: 'Ice', color: '#00ccff', tip: '❄️', desc: 'Ледяное лезвие', bg: '#0077aa' },
+    { id: 'galaxy', name: 'Galaxy', color: '#aa44ff', tip: '🌌', desc: 'Космический клинок', bg: '#5500aa' },
+    { id: 'gold', name: 'Gold', color: '#ffcc00', tip: '👑', desc: 'Золотой клинок', bg: '#aa8800' },
+    { id: 'blood', name: 'Blood', color: '#ff0044', tip: '🩸', desc: 'Кровавый клинок', bg: '#aa0033' },
+    { id: 'shadow', name: 'Shadow', color: '#444444', tip: '🌑', desc: 'Теневой клинок', bg: '#222' },
+    { id: 'rainbow', name: 'Rainbow', color: '#ff0000', tip: '🌈', desc: 'Радужный клинок', bg: '#333' },
+];
+
+// ============ MAPS ============
+const LOBBY_MAP = {
+    walls: [
+        // Room outline
+        { x: 100, y: 100, w: 800, h: 20 },
+        { x: 100, y: 580, w: 800, h: 20 },
+        { x: 100, y: 100, w: 20, h: 500 },
+        { x: 880, y: 100, w: 20, h: 500 },
+        // Furniture - tables
+        { x: 250, y: 250, w: 120, h: 60 },
+        { x: 550, y: 250, w: 120, h: 60 },
+        { x: 400, y: 400, w: 160, h: 70 },
+        // Furniture - couches
+        { x: 150, y: 380, w: 80, h: 40 },
+        { x: 750, y: 380, w: 80, h: 40 },
+        // Pillars
+        { x: 300, y: 150, w: 30, h: 30 },
+        { x: 650, y: 150, w: 30, h: 30 },
+        // Decorative
+        { x: 450, y: 130, w: 100, h: 15 },
+        { x: 200, y: 500, w: 60, h: 60 },
+        { x: 720, y: 500, w: 60, h: 60 },
+    ],
+    decorations: [
+        { type: 'carpet', x: 350, y: 320, w: 200, h: 150, color: '#4a2060' },
+        { type: 'carpet', x: 450, y: 350, w: 100, h: 90, color: '#6a3080' },
+        { type: 'plant', x: 130, y: 130 },
+        { type: 'plant', x: 850, y: 130 },
+        { type: 'plant', x: 130, y: 550 },
+        { type: 'plant', x: 850, y: 550 },
+        { type: 'lamp', x: 315, y: 135 },
+        { type: 'lamp', x: 665, y: 135 },
+        { type: 'sign', x: 430, y: 115, text: 'LOBBY' },
+    ],
+    floorColor: '#2a2a3e',
+    wallColor: '#444466',
+    spawnX: 500,
+    spawnY: 450,
+};
+
+const GAME_MAP = {
+    name: 'Mansion',
+    width: 1600,
+    height: 1200,
+    walls: [
+        // Outer walls
+        { x: 0, y: 0, w: 1600, h: 20 },
+        { x: 0, y: 1180, w: 1600, h: 20 },
+        { x: 0, y: 0, w: 20, h: 1200 },
+        { x: 1580, y: 0, w: 20, h: 1200 },
+        // Central hall dividers
+        { x: 300, y: 20, w: 20, h: 400 },
+        { x: 300, y: 500, w: 20, h: 300 },
+        { x: 300, y: 880, w: 20, h: 300 },
+        { x: 600, y: 20, w: 20, h: 250 },
+        { x: 600, y: 350, w: 20, h: 300 },
+        { x: 600, y: 730, w: 20, h: 450 },
+        { x: 900, y: 20, w: 20, h: 350 },
+        { x: 900, y: 450, w: 20, h: 200 },
+        { x: 900, y: 730, w: 20, h: 450 },
+        { x: 1200, y: 20, w: 20, h: 300 },
+        { x: 1200, y: 400, w: 20, h: 250 },
+        { x: 1200, y: 730, w: 20, h: 450 },
+        // Horizontal dividers
+        { x: 20, y: 400, w: 280, h: 20 },
+        { x: 380, y: 400, w: 220, h: 20 },
+        { x: 680, y: 400, w: 220, h: 20 },
+        { x: 980, y: 400, w: 220, h: 20 },
+        { x: 1280, y: 400, w: 280, h: 20 },
+        // Lower section
+        { x: 20, y: 780, w: 280, h: 20 },
+        { x: 380, y: 780, w: 220, h: 20 },
+        { x: 680, y: 780, w: 220, h: 20 },
+        { x: 980, y: 780, w: 220, h: 20 },
+        { x: 1280, y: 780, w: 280, h: 20 },
+        // Room furniture - tables
+        { x: 100, y: 120, w: 80, h: 50 },
+        { x: 420, y: 150, w: 100, h: 60 },
+        { x: 720, y: 100, w: 80, h: 80 },
+        { x: 1020, y: 130, w: 90, h: 50 },
+        { x: 1350, y: 150, w: 80, h: 60 },
+        { x: 100, y: 520, w: 80, h: 50 },
+        { x: 420, y: 500, w: 100, h: 60 },
+        { x: 720, y: 520, w: 80, h: 80 },
+        { x: 1020, y: 500, w: 90, h: 50 },
+        { x: 1350, y: 520, w: 80, h: 60 },
+        { x: 100, y: 900, w: 80, h: 50 },
+        { x: 420, y: 880, w: 100, h: 60 },
+        { x: 720, y: 900, w: 80, h: 80 },
+        { x: 1020, y: 880, w: 90, h: 50 },
+        { x: 1350, y: 900, w: 80, h: 60 },
+        // Couches
+        { x: 50, y: 280, w: 60, h: 30 },
+        { x: 680, y: 250, w: 60, h: 30 },
+        { x: 1300, y: 280, w: 60, h: 30 },
+        { x: 50, y: 650, w: 60, h: 30 },
+        { x: 680, y: 650, w: 60, h: 30 },
+        { x: 1300, y: 650, w: 60, h: 30 },
+        // Bookshelves
+        { x: 350, y: 20, w: 20, h: 100 },
+        { x: 950, y: 20, w: 20, h: 100 },
+        { x: 350, y: 700, w: 20, h: 100 },
+        { x: 950, y: 700, w: 20, h: 100 },
+        // Barrels
+        { x: 1500, y: 300, w: 30, h: 30 },
+        { x: 1500, y: 600, w: 30, h: 30 },
+        { x: 1500, y: 900, w: 30, h: 30 },
+    ],
+    floorColor: '#2d2d44',
+    wallColor: '#555577',
+    spawnX: 800,
+    spawnY: 600,
+    rooms: [
+        { name: 'Главный зал', x: 320, y: 420, w: 260, h: 340 },
+        { name: 'Библиотека', x: 40, y: 40, w: 240, h: 340 },
+        { name: 'Кухня', x: 340, y: 40, w: 240, h: 340 },
+        { name: 'Столовая', x: 640, y: 40, w: 240, h: 340 },
+        { name: 'Спальня', x: 940, y: 40, w: 240, h: 340 },
+        { name: 'Подвал', x: 1240, y: 40, w: 240, h: 340 },
+        { name: 'Оранжерея', x: 40, y: 440, w: 240, h: 340 },
+        { name: 'Лаборатория', x: 340, y: 440, w: 240, h: 340 },
+        { name: 'Тронный зал', x: 640, y: 440, w: 240, h: 340 },
+        { name: 'Сокровищница', x: 940, y: 440, w: 240, h: 340 },
+        { name: 'Тюрьма', x: 1240, y: 440, w: 240, h: 340 },
+        { name: 'Кладовая', x: 40, y: 800, w: 240, h: 340 },
+        { name: 'Часовня', x: 340, y: 800, w: 240, h: 340 },
+        { name: 'Алтарь', x: 640, y: 800, w: 240, h: 340 },
+        { name: 'Сад', x: 940, y: 800, w: 240, h: 340 },
+        { name: 'Выход', x: 1240, y: 800, w: 240, h: 340 },
+    ]
+};
+
+// ============ SKIN PANEL ============
+function buildSkinPanel() {
+    const list = document.getElementById('skin-list');
+    list.innerHTML = '';
+    SKINS.forEach(skin => {
+        const div = document.createElement('div');
+        div.className = 'skin-option' + (skin.id === selectedSkin ? ' selected' : '');
+        div.innerHTML = `
+            <div class="skin-preview" style="background:${skin.bg}; display:flex; align-items:center; justify-content:center; font-size:20px;">${skin.tip}</div>
+            <div>
+                <div style="font-weight:bold; color:${skin.color}">${skin.name}</div>
+                <div style="font-size:11px; color:#aaa;">${skin.desc}</div>
+            </div>
+        `;
+        div.onclick = () => {
+            selectedSkin = skin.id;
+            buildSkinPanel();
+        };
+        list.appendChild(div);
+    });
+}
+
+// ============ INIT ============
+function initLobby() {
+    gameState = 'lobby';
+    player.x = LOBBY_MAP.spawnX;
+    player.y = LOBBY_MAP.spawnY;
+    player.alive = true;
+    player.role = 'innocent';
+    bots = [];
+    for (let i = 0; i < 6; i++) {
+        bots.push(createBot('lobby'));
+    }
+    document.getElementById('skin-panel').style.display = 'block';
+    document.getElementById('start-btn').style.display = 'block';
+    document.getElementById('role-display').style.display = 'none';
+    document.getElementById('game-hud').style.display = 'none';
+    document.getElementById('round-result').style.display = 'none';
+    document.getElementById('instructions').style.display = 'block';
+    document.getElementById('instructions').innerHTML = 'WASD — движение | Мышь — камера | Выбери скин ножа';
+    document.getElementById('kill-cooldown').style.display = 'none';
+    document.getElementById('alive-count').style.display = 'none';
+    buildSkinPanel();
+}
+
+function createBot(map) {
+    const names = ['Alex', 'Max', 'Luna', 'Storm', 'Blaze', 'Nova', 'Shadow', 'Echo', 'Raven', 'Pixel'];
+    const colors = ['#44aaff', '#ff6644', '#44ff88', '#ff44cc', '#ffcc44', '#8844ff', '#44ffcc', '#ff8844', '#cc44ff', '#44ccff'];
+    const idx = Math.floor(Math.random() * names.length);
+    if (map === 'lobby') {
+        return {
+            x: 200 + Math.random() * 500,
+            y: 200 + Math.random() * 300,
+            speed: 1 + Math.random() * 1.5,
+            size: 16,
+            name: names[idx],
+            color: colors[idx],
+            role: 'innocent',
+            alive: true,
+            targetX: 0,
+            targetY: 0,
+            moveTimer: 0,
+            isBot: true,
+            killCooldown: 0,
+            shootingCooldown: 0,
+        };
+    }
+    return {
+        x: GAME_MAP.spawnX + (Math.random() - 0.5) * 600,
+        y: GAME_MAP.spawnY + (Math.random() - 0.5) * 400,
+        speed: 2 + Math.random() * 1,
+        size: 16,
+        name: names[idx],
+        color: colors[idx],
+        role: 'innocent',
+        alive: true,
+        targetX: 0,
+        targetY: 0,
+        moveTimer: 0,
+        isBot: true,
+        killCooldown: 0,
+        shootingCooldown: 0,
     };
+}
 
-    function auth(mode) {
-        const l = document.getElementById('auth-l').value;
-        const p = document.getElementById('auth-p').value;
-        if(!l || !p) return;
+// ============ START GAME ============
+function startGame() {
+    gameState = 'countdown';
+    countdownTimer = 3;
+    document.getElementById('skin-panel').style.display = 'none';
+    document.getElementById('start-btn').style.display = 'none';
+    document.getElementById('instructions').style.display = 'none';
 
-        if(mode === 'reg') {
-            const id = db.ref('users').push().key;
-            const data = { 
-                id, nick: l, pass: p, bones: 500, frame: 'f-none', 
-                av: `https://api.dicebear.com/7.x/pixel-art/svg?seed=${l}`,
-                agents: { shadow: 0, slayer: 0 }, lastActive: Date.now(),
-                likes: 0, dislikes: 0, inventory: { sword: false, scroll: false, staff: false }
-            };
-            db.ref('users/' + id).set(data);
-            login(id, data);
+    // Setup game map
+    player.x = GAME_MAP.spawnX;
+    player.y = GAME_MAP.spawnY;
+
+    // Create bots
+    bots = [];
+    for (let i = 0; i < 9; i++) {
+        bots.push(createBot('game'));
+    }
+
+    // Assign roles
+    const allPlayers = [player, ...bots];
+    // 1 murderer, 1 sheriff, rest innocent
+    const murderIdx = Math.floor(Math.random() * allPlayers.length);
+    let sheriffIdx;
+    do { sheriffIdx = Math.floor(Math.random() * allPlayers.length); } while (sheriffIdx === murderIdx);
+
+    allPlayers.forEach((p, i) => {
+        if (i === murderIdx) p.role = 'murder';
+        else if (i === sheriffIdx) p.role = 'sheriff';
+        else p.role = 'innocent';
+        p.alive = true;
+        p.killCooldown = 0;
+        p.shootingCooldown = 0;
+    });
+
+    // Show role
+    const roleDisplay = document.getElementById('role-display');
+    roleDisplay.style.display = 'block';
+    if (player.role === 'murder') {
+        roleDisplay.textContent = '🗡️ MURDER — Убей всех!';
+        roleDisplay.style.borderColor = '#ff0044';
+        roleDisplay.style.color = '#ff0044';
+    } else if (player.role === 'sheriff') {
+        roleDisplay.textContent = '🔫 SHERIFF — Найди убийцу!';
+        roleDisplay.style.borderColor = '#44aaff';
+        roleDisplay.style.color = '#44aaff';
+    } else {
+        roleDisplay.textContent = '😰 INNOCENT — Выживи!';
+        roleDisplay.style.borderColor = '#44ff88';
+        roleDisplay.style.color = '#44ff88';
+    }
+
+    setTimeout(() => {
+        gameState = 'playing';
+        roundTimer = 0;
+        document.getElementById('instructions').style.display = 'block';
+        if (player.role === 'murder') {
+            document.getElementById('instructions').innerHTML = 'WASD — движение | ЛКМ — убить (рядом с игроком) | Не попадись шерифу!';
+            document.getElementById('kill-cooldown').style.display = 'block';
+        } else if (player.role === 'sheriff') {
+            document.getElementById('instructions').innerHTML = 'WASD — движение | ЛКМ — стрелять | Осторожно: убьёшь невиновного — проиграешь!';
+            document.getElementById('kill-cooldown').style.display = 'block';
         } else {
-            db.ref('users').once('value', s => {
-                let f = false;
-                s.forEach(c => { if(c.val().nick === l && c.val().pass === p) { login(c.key, c.val()); f = true; } });
-                if(!f) alert("Тень не узнает тебя");
-            });
+            document.getElementById('instructions').innerHTML = 'WASD — движение | Беги и прячься! Найди убийцу!';
+            document.getElementById('kill-cooldown').style.display = 'none';
+        }
+        document.getElementById('alive-count').style.display = 'block';
+    }, 3500);
+}
+
+// ============ INPUT ============
+window.addEventListener('keydown', e => keys[e.key.toLowerCase()] = true);
+window.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+window.addEventListener('mousedown', e => {
+    mouse.clicked = true;
+    if (gameState === 'playing' && player.alive) {
+        if (player.role === 'murder' && player.killCooldown <= 0) {
+            tryMurderKill();
+        } else if (player.role === 'sheriff' && player.shootingCooldown <= 0) {
+            trySheriffShoot();
+        }
+    }
+});
+window.addEventListener('mouseup', () => mouse.clicked = false);
+
+function tryMurderKill() {
+    const worldMouseX = mouse.x - canvas.width / 2 + camera.x;
+    const worldMouseY = mouse.y - canvas.height / 2 + camera.y;
+
+    // Check if mouse is near any alive player (not self)
+    const allPlayers = [player, ...bots];
+    for (let p of allPlayers) {
+        if (p === player || !p.alive) continue;
+        const dist = Math.hypot(p.x - worldMouseX, p.y - worldMouseY);
+        if (dist < 60) {
+            const distToPlayer = Math.hypot(p.x - player.x, p.y - player.y);
+            if (distToPlayer < 80) {
+                killPlayer(p);
+                player.killCooldown = 60;
+                spawnParticles(p.x, p.y, '#ff0044', 15);
+                return;
+            }
+        }
+    }
+    // Also check bots near player
+    for (let p of allPlayers) {
+        if (p === player || !p.alive) continue;
+        const distToPlayer = Math.hypot(p.x - player.x, p.y - player.y);
+        if (distToPlayer < 50) {
+            killPlayer(p);
+            player.killCooldown = 60;
+            spawnParticles(p.x, p.y, '#ff0044', 15);
+            return;
+        }
+    }
+}
+
+function trySheriffShoot() {
+    const worldMouseX = mouse.x - canvas.width / 2 + camera.x;
+    const worldMouseY = mouse.y - canvas.height / 2 + camera.y;
+
+    const allPlayers = [player, ...bots];
+    let hit = false;
+    for (let p of allPlayers) {
+        if (p === player || !p.alive) continue;
+        const dist = Math.hypot(p.x - worldMouseX, p.y - worldMouseY);
+        if (dist < 60) {
+            const distToPlayer = Math.hypot(p.x - player.x, p.y - player.y);
+            if (distToPlayer < 200) {
+                hit = true;
+                if (p.role === 'murder') {
+                    killPlayer(p);
+                    spawnParticles(p.x, p.y, '#44aaff', 20);
+                    endRound('sheriff_win', 'Вы нашли убийцу! 🎉');
+                } else {
+                    // Shot innocent - sheriff dies
+                    killPlayer(player);
+                    spawnParticles(player.x, player.y, '#ff0044', 15);
+                    endRound('murder_win', 'Вы убили невиновного! Убийца победил 💀');
+                }
+                player.shootingCooldown = 90;
+                break;
+            }
+        }
+    }
+    if (!hit) {
+        player.shootingCooldown = 40;
+        // Bullet miss particle
+        spawnParticles(worldMouseX, worldMouseY, '#ffcc00', 5);
+    }
+}
+
+function killPlayer(p) {
+    p.alive = false;
+    // Death particles
+    for (let i = 0; i < 10; i++) {
+        particles.push({
+            x: p.x, y: p.y,
+            vx: (Math.random() - 0.5) * 6,
+            vy: (Math.random() - 0.5) * 6,
+            life: 30 + Math.random() * 20,
+            maxLife: 50,
+            color: p.color,
+            size: 3 + Math.random() * 4,
+        });
+    }
+}
+
+function spawnParticles(x, y, color, count) {
+    for (let i = 0; i < count; i++) {
+        particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 20 + Math.random() * 30,
+            maxLife: 50,
+            color,
+            size: 2 + Math.random() * 5,
+        });
+    }
+}
+
+function endRound(result, text) {
+    gameState = 'ended';
+    const el = document.getElementById('round-result');
+    el.style.display = 'block';
+    document.getElementById('result-title').textContent = result.includes('win') ? '🏆 ПОБЕДА!' : '💀 ПРОИГРЫШ';
+    document.getElementById('result-title').style.color = result.includes('win') ? '#44ff88' : '#ff4444';
+    document.getElementById('result-text').textContent = text;
+    el.style.borderColor = result.includes('win') ? '#44ff88' : '#ff4444';
+    document.getElementById('instructions').style.display = 'none';
+    document.getElementById('kill-cooldown').style.display = 'none';
+    document.getElementById('role-display').style.display = 'none';
+    document.getElementById('alive-count').style.display = 'none';
+}
+
+function backToLobby() {
+    document.getElementById('round-result').style.display = 'none';
+    initLobby();
+}
+
+// ============ COLLISION ============
+function collidesWithWall(x, y, size, map) {
+    for (let w of map.walls) {
+        if (x + size > w.x && x - size < w.x + w.w &&
+            y + size > w.y && y - size < w.y + w.h) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// ============ BOT AI ============
+function updateBots(map) {
+    bots.forEach(bot => {
+        if (!bot.alive) return;
+        bot.moveTimer--;
+        if (bot.moveTimer <= 0) {
+            bot.targetX = 100 + Math.random() * (map.width ? map.width - 200 : 700);
+            bot.targetY = 100 + Math.random() * (map.height ? map.height - 200 : 500);
+            bot.moveTimer = 120 + Math.random() * 180;
+        }
+
+        // Murder bot AI
+        if (bot.role === 'murder' && bot.killCooldown <= 0) {
+            // Find nearest player
+            let nearest = null;
+            let nearestDist = Infinity;
+            const allPlayers = [player, ...bots];
+            for (let p of allPlayers) {
+                if (p === bot || !p.alive) continue;
+                const d = Math.hypot(p.x - bot.x, p.y - bot.y);
+                if (d < nearestDist) { nearestDist = d; nearest = p; }
+            }
+            if (nearest && nearestDist < 50) {
+                killPlayer(nearest);
+                bot.killCooldown = 90;
+                spawnParticles(nearest.x, nearest.y, '#ff0044', 15);
+                return;
+            }
+            if (nearest && nearestDist < 300) {
+                // Chase
+                const dx = nearest.x - bot.x;
+                const dy = nearest.y - bot.y;
+                const dist = Math.hypot(dx, dy);
+                const nx = dx / dist * bot.speed;
+                const ny = dy / dist * bot.speed;
+                if (!collidesWithWall(bot.x + nx, bot.y, bot.size, map)) bot.x += nx;
+                if (!collidesWithWall(bot.x, bot.y + ny, bot.size, map)) bot.y += ny;
+                return;
+            }
+        }
+
+        // Sheriff bot AI
+        if (bot.role === 'sheriff' && bot.shootingCooldown <= 0) {
+            // Check if murder is nearby
+            let murderNear = null;
+            let murderDist = Infinity;
+            const allPlayers = [player, ...bots];
+            for (let p of allPlayers) {
+                if (p === bot || !p.alive || p.role !== 'murder') continue;
+                const d = Math.hypot(p.x - bot.x, p.y - bot.y);
+                if (d < murderDist) { murderDist = d; murderNear = p; }
+            }
+            if (murderNear && murderDist < 200) {
+                // 30% chance to shoot correctly
+                if (Math.random() < 0.3) {
+                    killPlayer(murderNear);
+                    spawnParticles(murderNear.x, murderNear.y, '#44aaff', 20);
+                    // Check if player is the murderer
+                    if (murderNear === player) {
+                        endRound('sheriff_win', 'Шериф нашёл убийцу! 💀');
+                    }
+                    bot.shootingCooldown = 90;
+                    return;
+                }
+            }
+        }
+
+        // Move towards target
+        const dx = bot.targetX - bot.x;
+        const dy = bot.targetY - bot.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist > 10) {
+            const nx = (dx / dist) * bot.speed;
+            const ny = (dy / dist) * bot.speed;
+            if (!collidesWithWall(bot.x + nx, bot.y, bot.size, map)) bot.x += nx;
+            if (!collidesWithWall(bot.x, bot.y + ny, bot.size, map)) bot.y += ny;
+        }
+
+        if (bot.killCooldown > 0) bot.killCooldown--;
+        if (bot.shootingCooldown > 0) bot.shootingCooldown--;
+    });
+}
+
+// ============ UPDATE ============
+function update() {
+    if (gameState === 'countdown') {
+        countdownTimer -= 1 / 60;
+        if (countdownTimer <= 0) {
+            gameState = 'playing';
+        }
+        return;
+    }
+
+    if (gameState !== 'playing') return;
+
+    // Player movement
+    let dx = 0, dy = 0;
+    if (keys['w'] || keys['ц'] || keys['arrowup']) dy = -1;
+    if (keys['s'] || keys['ы'] || keys['arrowdown']) dy = 1;
+    if (keys['a'] || keys['ф'] || keys['arrowleft']) dx = -1;
+    if (keys['d'] || keys['в'] || keys['arrowright']) dx = 1;
+
+    if (dx !== 0 && dy !== 0) {
+        dx *= 0.707;
+        dy *= 0.707;
+    }
+
+    const currentMap = gameState === 'lobby' ? LOBBY_MAP : GAME_MAP;
+
+    if (player.alive) {
+        const newX = player.x + dx * player.speed;
+        const newY = player.y + dy * player.speed;
+        if (!collidesWithWall(newX, player.y, player.size, currentMap)) player.x = newX;
+        if (!collidesWithWall(player.x, newY, player.size, currentMap)) player.y = newY;
+
+        if (player.killCooldown > 0) player.killCooldown--;
+        if (player.shootingCooldown > 0) player.shootingCooldown--;
+    }
+
+    // Camera
+    camera.x += (player.x - camera.x) * 0.1;
+    camera.y += (player.y - camera.y) * 0.1;
+
+    // Bots
+    updateBots(currentMap);
+
+    // Particles
+    particles = particles.filter(p => {
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vx *= 0.95;
+        p.vy *= 0.95;
+        p.life--;
+        return p.life > 0;
+    });
+
+    // Check win conditions
+    if (gameState === 'playing') {
+        const allPlayers = [player, ...bots];
+        const alive = allPlayers.filter(p => p.alive);
+        const murderAlive = alive.filter(p => p.role === 'murder');
+        const sheriffAlive = alive.filter(p => p.role === 'sheriff');
+        const innocentsAlive = alive.filter(p => p.role === 'innocent');
+
+        if (murderAlive.length === 0) {
+            if (player.role === 'murder') {
+                endRound('sheriff_win', 'Убийца eliminated! Шериф победил! 🎉');
+            } else {
+                endRound('innocent_win', 'Убийца eliminated! Невинные победили! 🎉');
+            }
+        } else if (player.role === 'murder' && (innocentsAlive.length === 0 && sheriffAlive.length === 0)) {
+            endRound('murder_win', 'Вы убили всех! Победа убийцы! 🗡️');
+        } else if (player.role !== 'murder' && !player.alive) {
+            if (murderAlive.length > 0) {
+                endRound('murder_win', 'Вас убил убийца! 💀');
+            }
+        } else if (bots.length > 0 && alive.length <= murderAlive.length) {
+            // Only murder(s) alive
+            endRound('murder_win', 'Убийца победил! 💀');
+        }
+
+        roundTimer++;
+    }
+
+    // Update HUD
+    if (gameState === 'playing') {
+        const allPlayers = [player, ...bots];
+        const aliveCount = allPlayers.filter(p => p.alive).length;
+        const totalCount = allPlayers.length;
+        document.getElementById('alive-count').innerHTML = `👥 Живых: ${aliveCount}/${totalCount}`;
+
+        if (player.role === 'murder') {
+            const cd = Math.ceil(player.killCooldown / 60 * 10) / 10;
+            document.getElementById('kill-cooldown').innerHTML = `🗡️ Кулдаун: ${Math.max(0, cd).toFixed(1)}с`;
+        } else if (player.role === 'sheriff') {
+            const cd = Math.ceil(player.shootingCooldown / 60 * 10) / 10;
+            document.getElementById('kill-cooldown').innerHTML = `🔫 Кулдаун: ${Math.max(0, cd).toFixed(1)}с`;
+        }
+    }
+}
+
+// ============ DRAW ============
+function getSkinColor() {
+    const skin = SKINS.find(s => s.id === selectedSkin);
+    return skin ? skin.color : '#cccccc';
+}
+
+function drawKnife(x, y, skinId, angle) {
+    const skin = SKINS.find(s => s.id === skinId);
+    const color = skin ? skin.color : '#cccccc';
+
+    ctx.save();
+    ctx.translate(x, y);
+    ctx.rotate(angle);
+
+    // Blade
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(0, -12);
+    ctx.lineTo(4, -2);
+    ctx.lineTo(4, 2);
+    ctx.lineTo(0, 4);
+    ctx.lineTo(-4, 2);
+    ctx.lineTo(-4, -2);
+    ctx.closePath();
+    ctx.fill();
+
+    // Handle
+    ctx.fillStyle = '#8B4513';
+    ctx.fillRect(-3, 4, 6, 8);
+
+    // Guard
+    ctx.fillStyle = '#666';
+    ctx.fillRect(-5, 3, 10, 2);
+
+    // Glow effect for special skins
+    if (skinId === 'flame') {
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#ff6600';
+        ctx.beginPath();
+        ctx.arc(0, -8, 8, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'ice') {
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#88ddff';
+        ctx.beginPath();
+        ctx.arc(0, -8, 10, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'galaxy') {
+        ctx.globalAlpha = 0.3;
+        const gradient = ctx.createRadialGradient(0, -8, 0, 0, -8, 12);
+        gradient.addColorStop(0, '#ff44ff');
+        gradient.addColorStop(1, '#4444ff');
+        ctx.fillStyle = gradient;
+        ctx.beginPath();
+        ctx.arc(0, -8, 12, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'gold') {
+        ctx.globalAlpha = 0.3;
+        ctx.fillStyle = '#ffdd44';
+        ctx.beginPath();
+        ctx.arc(0, -8, 8, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'rainbow') {
+        ctx.globalAlpha = 0.5;
+        const hue = (Date.now() / 20) % 360;
+        ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+        ctx.beginPath();
+        ctx.arc(0, -8, 8, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'shadow') {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#000';
+        ctx.beginPath();
+        ctx.arc(0, -8, 10, 0, Math.PI * 2);
+        ctx.fill();
+    } else if (skinId === 'blood') {
+        ctx.globalAlpha = 0.4;
+        ctx.fillStyle = '#ff0000';
+        ctx.beginPath();
+        ctx.arc(0, -8, 10, 0, Math.PI * 2);
+        ctx.fill();
+    }
+
+    ctx.restore();
+}
+
+function drawCharacter(x, y, size, color, name, role, alive, isPlayer, skinId, map) {
+    const screenX = x - camera.x + canvas.width / 2;
+    const screenY = y - camera.y + canvas.height / 2;
+
+    // Off-screen check
+    if (screenX < -50 || screenX > canvas.width + 50 || screenY < -50 || screenY > canvas.height + 50) return;
+
+    if (!alive) {
+        // Dead marker
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = '#ff0000';
+        ctx.font = '20px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('💀', screenX, screenY + 5);
+        ctx.globalAlpha = 1;
+        ctx.fillStyle = '#aaa';
+        ctx.font = '11px Arial';
+        ctx.fillText(name, screenX, screenY + 22);
+        return;
+    }
+
+    // Shadow
+    ctx.fillStyle = 'rgba(0,0,0,0.3)';
+    ctx.beginPath();
+    ctx.ellipse(screenX, screenY + size, size * 0.8, size * 0.3, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Body
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Outline
+    ctx.strokeStyle = isPlayer ? '#fff' : 'rgba(255,255,255,0.3)';
+    ctx.lineWidth = isPlayer ? 3 : 1;
+    ctx.stroke();
+
+    // Role indicator
+    if (role === 'murder' && (isPlayer || gameState === 'ended')) {
+        ctx.fillStyle = '#ff0044';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🗡️', screenX, screenY - size - 8);
+    }
+
+    // Name
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText(name, screenX, screenY - size - 14);
+
+    // Knife for murder
+    if (role === 'murder' && (isPlayer || gameState === 'ended')) {
+        const time = Date.now() / 1000;
+        const knifeAngle = Math.sin(time * 3) * 0.3;
+        drawKnife(screenX + 14, screenY - 5, skinId || 'classic', knifeAngle);
+    }
+
+    // Sheriff gun indicator
+    if (role === 'sheriff' && (isPlayer || gameState === 'ended')) {
+        ctx.fillStyle = '#44aaff';
+        ctx.font = '10px Arial';
+        ctx.textAlign = 'center';
+        ctx.fillText('🔫', screenX, screenY - size - 8);
+    }
+}
+
+function drawMap(map) {
+    const offsetX = -camera.x + canvas.width / 2;
+    const offsetY = -camera.y + canvas.height / 2;
+
+    // Floor
+    ctx.fillStyle = map.floorColor;
+    if (map.name) {
+        ctx.fillRect(offsetX, offsetY, map.width, map.height);
+    } else {
+        ctx.fillRect(offsetX, offsetY, 1000, 700);
+    }
+
+    // Floor grid
+    ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+    ctx.lineWidth = 1;
+    const gridSize = 50;
+    const startX = Math.floor((-offsetX) / gridSize) * gridSize;
+    const startY = Math.floor((-offsetY) / gridSize) * gridSize;
+    for (let x = startX; x < startX + canvas.width + gridSize * 2; x += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(x + offsetX, offsetY);
+        ctx.lineTo(x + offsetX, offsetY + canvas.height + gridSize * 2);
+        ctx.stroke();
+    }
+    for (let y = startY; y < startY + canvas.height + gridSize * 2; y += gridSize) {
+        ctx.beginPath();
+        ctx.moveTo(offsetX, y + offsetY);
+        ctx.lineTo(offsetX + canvas.width + gridSize * 2, y + offsetY);
+        ctx.stroke();
+    }
+
+    // Decorations
+    if (map.decorations) {
+        map.decorations.forEach(dec => {
+            const dx = dec.x + offsetX;
+            const dy = dec.y + offsetY;
+            if (dec.type === 'carpet') {
+                ctx.fillStyle = dec.color;
+                ctx.fillRect(dx, dy, dec.w, dec.h);
+            } else if (dec.type === 'plant') {
+                ctx.fillStyle = '#2d5a1e';
+                ctx.beginPath();
+                ctx.arc(dx, dy, 12, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.fillStyle = '#3a7a28';
+                ctx.beginPath();
+                ctx.arc(dx, dy - 5, 8, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (dec.type === 'lamp') {
+                ctx.fillStyle = '#ffdd88';
+                ctx.globalAlpha = 0.3 + Math.sin(Date.now() / 500) * 0.1;
+                ctx.beginPath();
+                ctx.arc(dx, dy, 20, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.globalAlpha = 1;
+                ctx.fillStyle = '#ffcc44';
+                ctx.beginPath();
+                ctx.arc(dx, dy, 5, 0, Math.PI * 2);
+                ctx.fill();
+            } else if (dec.type === 'sign') {
+                ctx.fillStyle = 'rgba(0,0,0,0.6)';
+                ctx.fillRect(dx - 30, dy - 8, 60, 20);
+                ctx.fillStyle = '#e94560';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(dec.text, dx + 10, dy + 7);
+            }
+        });
+    }
+
+    // Room labels for game map
+    if (map.rooms) {
+        map.rooms.forEach(room => {
+            const rx = room.x + offsetX;
+            const ry = room.y + offsetY;
+            // Check if on screen
+            if (rx + room.w > 0 && rx < canvas.width && ry + room.h > 0 && ry < canvas.height) {
+                ctx.fillStyle = 'rgba(255,255,255,0.06)';
+                ctx.fillRect(rx, ry, room.w, room.h);
+                ctx.fillStyle = 'rgba(255,255,255,0.15)';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillText(room.name, rx + room.w / 2, ry + 16);
+            }
+        });
+    }
+
+    // Walls
+    map.walls.forEach(w => {
+        const wx = w.x + offsetX;
+        const wy = w.y + offsetY;
+        // Check if on screen
+        if (wx + w.w > -10 && wx < canvas.width + 10 && wy + w.h > -10 && wy < canvas.height + 10) {
+            // Wall shadow
+            ctx.fillStyle = 'rgba(0,0,0,0.3)';
+            ctx.fillRect(wx + 3, wy + 3, w.w, w.h);
+
+            // Wall
+            ctx.fillStyle = map.wallColor;
+            ctx.fillRect(wx, wy, w.w, w.h);
+
+            // Wall highlight
+            ctx.fillStyle = 'rgba(255,255,255,0.1)';
+            ctx.fillRect(wx, wy, w.w, 2);
+            ctx.fillRect(wx, wy, 2, w.h);
+        }
+    });
+}
+
+function drawParticles() {
+    particles.forEach(p => {
+        const sx = p.x - camera.x + canvas.width / 2;
+        const sy = p.y - camera.y + canvas.height / 2;
+        ctx.globalAlpha = p.life / p.maxLife;
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(sx, sy, p.size * (p.life / p.maxLife), 0, Math.PI * 2);
+        ctx.fill();
+    });
+    ctx.globalAlpha = 1;
+}
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    if (gameState === 'lobby') {
+        drawMap(LOBBY_MAP);
+        bots.forEach(b => drawCharacter(b.x, b.y, b.size, b.color, b.name, b.role, b.alive, false, 'classic', LOBBY_MAP));
+        drawCharacter(player.x, player.y, player.size, '#44ff88', 'You', player.role, player.alive, true, selectedSkin, LOBBY_MAP);
+        drawParticles();
+    } else if (gameState === 'countdown') {
+        drawMap(GAME_MAP);
+        bots.forEach(b => drawCharacter(b.x, b.y, b.size, b.color, b.name, b.role, b.alive, false, 'classic', GAME_MAP));
+        drawCharacter(player.x, player.y, player.size, '#44ff88', 'You', player.role, player.alive, true, selectedSkin, GAME_MAP);
+        drawParticles();
+
+        // Countdown text
+        ctx.fillStyle = 'rgba(0,0,0,0.5)';
+        ctx.fillRect(0, 0, canvas.width, canvas.height);
+        ctx.fillStyle = '#fff';
+        ctx.font = 'bold 80px Arial';
+        ctx.textAlign = 'center';
+        const count = Math.ceil(countdownTimer);
+        ctx.fillText(count > 0 ? count : 'GO!', canvas.width / 2, canvas.height / 2);
+    } else if (gameState === 'playing' || gameState === 'ended') {
+        drawMap(GAME_MAP);
+        bots.forEach(b => drawCharacter(b.x, b.y, b.size, b.color, b.name, b.role, b.alive, false, 'classic', GAME_MAP));
+        drawCharacter(player.x, player.y, player.size, '#44ff88', 'You', player.role, player.alive, true, selectedSkin, GAME_MAP);
+        drawParticles();
+
+        // Fog of war - darken areas far from player
+        if (gameState === 'playing' && player.alive) {
+            const gradient = ctx.createRadialGradient(
+                canvas.width / 2, canvas.height / 2, 150,
+                canvas.width / 2, canvas.height / 2, 500
+            );
+            gradient.addColorStop(0, 'rgba(0,0,0,0)');
+            gradient.addColorStop(1, 'rgba(0,0,0,0.4)');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
         }
     }
 
-    function login(id, data) {
-        cur = { id, ...data };
-        if(document.getElementById('auth-save').checked) localStorage.setItem('cave_v3_user', JSON.stringify({id}));
-        document.getElementById('auth-overlay').style.display = 'none';
-        
-        // Оффлайн доход
-        const diff = Math.floor((Date.now() - (data.lastActive || Date.now())) / 10000);
-        if(diff > 0 && data.agents?.shadow > 0) {
-            const reward = diff * (data.agents.shadow * 5);
-            db.ref(`users/${id}/bones`).transaction(b => b + reward);
-            alert(`Агенты принесли ${reward} 🦴 пока тебя не было!`);
-        }
-        
-        initSync();
+    // Murder knife on screen for player
+    if (gameState === 'playing' && player.alive && player.role === 'murder') {
+        const time = Date.now() / 1000;
+        const knifeX = canvas.width - 80;
+        const knifeY = canvas.height - 80;
+        drawKnife(knifeX, knifeY, selectedSkin, Math.sin(time * 2) * 0.2);
     }
+}
 
-    function initSync() {
-        db.ref('users/' + cur.id).on('value', s => {
-            cur = { id: cur.id, ...s.val() };
-            document.getElementById('stat-bones').innerText = cur.bones;
-            document.getElementById('stat-name').innerText = cur.nick;
-        });
+// ============ GAME LOOP ============
+function gameLoop() {
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
 
-        // Циклы
-        setInterval(() => {
-            if(cur.agents?.shadow > 0) db.ref(`users/${cur.id}/bones`).transaction(b => b + (cur.agents.shadow * 5));
-            db.ref(`users/${cur.id}/lastActive`).set(Date.now());
-        }, 10000);
-
-        setInterval(() => {
-            if(cur.inventory?.staff) hitBoss(true);
-        }, 3000);
-
-        loadFeed();
-        init3D();
-        syncBoss();
-    }
-
-    // --- МАГАЗИН И ИНВЕНТАРЬ ---
-    function buyItem(item, cost) {
-        if(cur.bones < cost) return alert("Мало костей!");
-        let upd = { bones: cur.bones - cost };
-        if(item.startsWith('f-')) upd.frame = item;
-        else upd[`inventory/${item}`] = true;
-        db.ref('users/' + cur.id).update(upd);
-        alert("Приобретено!");
-    }
-
-    // --- ПРОФИЛИ И СОЦИАЛКА ---
-    function openMyProfile() { openUser(cur.id); }
-
-    function openUser(uid) {
-        showP('prof');
-        db.ref('users/' + uid).once('value', s => {
-            const u = s.val();
-            const isMe = uid === cur.id;
-            document.getElementById('p-content').innerHTML = `
-                <div class="av-box ${u.frame}"><img src="${u.av}" class="avatar"></div>
-                <h2>${u.nick}</h2>
-                <div style="margin:15px 0;">
-                    <span onclick="vote('${uid}','likes')" style="cursor:pointer">❤️ ${u.likes || 0}</span> | 
-                    <span onclick="vote('${uid}','dislikes')" style="cursor:pointer">👎 ${u.dislikes || 0}</span>
-                </div>
-                ${!isMe ? `
-                    <button class="btn" onclick="addFriend('${uid}')">Добавить в друзья</button>
-                    <button class="btn" onclick="openChat('${uid}','${u.nick}')">Написать</button>
-                ` : `<p>Это ваше личное логово</p>`}
-            `;
-        });
-    }
-
-    function vote(uid, type) {
-        db.ref(`users/${uid}/${type}`).transaction(v => (v || 0) + 1);
-        openUser(uid);
-    }
-
-    // --- ЧАТ ---
-    function openChat(uid, nick) {
-        activeChatUID = uid;
-        const key = [cur.id, uid].sort().join("_");
-        document.getElementById('chat-window').style.display = 'flex';
-        document.getElementById('chat-user').innerText = nick;
-        db.ref('chats/' + key).on('value', s => {
-            const box = document.getElementById('chat-msgs'); box.innerHTML = '';
-            s.forEach(m => {
-                const d = m.val();
-                box.innerHTML += `<div style="margin-bottom:5px; color:${d.f === cur.nick ? '#ff6600' : '#fff'}"><b>${d.f}:</b> ${d.t}</div>`;
-            });
-            box.scrollTop = box.scrollHeight;
-        });
-    }
-
-    function sendMsg() {
-        const t = document.getElementById('chat-in').value;
-        const key = [cur.id, activeChatUID].sort().join("_");
-        if(t) db.ref('chats/' + key).push({ f: cur.nick, t });
-        document.getElementById('chat-in').value = '';
-    }
-
-    // --- БОСС ---
-    function syncBoss() {
-        db.ref('boss/hp').on('value', s => {
-            const hp = s.val() || 1000000;
-            document.getElementById('boss-hp-bar').style.width = (hp/1000000*100) + "%";
-        });
-    }
-
-    function hitBoss(isAuto = false) {
-        const multi = cur.inventory?.sword ? 100 : 10;
-        db.ref('boss/hp').transaction(h => (h || 1000000) - multi);
-        if(!isAuto) {
-            const r = Math.floor(Math.random()*5);
-            db.ref(`users/${cur.id}/bones`).transaction(b => b + r);
-            document.getElementById('boss-log').innerText = `Урон: ${multi} | Получено: ${r} 🦴`;
-        }
-    }
-
-    // --- ВСПОМОГАТЕЛЬНОЕ ---
-    function showP(id) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active-page'));
-        document.getElementById(id).classList.add('active-page');
-    }
-
-    function searchUser() {
-        const q = document.getElementById('g-search').value.toLowerCase();
-        db.ref('users').once('value', s => {
-            s.forEach(c => { if(c.val().nick.toLowerCase() === q) openUser(c.key); });
-        });
-    }
-
-    function loadFeed() {
-        db.ref('posts').limitToLast(10).on('value', s => {
-            const l = document.getElementById('feed-list'); l.innerHTML = '';
-            s.forEach(c => {
-                const p = c.val();
-                l.innerHTML = `<div class="card"><b>${p.nick}:</b> ${p.text}</div>` + l.innerHTML;
-            });
-        });
-    }
-
-    function sendPost() {
-        const t = document.getElementById('post-in').value;
-        if(t) db.ref('posts').push({ nick: cur.nick, text: t });
-        document.getElementById('post-in').value = '';
-    }
-
-    // --- 3D ГРАФИКА ---
-    let bossObj;
-    function init3D() {
-        const container = document.getElementById('boss-3d-container');
-        const bgCon = document.getElementById('bg-canvas');
-        
-        // Фон
-        const bgScene = new THREE.Scene();
-        const bgCam = new THREE.PerspectiveCamera(75, window.innerWidth/window.innerHeight, 0.1, 1000);
-        const bgRen = new THREE.WebGLRenderer({ canvas: bgCon, alpha: true });
-        bgRen.setSize(window.innerWidth, window.innerHeight);
-        
-        const cubes = [];
-        for(let i=0; i<60; i++) {
-            const m = new THREE.Mesh(new THREE.BoxGeometry(1,1,1), new THREE.MeshBasicMaterial({color: 0xff6600, wireframe: true}));
-            m.position.set(Math.random()*60-30, Math.random()*60-30, Math.random()*20-40);
-            bgScene.add(m); cubes.push(m);
-        }
-
-        // Босс
-        const bScene = new THREE.Scene();
-        const bCam = new THREE.PerspectiveCamera(75, container.clientWidth/container.clientHeight, 0.1, 1000);
-        const bRen = new THREE.WebGLRenderer({ alpha: true });
-        bRen.setSize(container.clientWidth, container.clientHeight);
-        container.innerHTML = ''; container.appendChild(bRen.domElement);
-        bossObj = new THREE.Mesh(new THREE.TorusKnotGeometry(1, 0.3, 100, 16), new THREE.MeshNormalMaterial({wireframe: true}));
-        bScene.add(bossObj); bCam.position.z = 3;
-
-        function anim() {
-            requestAnimationFrame(anim);
-            cubes.forEach(c => { c.rotation.x += 0.01; c.rotation.y += 0.01; });
-            bossObj.rotation.y += 0.02;
-            bgRen.render(bgScene, bgCam);
-            bRen.render(bScene, bCam);
-        }
-        anim();
-    }
-
-    function loadAdm() {
-        if(document.getElementById('adm-key').value === 'ADMINHACKER') {
-            db.ref('users').once('value', s => {
-                let h = '<table><tr><th>Ник</th><th>Bones</th><th>Удалить</th></tr>';
-                s.forEach(c => {
-                    h += `<tr><td>${c.val().nick}</td><td>${c.val().bones}</td><td><button onclick="db.ref('users/${c.key}').remove()">X</button></td></tr>`;
-                });
-                document.getElementById('adm-data').innerHTML = h + '</table>';
-            });
-        }
-    }
+// ============ START ============
+initLobby();
+gameLoop();
 </script>
 </body>
 </html>
-
