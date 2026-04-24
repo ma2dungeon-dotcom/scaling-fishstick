@@ -2,252 +2,713 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>BLOXBURG 2D: ULTRA MAX EDITION</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>VK-style Social Network | Firebase</title>
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    <!-- Font Awesome & CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
-        body { margin: 0; overflow: hidden; background: #000; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        #ui {
-            position: absolute; top: 20px; left: 20px;
-            background: rgba(0, 0, 0, 0.85); padding: 25px;
-            border-radius: 20px; border: 3px solid #3498db;
-            color: #fff; pointer-events: none; z-index: 100;
-            box-shadow: 0 0 20px rgba(52, 152, 219, 0.5);
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
-        .stat-bar { width: 200px; height: 10px; background: #444; border-radius: 5px; margin: 5px 0; overflow: hidden; }
-        #hp-fill { height: 100%; background: #e74c3c; width: 100%; transition: 0.3s; }
-        #energy-fill { height: 100%; background: #f1c40f; width: 100%; }
-        .stat-val { font-size: 18px; font-weight: bold; text-shadow: 2px 2px #000; }
-        #event-msg { color: #00ff00; font-weight: bold; text-transform: uppercase; animation: blink 1s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.3; } 100% { opacity: 1; } }
-        #win-screen {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(255, 215, 0, 0.3); backdrop-filter: blur(10px);
-            z-index: 1000; justify-content: center; align-items: center;
-            font-size: 80px; color: #fff; text-shadow: 0 0 30px #000;
+        body {
+            background: #edeef0;
+        }
+        /* Auth Container */
+        .auth-container {
+            max-width: 420px;
+            margin: 80px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+            padding: 30px 24px;
+            text-align: center;
+        }
+        .auth-tabs {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 24px;
+            border-bottom: 2px solid #e7e8ec;
+        }
+        .auth-tab {
+            flex: 1;
+            padding: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            color: #65676b;
+            transition: 0.2s;
+        }
+        .auth-tab.active {
+            color: #2d81e0;
+            border-bottom: 2px solid #2d81e0;
+            margin-bottom: -2px;
+        }
+        .auth-form input {
+            width: 100%;
+            padding: 12px;
+            margin: 8px 0;
+            border: 1px solid #d0d1d3;
+            border-radius: 8px;
+            font-size: 15px;
+        }
+        .auth-form button {
+            width: 100%;
+            padding: 12px;
+            background: #2d81e0;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            font-size: 16px;
+            margin-top: 16px;
+            cursor: pointer;
+        }
+        .error-msg {
+            color: #e64646;
+            font-size: 13px;
+            margin-top: 10px;
+        }
+        /* Main App Layout */
+        .app-container {
+            display: none;
+            max-width: 1280px;
+            margin: 0 auto;
+            min-height: 100vh;
+        }
+        .top-nav {
+            background: white;
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo {
+            font-size: 22px;
+            font-weight: 700;
+            color: #2d81e0;
+        }
+        .nav-icons i {
+            font-size: 22px;
+            margin: 0 14px;
+            color: #818c99;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .nav-icons i.active-nav {
+            color: #2d81e0;
+        }
+        .logout-btn {
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+            color: #e64646;
+        }
+        .content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            padding: 20px;
+        }
+        .sidebar {
+            flex: 1.2;
+            min-width: 240px;
+        }
+        .main-feed {
+            flex: 3;
+            min-width: 280px;
+        }
+        .right-panel {
+            flex: 1.4;
+            min-width: 240px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .profile-card {
+            text-align: center;
+        }
+        .avatar-lg {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .post-input {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .post-input input {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid #e1e3e6;
+            border-radius: 24px;
+            background: #f2f3f5;
+        }
+        .feed-item {
+            border-bottom: 1px solid #e7e8ec;
+            padding: 12px 0;
+        }
+        .user-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 8px;
+        }
+        .avatar-sm {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            object-fit: cover;
+        }
+        .search-input {
+            width: 100%;
+            padding: 10px;
+            border-radius: 20px;
+            border: 1px solid #e1e3e6;
+            margin-bottom: 12px;
+        }
+        .user-list-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px 0;
+            cursor: pointer;
+            border-radius: 8px;
+        }
+        .user-list-item:hover {
+            background: #f0f2f5;
+        }
+        .message-thread {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 12px;
+        }
+        .msg-bubble {
+            padding: 8px 12px;
+            margin: 6px;
+            border-radius: 18px;
+            max-width: 80%;
+        }
+        .msg-out {
+            background: #2d81e0;
+            color: white;
+            align-self: flex-end;
+            margin-left: auto;
+        }
+        .msg-in {
+            background: #e4e6eb;
+            color: black;
+        }
+        .avatar-upload {
+            margin-top: 16px;
+        }
+        .avatar-upload label {
+            background: #e7e8ec;
+            padding: 8px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .status-text {
+            font-size: 13px;
+            color: #65676b;
+        }
+        button {
+            background: none;
+            border: none;
+            cursor: pointer;
+        }
+        .send-msg {
+            display: flex;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .send-msg input {
+            flex: 1;
+            padding: 8px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+        }
+        h4 {
+            margin-bottom: 12px;
+        }
+        @media (max-width: 760px) {
+            .sidebar, .right-panel { display: none; }
+            .main-feed { flex: 1; }
         }
     </style>
 </head>
 <body>
 
-<div id="ui">
-    <div class="stat-val" id="moneyLabel">💰 БАЛАНС: $500</div>
-    <div class="stat-val" id="lvlLabel">🌟 УРОВЕНЬ: 1 (XP: 0/100)</div>
-    <div style="margin-top:10px;">Здоровье:</div>
-    <div class="stat-bar"><div id="hp-fill"></div></div>
-    <div>Энергия:</div>
-    <div class="stat-bar"><div id="energy-fill"></div></div>
-    <div id="weaponLabel" style="color:#bdc3c7; margin-top:10px;">🔫 ОРУЖИЕ: КУЛАКИ</div>
-    <div id="itemsLabel" style="color:#3498db;">🏠 МЕБЕЛЬ: 0 / 25</div>
-    <div id="event-msg">СОБЫТИЕ: ШТИЛЬ</div>
+<!-- Auth Section -->
+<div id="authSection" class="auth-container">
+    <div class="auth-tabs">
+        <div id="loginTab" class="auth-tab active">Вход</div>
+        <div id="registerTab" class="auth-tab">Регистрация</div>
+    </div>
+    <div id="loginForm" class="auth-form">
+        <input type="email" id="loginEmail" placeholder="Email" autocomplete="email">
+        <input type="password" id="loginPassword" placeholder="Пароль">
+        <button id="doLoginBtn">Войти</button>
+        <div id="loginError" class="error-msg"></div>
+    </div>
+    <div id="registerForm" class="auth-form" style="display: none;">
+        <input type="text" id="regName" placeholder="Имя пользователя">
+        <input type="email" id="regEmail" placeholder="Email">
+        <input type="password" id="regPassword" placeholder="Пароль">
+        <button id="doRegisterBtn">Зарегистрироваться</button>
+        <div id="regError" class="error-msg"></div>
+    </div>
 </div>
 
-<div id="win-screen">ГОРОД ПОКОРЕН!</div>
-<canvas id="gameCanvas"></canvas>
+<!-- Main App (after login) -->
+<div id="appContainer" class="app-container">
+    <div class="top-nav">
+        <div class="logo">VK Clone</div>
+        <div class="nav-icons">
+            <i id="navFeed" class="fas fa-newspaper active-nav" data-view="feed"></i>
+            <i id="navMessages" class="fas fa-comment-dots" data-view="messages"></i>
+            <i id="navSearch" class="fas fa-search" data-view="search"></i>
+            <i id="navProfile" class="fas fa-user-circle" data-view="profile"></i>
+        </div>
+        <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
+    </div>
+
+    <div class="content">
+        <!-- Left sidebar (current user info) -->
+        <div class="sidebar">
+            <div class="card profile-card" id="currentUserCard">
+                <img id="currentAvatar" class="avatar-lg" src="https://via.placeholder.com/96?text=Avatar" alt="avatar">
+                <h3 id="currentUserName">Загрузка...</h3>
+                <div class="avatar-upload">
+                    <label for="avatarUploadInput"><i class="fas fa-camera"></i> Сменить аватар</label>
+                    <input type="file" id="avatarUploadInput" accept="image/jpeg,image/png" style="display:none">
+                </div>
+                <div class="status-text" id="userStatusText"></div>
+            </div>
+        </div>
+
+        <!-- Dynamic content panels -->
+        <div class="main-feed" id="dynamicPanel">
+            <!-- FEED VIEW (Default) -->
+            <div id="feedView" class="view-panel">
+                <div class="card">
+                    <div class="post-input">
+                        <input type="text" id="postText" placeholder="Что у вас нового?">
+                        <button id="submitPostBtn" style="background:#2d81e0; color:white; border-radius:20px; padding:8px 16px;">Опубликовать</button>
+                    </div>
+                </div>
+                <div id="postsFeed" class="card">
+                    <h4>Лента рекомендаций</h4>
+                    <div id="postsList">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- MESSAGES VIEW -->
+            <div id="messagesView" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h4>Личные сообщения</h4>
+                    <div id="dialogsList" style="max-height:200px; overflow-y:auto; border-bottom:1px solid #eee;">
+                        <!-- диалоги -->
+                    </div>
+                    <div id="chatArea" style="margin-top:16px;">
+                        <div id="chatHeader"><strong>Выберите диалог</strong></div>
+                        <div id="messagesList" class="message-thread"></div>
+                        <div class="send-msg" id="sendMsgArea" style="display:none;">
+                            <input type="text" id="messageInput" placeholder="Сообщение...">
+                            <button id="sendMsgBtn"><i class="fas fa-paper-plane"></i></button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SEARCH VIEW -->
+            <div id="searchView" class="view-panel" style="display:none;">
+                <div class="card">
+                    <h4>Поиск людей</h4>
+                    <input type="text" id="searchUsersInput" class="search-input" placeholder="Введите имя...">
+                    <div id="searchResults"></div>
+                </div>
+            </div>
+
+            <!-- PROFILE VIEW (other or self) -->
+            <div id="profileView" class="view-panel" style="display:none;">
+                <div class="card" id="profileDetailCard">
+                    <!-- динамический профиль пользователя -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right panel: рекомендации/друзья (просто предложка) -->
+        <div class="right-panel">
+            <div class="card">
+                <h4>Рекомендуемые</h4>
+                <div id="suggestedUsers"></div>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+    // Инициализация Firebase
+    const firebaseConfig = {
+        apiKey: "AIzaSyCPeeNo5x-sa2XeCHY13FurZ_Xb1jkEoyI",
+        authDomain: "ma2dungeon-4019c.firebaseapp.com",
+        databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com",
+        projectId: "ma2dungeon-4019c",
+        storageBucket: "ma2dungeon-4019c.firebasestorage.app",
+        messagingSenderId: "807177135718",
+        appId: "1:807177135718:web:3701e2061715842a046fa7"
+    };
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
+    const db = firebase.database();
+    const storage = firebase.storage();
 
-// --- КОНФИГУРАЦИЯ ---
-const WORLD_SIZE = 4000;
-const furniturePrices = Array.from({length: 25}, (_, i) => (i + 1) * 250);
-const colors = { grass: "#1b5e20", road: "#2c3e50", house: "#5d4037", shop: "#455a64", forest: "#004d40", work: "#ff6f00" };
+    let currentUserObj = null; // { uid, name, avatarURL }
+    let currentChatWith = null;
 
-let s = {
-    loc: "street", money: 1000, xp: 0, lvl: 1, items: 0,
-    hp: 100, energy: 100,
-    weapon: { name: "Кулаки", dmg: 10, range: 60, color: "#fff" },
-    hasPackage: false, multiplier: 1, weather: "sun"
-};
+    // DOM elements
+    const authSection = document.getElementById('authSection');
+    const appContainer = document.getElementById('appContainer');
+    const loginTab = document.getElementById('loginTab');
+    const registerTab = document.getElementById('registerTab');
+    const loginFormDiv = document.getElementById('loginForm');
+    const registerFormDiv = document.getElementById('registerForm');
 
-let p = { x: 2000, y: 2000, vx: 0, vy: 0, size: 35, rot: 0 };
-let cam = { x: 2000, y: 2000 };
-let enemies = [];
-let particles = [];
+    // Views
+    const views = { feed: 'feedView', messages: 'messagesView', search: 'searchView', profile: 'profileView' };
+    let currentView = 'feed';
 
-const buildings = [
-    {x: 1800, y: 1800, w: 300, h: 250, c: colors.house, n: "ЭЛИТНЫЙ ОСОБНЯК", t: "house"},
-    {x: 2200, y: 1800, w: 250, h: 200, c: colors.shop, n: "МЕБЕЛЬНЫЙ ЦЕНТР", t: "shop_f"},
-    {x: 1800, y: 2200, w: 250, h: 180, c: "#2c3e50", n: "ОРУЖЕЙНЫЙ БАРОН", t: "shop_w"},
-    {x: 2200, y: 2200, w: 250, h: 180, c: colors.forest, n: "ЗОНА ОХОТЫ", t: "forest"},
-    {x: 1000, y: 1000, w: 400, h: 150, c: colors.work, n: "ЦЕНТРАЛЬНЫЙ СКЛАД", t: "work"},
-    {x: 3500, y: 3500, w: 200, h: 200, c: "#e74c3c", n: "ТОЧКА СДАЧИ", t: "dropoff"}
-];
-
-// --- СИСТЕМА УПРАВЛЕНИЯ ---
-let keys = {};
-window.onkeydown = (e) => { 
-    keys[e.code] = true; 
-    if(e.code === 'KeyE') handleInteraction();
-    if(e.code === 'Escape') { s.loc = "street"; p.x=2000; p.y=2100; }
-    if(e.code === 'Space') attack();
-};
-window.onkeyup = (e) => keys[e.code] = false;
-
-function handleInteraction() {
-    buildings.forEach(b => {
-        let dist = Math.hypot(p.x - (b.x + b.w/2), p.y - (b.y + b.h/2));
-        if (dist < 200) {
-            if (b.t === "work" && !s.hasPackage) { s.hasPackage = true; createEffect(p.x, p.y, "#f1c40f"); }
-            else if (b.t === "dropoff" && s.hasPackage) {
-                let reward = 500 * s.multiplier * s.lvl;
-                s.money += reward; s.xp += 40; s.hasPackage = false;
-                createEffect(p.x, p.y, "#2ecc71");
-            } else if (b.t !== "work" && b.t !== "dropoff") {
-                s.loc = b.t;
-                if(b.t === "forest") spawnEnemies();
-                p.x = 400; p.y = 600;
-            }
-        }
-    });
-}
-
-function spawnEnemies() {
-    enemies = [];
-    for(let i=0; i<5; i++) {
-        enemies.push({ x: 800 + i*400, y: 550, hp: 50 + i*50, maxHp: 50 + i*50, type: i>2?"МЕДВЕДЬ":"ВОЛК", val: 200 + i*200 });
+    function showView(viewId) {
+        Object.keys(views).forEach(v => {
+            const el = document.getElementById(views[v]);
+            if (el) el.style.display = 'none';
+        });
+        document.getElementById(views[viewId]).style.display = 'block';
+        currentView = viewId;
+        // обновить активную иконку
+        document.querySelectorAll('.nav-icons i').forEach(icon => icon.classList.remove('active-nav'));
+        const activeIcon = document.getElementById(`nav${viewId.charAt(0).toUpperCase() + viewId.slice(1)}`);
+        if (activeIcon) activeIcon.classList.add('active-nav');
+        if (viewId === 'messages') loadDialogs();
+        if (viewId === 'search') { }
+        if (viewId === 'profile') showMyProfile();
     }
-}
 
-function attack() {
-    if(s.energy < 5) return;
-    s.energy -= 5;
-    let hit = false;
-    enemies.forEach(en => {
-        if(Math.abs(p.x - en.x) < s.weapon.range) {
-            en.hp -= s.weapon.dmg * (1 + s.lvl*0.1);
-            createEffect(en.x, en.y, "red");
-            if(en.hp <= 0) { s.money += en.val; s.xp += en.val/2; en.x = -10000; }
-            hit = true;
-        }
-    });
-    if(!hit) createEffect(p.x + 50, p.y, s.weapon.color);
-}
+    // Helper: получить данные пользователя по uid
+    async function getUserData(uid) {
+        const snap = await db.ref(`users/${uid}`).once('value');
+        return snap.val();
+    }
 
-function createEffect(x, y, color) {
-    for(let i=0; i<10; i++) particles.push({x, y, vx: (Math.random()-0.5)*10, vy: (Math.random()-0.5)*10, c: color, life: 20});
-}
+    // Обновить левый сайдбар
+    async function updateSidebar() {
+        if (!currentUserObj) return;
+        const userData = await getUserData(currentUserObj.uid);
+        const name = userData?.name || 'Пользователь';
+        const avatar = userData?.avatarURL || 'https://via.placeholder.com/96?text=Avatar';
+        document.getElementById('currentUserName').innerText = name;
+        document.getElementById('currentAvatar').src = avatar;
+        document.getElementById('userStatusText').innerText = userData?.email || '';
+        currentUserObj.name = name;
+        currentUserObj.avatarURL = avatar;
+    }
 
-function update() {
-    // XP & Level
-    if(s.xp >= s.lvl * 100) { s.xp = 0; s.lvl++; s.hp = 100; createEffect(p.x, p.y, "gold"); }
-
-    // Логика мира
-    if (stateUpdate()) return;
-
-    // Снятие энергии
-    if(s.energy < 100) s.energy += 0.05;
-
-    // Интерфейс
-    document.getElementById("moneyLabel").innerText = `💰 БАЛАНС: $${Math.floor(s.money)}`;
-    document.getElementById("lvlLabel").innerText = `🌟 УРОВЕНЬ: ${s.lvl} (XP: ${Math.floor(s.xp)}/${s.lvl*100})`;
-    document.getElementById("hp-fill").style.width = s.hp + "%";
-    document.getElementById("energy-fill").style.width = s.energy + "%";
-    document.getElementById("itemsLabel").innerText = `🏠 МЕБЕЛЬ: ${s.items} / 25`;
-    document.getElementById("weaponLabel").innerText = `🔫 ОРУЖИЕ: ${s.weapon.name.toUpperCase()}`;
-}
-
-function stateUpdate() {
-    let speed = (s.energy > 10 ? 8 : 3);
-    if(s.loc === "forest") {
-        if(keys["KeyA"]) p.x -= speed;
-        if(keys["KeyD"]) p.x += speed;
-        if(keys["KeyW"] && p.y >= 550) p.vy = -16;
-        p.vy += 0.8; p.y += p.vy;
-        if(p.y > 550) { p.y = 550; p.vy = 0; }
-        
-        enemies.forEach(en => {
-            if(en.x < -1000) return;
-            en.x += (p.x > en.x ? 3 : -3);
-            if(Math.hypot(p.x - en.x, p.y - en.y) < 40) {
-                s.hp -= 0.5;
-                if(s.hp <= 0) { s.money *= 0.8; s.hp = 100; s.loc = "street"; p.x=2000; p.y=2000; alert("ВЫ ПОПАЛИ В БОЛЬНИЦУ!"); }
+    // Загрузка ленты (посты всех)
+    async function loadFeed() {
+        const postsRef = db.ref('posts');
+        postsRef.on('value', (snapshot) => {
+            const posts = [];
+            snapshot.forEach(child => {
+                posts.push({ id: child.key, ...child.val() });
+            });
+            posts.sort((a,b) => b.timestamp - a.timestamp);
+            const container = document.getElementById('postsList');
+            if (!container) return;
+            if (posts.length === 0) { container.innerHTML = '<div>Нет постов. Напишите первый!</div>'; return; }
+            container.innerHTML = '';
+            for (let post of posts) {
+                const div = document.createElement('div');
+                div.className = 'feed-item';
+                div.innerHTML = `
+                    <div class="user-row">
+                        <img src="${post.authorAvatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
+                        <b>${post.authorName}</b>
+                        <span style="font-size:12px; color:#65676b;">${new Date(post.timestamp).toLocaleString()}</span>
+                    </div>
+                    <div>${escapeHtml(post.text)}</div>
+                `;
+                container.appendChild(div);
             }
         });
-    } else {
-        if(keys["KeyW"]) p.y -= speed; if(keys["KeyS"]) p.y += speed;
-        if(keys["KeyA"]) p.x -= speed; if(keys["KeyD"]) p.x += speed;
     }
 
-    if(s.loc === "shop_f" && p.y < 200) {
-        let price = furniturePrices[s.items];
-        if(s.money >= price && s.items < 25) { s.money -= price; s.items++; p.y = 400; checkWin(); }
-    }
-
-    if(s.loc === "shop_w") {
-        if(p.x < 200 && s.money >= 2000) { s.weapon = {name: "Магнум", dmg: 60, range: 200, color: "orange"}; s.money -= 2000; p.x=400; }
-        if(p.x > 600 && s.money >= 10000) { s.weapon = {name: "Плазмоган", dmg: 250, range: 500, color: "cyan"}; s.money -= 10000; p.x=400; }
-    }
-}
-
-function checkWin() {
-    if(s.items >= 25) {
-        let w = document.getElementById("win-screen");
-        w.style.display = "flex";
-        setTimeout(() => w.style.display = "none", 3000);
-    }
-}
-
-function draw() {
-    ctx.fillStyle = "#000"; ctx.fillRect(0,0, canvas.width, canvas.height);
-    ctx.save();
-    ctx.translate(canvas.width/2 - p.x, canvas.height/2 - p.y);
-
-    if(s.loc === "street") {
-        ctx.fillStyle = colors.grass; ctx.fillRect(0,0, WORLD_SIZE, WORLD_SIZE);
-        // Дороги
-        ctx.fillStyle = colors.road; ctx.fillRect(1900, 0, 200, WORLD_SIZE); ctx.fillRect(0, 1900, WORLD_SIZE, 200);
-        // Здания с тенями
-        buildings.forEach(b => {
-            ctx.shadowColor = "rgba(0,0,0,0.5)"; ctx.shadowBlur = 20;
-            ctx.fillStyle = b.c; ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 20); ctx.fill();
-            ctx.shadowBlur = 0; ctx.fillStyle = "#fff"; ctx.fillText(b.n, b.x, b.y - 10);
+    // Поиск пользователей по имени
+    function searchUsers(query) {
+        const usersRef = db.ref('users');
+        usersRef.once('value', (snap) => {
+            const results = [];
+            snap.forEach(child => {
+                const user = child.val();
+                if (user.uid !== currentUserObj.uid && user.name && user.name.toLowerCase().includes(query.toLowerCase())) {
+                    results.push({ uid: child.key, name: user.name, avatarURL: user.avatarURL });
+                }
+            });
+            const container = document.getElementById('searchResults');
+            if (!container) return;
+            if (results.length === 0) { container.innerHTML = '<div>Никого не найдено</div>'; return; }
+            container.innerHTML = '';
+            results.forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'user-list-item';
+                div.innerHTML = `<img src="${u.avatarURL || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${u.name}</span>`;
+                div.onclick = () => openUserProfile(u.uid);
+                container.appendChild(div);
+            });
         });
-    } else if(s.loc === "forest") {
-        ctx.fillStyle = "#001a33"; ctx.fillRect(p.x-1000, 0, 2000, WORLD_SIZE);
-        ctx.fillStyle = "#1b5e20"; ctx.fillRect(p.x-1000, 585, 2000, 500);
-        enemies.forEach(en => {
-            if(en.x < -1000) return;
-            ctx.fillStyle = en.type === "МЕДВЕДЬ" ? "#3e2723" : "#7f8c8d";
-            ctx.fillRect(en.x-25, en.y-20, 50, 40);
-            // Health Bar врага
-            ctx.fillStyle = "red"; ctx.fillRect(en.x-25, en.y-40, (en.hp/en.maxHp)*50, 5);
-        });
-    } else {
-        ctx.fillStyle = "#2c3e50"; ctx.fillRect(0,0, 800, 800);
-        if(s.loc === "house") {
-            for(let i=0; i<s.items; i++) {
-                ctx.fillStyle = `hsl(${i*15}, 70%, 50%)`; 
-                ctx.fillRect(50+(i%5)*150, 100+Math.floor(i/5)*120, 100, 60);
-                ctx.fillStyle = "#fff"; ctx.font = "12px Arial"; ctx.fillText("VIP ОБЪЕКТ "+(i+1), 50+(i%5)*150, 90+Math.floor(i/5)*120);
-            }
+    }
+
+    function openUserProfile(uid) {
+        showView('profile');
+        loadProfileById(uid);
+    }
+
+    async function loadProfileById(uid) {
+        const userData = await getUserData(uid);
+        if (!userData) return;
+        const isOwn = (uid === currentUserObj.uid);
+        const container = document.getElementById('profileDetailCard');
+        container.innerHTML = `
+            <div style="text-align:center;">
+                <img src="${userData.avatarURL || 'https://via.placeholder.com/120'}" style="width:120px; height:120px; border-radius:50%; object-fit:cover;">
+                <h2>${userData.name}</h2>
+                <div>${userData.email || ''}</div>
+                ${!isOwn ? `<button id="startChatBtn" style="margin-top:12px; background:#2d81e0; color:white; padding:8px 20px; border-radius:20px;">Написать сообщение</button>` : ''}
+            </div>
+        `;
+        if (!isOwn) {
+            document.getElementById('startChatBtn')?.addEventListener('click', () => {
+                currentChatWith = uid;
+                showView('messages');
+                loadDialogs();
+                setTimeout(() => openChatWith(uid), 300);
+            });
         }
-        ctx.fillStyle = "#e74c3c"; ctx.fillRect(350, 780, 100, 20); // Выход
     }
 
-    // Частицы
-    particles.forEach((pt, i) => {
-        pt.x += pt.vx; pt.y += pt.vy; pt.life--;
-        ctx.fillStyle = pt.c; ctx.fillRect(pt.x, pt.y, 4, 4);
-        if(pt.life <= 0) particles.splice(i, 1);
+    async function showMyProfile() {
+        loadProfileById(currentUserObj.uid);
+    }
+
+    // Диалоги и сообщения
+    async function loadDialogs() {
+        const msgsRef = db.ref(`messages/${currentUserObj.uid}`);
+        msgsRef.on('value', async (snap) => {
+            const dialogsMap = new Map();
+            snap.forEach(child => {
+                const withId = child.key;
+                dialogsMap.set(withId, child.val());
+            });
+            const dialogListDiv = document.getElementById('dialogsList');
+            dialogListDiv.innerHTML = '';
+            for (let [withId, data] of dialogsMap.entries()) {
+                const lastMsg = data.lastMessage || '';
+                const partnerData = await getUserData(withId);
+                const partnerName = partnerData?.name || 'Пользователь';
+                const partnerAvatar = partnerData?.avatarURL || 'https://via.placeholder.com/40';
+                const div = document.createElement('div');
+                div.className = 'user-list-item';
+                div.innerHTML = `<img src="${partnerAvatar}" class="avatar-sm"><div><b>${partnerName}</b><div style="font-size:12px">${lastMsg.substring(0,30)}</div></div>`;
+                div.onclick = () => openChatWith(withId);
+                dialogListDiv.appendChild(div);
+            }
+            if (dialogsMap.size === 0) dialogListDiv.innerHTML = '<div>Нет диалогов</div>';
+        });
+    }
+
+    function openChatWith(partnerId) {
+        currentChatWith = partnerId;
+        const chatHeader = document.getElementById('chatHeader');
+        getUserData(partnerId).then(u => {
+            chatHeader.innerHTML = `<strong>Чат с ${u?.name || 'пользователем'}</strong>`;
+        });
+        document.getElementById('sendMsgArea').style.display = 'flex';
+        loadMessages(partnerId);
+    }
+
+    function loadMessages(partnerId) {
+        const chatId = generateChatId(currentUserObj.uid, partnerId);
+        const messagesRef = db.ref(`chat_rooms/${chatId}/messages`);
+        messagesRef.on('value', (snap) => {
+            const msgs = [];
+            snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
+            msgs.sort((a,b)=> a.timestamp - b.timestamp);
+            const container = document.getElementById('messagesList');
+            container.innerHTML = '';
+            msgs.forEach(m => {
+                const isMe = (m.sender === currentUserObj.uid);
+                const bubbleDiv = document.createElement('div');
+                bubbleDiv.className = `msg-bubble ${isMe ? 'msg-out' : 'msg-in'}`;
+                bubbleDiv.style.textAlign = isMe ? 'right' : 'left';
+                bubbleDiv.style.marginLeft = isMe ? 'auto' : '0';
+                bubbleDiv.innerText = m.text;
+                container.appendChild(bubbleDiv);
+            });
+            container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    function generateChatId(uid1, uid2) {
+        return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
+    }
+
+    async function sendMessage(text) {
+        if (!currentChatWith || !text.trim()) return;
+        const chatId = generateChatId(currentUserObj.uid, currentChatWith);
+        const newMsgRef = db.ref(`chat_rooms/${chatId}/messages`).push();
+        const msgObj = {
+            sender: currentUserObj.uid,
+            receiver: currentChatWith,
+            text: text,
+            timestamp: Date.now()
+        };
+        await newMsgRef.set(msgObj);
+        // Обновить последнее сообщение в диалогах обоих пользователей
+        const updates = {};
+        updates[`messages/${currentUserObj.uid}/${currentChatWith}/lastMessage`] = text;
+        updates[`messages/${currentUserObj.uid}/${currentChatWith}/updated`] = Date.now();
+        updates[`messages/${currentChatWith}/${currentUserObj.uid}/lastMessage`] = text;
+        updates[`messages/${currentChatWith}/${currentUserObj.uid}/updated`] = Date.now();
+        await db.ref().update(updates);
+        document.getElementById('messageInput').value = '';
+    }
+
+    // Загрузка рекомендаций (пользователи, кроме себя)
+    async function loadSuggestions() {
+        const usersRef = db.ref('users');
+        usersRef.once('value', (snap) => {
+            const users = [];
+            snap.forEach(child => {
+                if (child.key !== currentUserObj.uid) users.push({ uid: child.key, name: child.val().name, avatar: child.val().avatarURL });
+            });
+            const container = document.getElementById('suggestedUsers');
+            container.innerHTML = '';
+            users.slice(0, 5).forEach(u => {
+                const div = document.createElement('div');
+                div.className = 'user-list-item';
+                div.innerHTML = `<img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${u.name}</span>`;
+                div.onclick = () => openUserProfile(u.uid);
+                container.appendChild(div);
+            });
+        });
+    }
+
+    // Avatar upload
+    function setupAvatarUpload() {
+        const fileInput = document.getElementById('avatarUploadInput');
+        fileInput.addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const storageRef = storage.ref(`avatars/${currentUserObj.uid}`);
+            const uploadTask = storageRef.put(file);
+            uploadTask.on('state_changed', null, null, async () => {
+                const url = await storageRef.getDownloadURL();
+                await db.ref(`users/${currentUserObj.uid}`).update({ avatarURL: url });
+                updateSidebar();
+                // обновить посты и везде
+                alert('Аватар обновлён!');
+            });
+        });
+    }
+
+    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+
+    // Регистрация нового пользователя
+    async function register(email, password, name) {
+        try {
+            const cred = await auth.createUserWithEmailAndPassword(email, password);
+            const uid = cred.user.uid;
+            const userData = { uid, name, email, avatarURL: 'https://via.placeholder.com/96?text=Avatar', createdAt: Date.now() };
+            await db.ref(`users/${uid}`).set(userData);
+            await cred.user.updateProfile({ displayName: name });
+            return true;
+        } catch(e) { throw e; }
+    }
+
+    // Обработка входа и смены состояния
+    auth.onAuthStateChanged(async (user) => {
+        if (user) {
+            const userDataSnap = await db.ref(`users/${user.uid}`).once('value');
+            let userData = userDataSnap.val();
+            if (!userData) {
+                userData = { uid: user.uid, name: user.email.split('@')[0], email: user.email, avatarURL: 'https://via.placeholder.com/96?text=Avatar' };
+                await db.ref(`users/${user.uid}`).set(userData);
+            }
+            currentUserObj = { uid: user.uid, name: userData.name, avatarURL: userData.avatarURL };
+            authSection.style.display = 'none';
+            appContainer.style.display = 'block';
+            updateSidebar();
+            loadFeed();
+            loadSuggestions();
+            setupAvatarUpload();
+            showView('feed');
+            // дополнительно слушаем диалоги при открытии вкладки
+        } else {
+            authSection.style.display = 'block';
+            appContainer.style.display = 'none';
+            currentUserObj = null;
+        }
     });
 
-    // Игрок
-    ctx.shadowBlur = 15; ctx.shadowColor = s.weapon.color;
-    ctx.fillStyle = "#3498db"; ctx.beginPath(); ctx.roundRect(p.x-20, p.y-20, 40, 40, 10); ctx.fill();
-    ctx.shadowBlur = 0;
-    // Глаза
-    ctx.fillStyle = "#fff"; ctx.fillRect(p.x-12, p.y-12, 8, 8); ctx.fillRect(p.x+4, p.y-12, 8, 8);
-    if(s.hasPackage) { ctx.fillStyle = "gold"; ctx.fillRect(p.x-10, p.y-35, 20, 20); }
-
-    ctx.restore();
-    update();
-    requestAnimationFrame(draw);
-}
-
-canvas.width = window.innerWidth;
-canvas.height = window.innerHeight;
-draw();
+    // Event listeners UI
+    loginTab.onclick = () => { loginTab.classList.add('active'); registerTab.classList.remove('active'); loginFormDiv.style.display = 'block'; registerFormDiv.style.display = 'none'; };
+    registerTab.onclick = () => { registerTab.classList.add('active'); loginTab.classList.remove('active'); loginFormDiv.style.display = 'none'; registerFormDiv.style.display = 'block'; };
+    document.getElementById('doLoginBtn').onclick = async () => {
+        const email = document.getElementById('loginEmail').value;
+        const pwd = document.getElementById('loginPassword').value;
+        try { await auth.signInWithEmailAndPassword(email, pwd); } catch(e) { document.getElementById('loginError').innerText = e.message; }
+    };
+    document.getElementById('doRegisterBtn').onclick = async () => {
+        const name = document.getElementById('regName').value.trim();
+        const email = document.getElementById('regEmail').value;
+        const pwd = document.getElementById('regPassword').value;
+        try { await register(email, pwd, name); } catch(e) { document.getElementById('regError').innerText = e.message; }
+    };
+    document.getElementById('logoutBtn').onclick = () => auth.signOut();
+    document.getElementById('submitPostBtn').onclick = async () => {
+        const text = document.getElementById('postText').value.trim();
+        if (!text) return;
+        const post = { authorId: currentUserObj.uid, authorName: currentUserObj.name, authorAvatar: currentUserObj.avatarURL, text, timestamp: Date.now() };
+        await db.ref('posts').push(post);
+        document.getElementById('postText').value = '';
+    };
+    document.getElementById('sendMsgBtn').onclick = () => sendMessage(document.getElementById('messageInput').value);
+    document.getElementById('searchUsersInput').addEventListener('input', (e) => searchUsers(e.target.value));
+    document.getElementById('navFeed').onclick = () => showView('feed');
+    document.getElementById('navMessages').onclick = () => showView('messages');
+    document.getElementById('navSearch').onclick = () => showView('search');
+    document.getElementById('navProfile').onclick = () => showView('profile');
 </script>
 </body>
 </html>
-
+```
