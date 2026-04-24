@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>VK-style Social Network | Firebase</title>
+    <title>Ma2DUNGEON | Социальная сеть</title>
     <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -108,6 +108,14 @@
             font-weight: 700;
             color: #2d81e0;
         }
+        .logo span {
+            background: #2d81e0;
+            color: white;
+            font-size: 14px;
+            padding: 2px 8px;
+            border-radius: 20px;
+            margin-left: 8px;
+        }
         .nav-icons i {
             font-size: 22px;
             margin: 0 14px;
@@ -153,6 +161,30 @@
         .profile-card {
             text-align: center;
         }
+        /* Стиль для заглушки аватарки */
+        .avatar-placeholder {
+            width: 96px;
+            height: 96px;
+            border-radius: 50%;
+            background: #b0b3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto;
+            color: #4e5259;
+            font-size: 48px;
+        }
+        .avatar-placeholder-sm {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #b0b3b8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4e5259;
+            font-size: 20px;
+        }
         .avatar-lg {
             width: 96px;
             height: 96px;
@@ -160,6 +192,7 @@
             object-fit: cover;
             border: 2px solid #fff;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            background: #b0b3b8;
         }
         .post-input {
             display: flex;
@@ -188,6 +221,7 @@
             height: 40px;
             border-radius: 50%;
             object-fit: cover;
+            background: #b0b3b8;
         }
         .search-input {
             width: 100%;
@@ -265,6 +299,11 @@
             .sidebar, .right-panel { display: none; }
             .main-feed { flex: 1; }
         }
+        .empty-posts {
+            text-align: center;
+            color: #65676b;
+            padding: 20px;
+        }
     </style>
 </head>
 <body>
@@ -273,8 +312,7 @@
 <div id="authSection" class="auth-container">
     <div class="info-banner" id="setupWarning" style="display:none;">
         ⚠️ <strong>Настройка Firebase:</strong> Ошибка аутентификации. 
-        Пожалуйста, включите вход по Email/Password в консоли Firebase.<br>
-        <strong>Инструкция:</strong> Перейдите в Firebase Console → Authentication → Sign-in methods → Включите "Email/Password".
+        Пожалуйста, включите вход по Email/Password в консоли Firebase.
     </div>
     <div class="auth-tabs">
         <div id="loginTab" class="auth-tab active">Вход</div>
@@ -295,24 +333,24 @@
     </div>
 </div>
 
-<!-- Main App (after login) -->
+<!-- Main App -->
 <div id="appContainer" class="app-container">
     <div class="top-nav">
-        <div class="logo">VK Clone</div>
+        <div class="logo">Ma2DUNGEON <span>Отважный путник</span></div>
         <div class="nav-icons">
-            <i id="navFeed" class="fas fa-newspaper active-nav" data-view="feed"></i>
-            <i id="navMessages" class="fas fa-comment-dots" data-view="messages"></i>
-            <i id="navSearch" class="fas fa-search" data-view="search"></i>
-            <i id="navProfile" class="fas fa-user-circle" data-view="profile"></i>
+            <i id="navFeed" class="fas fa-newspaper active-nav"></i>
+            <i id="navMessages" class="fas fa-comment-dots"></i>
+            <i id="navSearch" class="fas fa-search"></i>
+            <i id="navProfile" class="fas fa-user-circle"></i>
         </div>
         <button class="logout-btn" id="logoutBtn"><i class="fas fa-sign-out-alt"></i></button>
     </div>
 
     <div class="content">
-        <!-- Left sidebar (current user info) -->
+        <!-- Левая панель (текущий пользователь) -->
         <div class="sidebar">
             <div class="card profile-card" id="currentUserCard">
-                <img id="currentAvatar" class="avatar-lg" src="https://via.placeholder.com/96?text=Avatar" alt="avatar">
+                <div id="currentAvatarContainer"></div>
                 <h3 id="currentUserName">Загрузка...</h3>
                 <div class="avatar-upload">
                     <label for="avatarUploadInput"><i class="fas fa-camera"></i> Сменить аватар</label>
@@ -322,29 +360,27 @@
             </div>
         </div>
 
-        <!-- Dynamic content panels -->
+        <!-- Динамическая область -->
         <div class="main-feed" id="dynamicPanel">
-            <!-- FEED VIEW (Default) -->
+            <!-- Лента -->
             <div id="feedView" class="view-panel">
                 <div class="card">
                     <div class="post-input">
-                        <input type="text" id="postText" placeholder="Что у вас нового?">
+                        <input type="text" id="postText" placeholder="Что у вас нового, отважный путник?">
                         <button id="submitPostBtn" style="background:#2d81e0; color:white; border-radius:20px; padding:8px 16px;">Опубликовать</button>
                     </div>
                 </div>
                 <div id="postsFeed" class="card">
-                    <h4>Лента рекомендаций</h4>
+                    <h4><i class="fas fa-fire"></i> Лента рекомендаций</h4>
                     <div id="postsList">Загрузка...</div>
                 </div>
             </div>
 
-            <!-- MESSAGES VIEW -->
+            <!-- Сообщения -->
             <div id="messagesView" class="view-panel" style="display:none;">
                 <div class="card">
-                    <h4>Личные сообщения</h4>
-                    <div id="dialogsList" style="max-height:200px; overflow-y:auto; border-bottom:1px solid #eee;">
-                        <!-- диалоги -->
-                    </div>
+                    <h4><i class="fas fa-comments"></i> Личные сообщения</h4>
+                    <div id="dialogsList" style="max-height:200px; overflow-y:auto; border-bottom:1px solid #eee;"></div>
                     <div id="chatArea" style="margin-top:16px;">
                         <div id="chatHeader"><strong>Выберите диалог</strong></div>
                         <div id="messagesList" class="message-thread"></div>
@@ -356,27 +392,25 @@
                 </div>
             </div>
 
-            <!-- SEARCH VIEW -->
+            <!-- Поиск -->
             <div id="searchView" class="view-panel" style="display:none;">
                 <div class="card">
-                    <h4>Поиск людей</h4>
+                    <h4><i class="fas fa-search"></i> Поиск людей</h4>
                     <input type="text" id="searchUsersInput" class="search-input" placeholder="Введите имя...">
                     <div id="searchResults"></div>
                 </div>
             </div>
 
-            <!-- PROFILE VIEW (other or self) -->
+            <!-- Профиль -->
             <div id="profileView" class="view-panel" style="display:none;">
-                <div class="card" id="profileDetailCard">
-                    <!-- динамический профиль пользователя -->
-                </div>
+                <div class="card" id="profileDetailCard"></div>
             </div>
         </div>
 
-        <!-- Right panel: рекомендации/друзья (просто предложка) -->
+        <!-- Правая панель: реальные пользователи (НЕ боты) -->
         <div class="right-panel">
             <div class="card">
-                <h4>Рекомендуемые</h4>
+                <h4><i class="fas fa-user-friends"></i> Другие путники</h4>
                 <div id="suggestedUsers"></div>
             </div>
         </div>
@@ -384,7 +418,6 @@
 </div>
 
 <script>
-    // Инициализация Firebase
     const firebaseConfig = {
         apiKey: "AIzaSyCPeeNo5x-sa2XeCHY13FurZ_Xb1jkEoyI",
         authDomain: "ma2dungeon-4019c.firebaseapp.com",
@@ -396,20 +429,17 @@
     };
     
     let app, auth, db, storage;
-    
     try {
         app = firebase.initializeApp(firebaseConfig);
         auth = firebase.auth();
         db = firebase.database();
         storage = firebase.storage();
-    } catch(e) {
-        console.error("Firebase init error:", e);
-    }
+    } catch(e) { console.error(e); }
 
     let currentUserObj = null;
     let currentChatWith = null;
 
-    // DOM elements
+    // DOM
     const authSection = document.getElementById('authSection');
     const appContainer = document.getElementById('appContainer');
     const loginTab = document.getElementById('loginTab');
@@ -418,23 +448,46 @@
     const registerFormDiv = document.getElementById('registerForm');
     const setupWarning = document.getElementById('setupWarning');
 
-    // Views
-    const views = { feed: 'feedView', messages: 'messagesView', search: 'searchView', profile: 'profileView' };
-    let currentView = 'feed';
+    // Генерация аватарки-заглушки (человечек на сером фоне)
+    function getAvatarElement(url, size = 'lg') {
+        if (url && url !== 'https://via.placeholder.com/96?text=Avatar' && url !== 'https://via.placeholder.com/40' && url !== '') {
+            if (size === 'lg') {
+                return `<img src="${url}" class="avatar-lg" style="margin:0 auto; display:block;" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+            } else {
+                return `<img src="${url}" class="avatar-sm" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';">`;
+            }
+        }
+        if (size === 'lg') {
+            return `<div class="avatar-placeholder"><i class="fas fa-user"></i></div>`;
+        } else {
+            return `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
+        }
+    }
 
-    function showView(viewId) {
-        Object.keys(views).forEach(v => {
-            const el = document.getElementById(views[v]);
-            if (el) el.style.display = 'none';
-        });
-        document.getElementById(views[viewId]).style.display = 'block';
-        currentView = viewId;
-        document.querySelectorAll('.nav-icons i').forEach(icon => icon.classList.remove('active-nav'));
-        const activeIcon = document.getElementById(`nav${viewId.charAt(0).toUpperCase() + viewId.slice(1)}`);
-        if (activeIcon) activeIcon.classList.add('active-nav');
-        if (viewId === 'messages' && currentUserObj) loadDialogs();
-        if (viewId === 'search') { }
-        if (viewId === 'profile' && currentUserObj) showMyProfile();
+    function renderAvatar(url, size = 'lg') {
+        if (url && url !== 'https://via.placeholder.com/96?text=Avatar' && url !== 'https://via.placeholder.com/40' && url !== '') {
+            if (size === 'lg') {
+                return `<img src="${url}" class="avatar-lg" onerror="this.onerror=null; this.src='';">`;
+            } else {
+                return `<img src="${url}" class="avatar-sm" onerror="this.onerror=null; this.src='';">`;
+            }
+        }
+        if (size === 'lg') {
+            return `<div class="avatar-placeholder"><i class="fas fa-user"></i></div>`;
+        } else {
+            return `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
+        }
+    }
+
+    function updateSidebarAvatar() {
+        const container = document.getElementById('currentAvatarContainer');
+        if (!currentUserObj) return;
+        const avatarUrl = currentUserObj.avatarURL;
+        if (avatarUrl && avatarUrl !== 'https://via.placeholder.com/96?text=Avatar' && avatarUrl !== '') {
+            container.innerHTML = `<img src="${avatarUrl}" class="avatar-lg" style="margin:0 auto; display:block;" onerror="this.onerror=null; this.src='';">`;
+        } else {
+            container.innerHTML = `<div class="avatar-placeholder"><i class="fas fa-user"></i></div>`;
+        }
     }
 
     async function getUserData(uid) {
@@ -447,13 +500,13 @@
     async function updateSidebar() {
         if (!currentUserObj) return;
         const userData = await getUserData(currentUserObj.uid);
-        const name = userData?.name || 'Пользователь';
-        const avatar = userData?.avatarURL || 'https://via.placeholder.com/96?text=Avatar';
+        const name = userData?.name || 'Путник';
+        const avatar = userData?.avatarURL;
         document.getElementById('currentUserName').innerText = name;
-        document.getElementById('currentAvatar').src = avatar;
-        document.getElementById('userStatusText').innerText = userData?.email || '';
         currentUserObj.name = name;
         currentUserObj.avatarURL = avatar;
+        updateSidebarAvatar();
+        document.getElementById('userStatusText').innerText = userData?.email || '';
     }
 
     function loadFeed() {
@@ -461,20 +514,24 @@
         const postsRef = db.ref('posts');
         postsRef.on('value', (snapshot) => {
             const posts = [];
-            snapshot.forEach(child => {
-                posts.push({ id: child.key, ...child.val() });
-            });
+            snapshot.forEach(child => posts.push({ id: child.key, ...child.val() }));
             posts.sort((a,b) => b.timestamp - a.timestamp);
             const container = document.getElementById('postsList');
             if (!container) return;
-            if (posts.length === 0) { container.innerHTML = '<div>Нет постов. Напишите первый!</div>'; return; }
+            if (posts.length === 0) {
+                container.innerHTML = '<div class="empty-posts">✨ Пока нет постов. Напишите что-нибудь!</div>';
+                return;
+            }
             container.innerHTML = '';
             for (let post of posts) {
                 const div = document.createElement('div');
                 div.className = 'feed-item';
+                const authorAvatarHtml = (post.authorAvatar && post.authorAvatar !== 'https://via.placeholder.com/96?text=Avatar') 
+                    ? `<img src="${post.authorAvatar}" class="avatar-sm" onerror="this.onerror=null; this.src='';">`
+                    : `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
                 div.innerHTML = `
                     <div class="user-row">
-                        <img src="${post.authorAvatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
+                        ${authorAvatarHtml}
                         <b>${escapeHtml(post.authorName)}</b>
                         <span style="font-size:12px; color:#65676b;">${new Date(post.timestamp).toLocaleString()}</span>
                     </div>
@@ -486,24 +543,26 @@
     }
 
     function searchUsers(query) {
-        if (!db) return;
-        const usersRef = db.ref('users');
-        usersRef.once('value', (snap) => {
+        if (!db || !currentUserObj) return;
+        db.ref('users').once('value', (snap) => {
             const results = [];
             snap.forEach(child => {
                 const user = child.val();
-                if (user.uid !== currentUserObj?.uid && user.name && user.name.toLowerCase().includes(query.toLowerCase())) {
+                if (user.uid !== currentUserObj.uid && user.name && user.name.toLowerCase().includes(query.toLowerCase())) {
                     results.push({ uid: child.key, name: user.name, avatarURL: user.avatarURL });
                 }
             });
             const container = document.getElementById('searchResults');
             if (!container) return;
-            if (results.length === 0) { container.innerHTML = '<div>Никого не найдено</div>'; return; }
+            if (results.length === 0) { container.innerHTML = '<div>🤔 Никого не найдено</div>'; return; }
             container.innerHTML = '';
             results.forEach(u => {
+                const avatarHtml = (u.avatarURL && u.avatarURL !== 'https://via.placeholder.com/96?text=Avatar') 
+                    ? `<img src="${u.avatarURL}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` 
+                    : `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${u.avatarURL || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${escapeHtml(u.name)}</span>`;
+                div.innerHTML = `${avatarHtml}<span>${escapeHtml(u.name)}</span>`;
                 div.onclick = () => openUserProfile(u.uid);
                 container.appendChild(div);
             });
@@ -519,13 +578,16 @@
         const userData = await getUserData(uid);
         if (!userData) return;
         const isOwn = (uid === currentUserObj?.uid);
+        const avatarHtml = (userData.avatarURL && userData.avatarURL !== 'https://via.placeholder.com/96?text=Avatar') 
+            ? `<img src="${userData.avatarURL}" style="width:120px; height:120px; border-radius:50%; object-fit:cover; margin:0 auto;">` 
+            : `<div class="avatar-placeholder" style="width:120px; height:120px; font-size:60px; margin:0 auto;"><i class="fas fa-user"></i></div>`;
         const container = document.getElementById('profileDetailCard');
         container.innerHTML = `
             <div style="text-align:center;">
-                <img src="${userData.avatarURL || 'https://via.placeholder.com/120'}" style="width:120px; height:120px; border-radius:50%; object-fit:cover;">
+                ${avatarHtml}
                 <h2>${escapeHtml(userData.name)}</h2>
                 <div>${escapeHtml(userData.email || '')}</div>
-                ${!isOwn ? `<button id="startChatBtn" style="margin-top:12px; background:#2d81e0; color:white; padding:8px 20px; border-radius:20px;">Написать сообщение</button>` : ''}
+                ${!isOwn ? `<button id="startChatBtn" style="margin-top:12px; background:#2d81e0; color:white; padding:8px 20px; border-radius:20px;">📩 Написать сообщение</button>` : ''}
             </div>
         `;
         if (!isOwn) {
@@ -538,7 +600,7 @@
         }
     }
 
-    async function showMyProfile() {
+    function showMyProfile() {
         if (currentUserObj) loadProfileById(currentUserObj.uid);
     }
 
@@ -547,32 +609,32 @@
         const msgsRef = db.ref(`messages/${currentUserObj.uid}`);
         msgsRef.on('value', async (snap) => {
             const dialogsMap = new Map();
-            snap.forEach(child => {
-                const withId = child.key;
-                dialogsMap.set(withId, child.val());
-            });
+            snap.forEach(child => dialogsMap.set(child.key, child.val()));
             const dialogListDiv = document.getElementById('dialogsList');
             dialogListDiv.innerHTML = '';
             for (let [withId, data] of dialogsMap.entries()) {
                 const lastMsg = data.lastMessage || '';
                 const partnerData = await getUserData(withId);
-                const partnerName = partnerData?.name || 'Пользователь';
-                const partnerAvatar = partnerData?.avatarURL || 'https://via.placeholder.com/40';
+                if (!partnerData) continue;
+                const partnerName = partnerData.name || 'Пользователь';
+                const partnerAvatar = partnerData.avatarURL;
+                const avatarHtml = (partnerAvatar && partnerAvatar !== 'https://via.placeholder.com/96?text=Avatar') 
+                    ? `<img src="${partnerAvatar}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;">` 
+                    : `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${partnerAvatar}" class="avatar-sm"><div><b>${escapeHtml(partnerName)}</b><div style="font-size:12px">${escapeHtml(lastMsg.substring(0,30))}</div></div>`;
+                div.innerHTML = `${avatarHtml}<div><b>${escapeHtml(partnerName)}</b><div style="font-size:12px">${escapeHtml(lastMsg.substring(0,30))}</div></div>`;
                 div.onclick = () => openChatWith(withId);
                 dialogListDiv.appendChild(div);
             }
-            if (dialogsMap.size === 0) dialogListDiv.innerHTML = '<div>Нет диалогов</div>';
+            if (dialogsMap.size === 0) dialogListDiv.innerHTML = '<div>💬 Нет диалогов</div>';
         });
     }
 
     function openChatWith(partnerId) {
         currentChatWith = partnerId;
-        const chatHeader = document.getElementById('chatHeader');
         getUserData(partnerId).then(u => {
-            chatHeader.innerHTML = `<strong>Чат с ${escapeHtml(u?.name || 'пользователем')}</strong>`;
+            document.getElementById('chatHeader').innerHTML = `<strong>💬 Чат с ${escapeHtml(u?.name || 'пользователем')}</strong>`;
         });
         document.getElementById('sendMsgArea').style.display = 'flex';
         loadMessages(partnerId);
@@ -582,6 +644,7 @@
         if (!db || !currentUserObj) return;
         const chatId = generateChatId(currentUserObj.uid, partnerId);
         const messagesRef = db.ref(`chat_rooms/${chatId}/messages`);
+        messagesRef.off();
         messagesRef.on('value', (snap) => {
             const msgs = [];
             snap.forEach(child => msgs.push({ id: child.key, ...child.val() }));
@@ -601,21 +664,13 @@
         });
     }
 
-    function generateChatId(uid1, uid2) {
-        return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`;
-    }
+    function generateChatId(uid1, uid2) { return uid1 < uid2 ? `${uid1}_${uid2}` : `${uid2}_${uid1}`; }
 
     async function sendMessage(text) {
         if (!currentChatWith || !text.trim() || !db || !currentUserObj) return;
         const chatId = generateChatId(currentUserObj.uid, currentChatWith);
         const newMsgRef = db.ref(`chat_rooms/${chatId}/messages`).push();
-        const msgObj = {
-            sender: currentUserObj.uid,
-            receiver: currentChatWith,
-            text: text,
-            timestamp: Date.now()
-        };
-        await newMsgRef.set(msgObj);
+        await newMsgRef.set({ sender: currentUserObj.uid, receiver: currentChatWith, text, timestamp: Date.now() });
         const updates = {};
         updates[`messages/${currentUserObj.uid}/${currentChatWith}/lastMessage`] = text;
         updates[`messages/${currentUserObj.uid}/${currentChatWith}/updated`] = Date.now();
@@ -625,20 +680,30 @@
         document.getElementById('messageInput').value = '';
     }
 
-    async function loadSuggestions() {
+    // Реальные пользователи (без ботов)
+    async function loadRealUsers() {
         if (!db || !currentUserObj) return;
         const usersRef = db.ref('users');
         usersRef.once('value', (snap) => {
             const users = [];
             snap.forEach(child => {
-                if (child.key !== currentUserObj.uid) users.push({ uid: child.key, name: child.val().name, avatar: child.val().avatarURL });
+                if (child.key !== currentUserObj.uid) {
+                    users.push({ uid: child.key, name: child.val().name, avatar: child.val().avatarURL });
+                }
             });
             const container = document.getElementById('suggestedUsers');
             container.innerHTML = '';
-            users.slice(0, 5).forEach(u => {
+            if (users.length === 0) {
+                container.innerHTML = '<div>😴 Пока нет других путников</div>';
+                return;
+            }
+            users.slice(0, 8).forEach(u => {
+                const avatarHtml = (u.avatar && u.avatar !== 'https://via.placeholder.com/96?text=Avatar') 
+                    ? `<img src="${u.avatar}" class="avatar-sm" style="width:40px;height:40px;border-radius:50%;object-fit:cover;">` 
+                    : `<div class="avatar-placeholder-sm"><i class="fas fa-user"></i></div>`;
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${escapeHtml(u.name)}</span>`;
+                div.innerHTML = `${avatarHtml}<span>${escapeHtml(u.name)}</span>`;
                 div.onclick = () => openUserProfile(u.uid);
                 container.appendChild(div);
             });
@@ -655,105 +720,74 @@
             uploadTask.on('state_changed', null, null, async () => {
                 const url = await storageRef.getDownloadURL();
                 await db.ref(`users/${currentUserObj.uid}`).update({ avatarURL: url });
+                currentUserObj.avatarURL = url;
                 updateSidebar();
-                alert('Аватар обновлён!');
+                alert('✅ Аватар обновлён!');
             });
         });
     }
 
-    function escapeHtml(str) { 
-        if (!str) return '';
-        return str.replace(/[&<>]/g, function(m){
-            if(m==='&') return '&amp;'; 
-            if(m==='<') return '&lt;'; 
-            if(m==='>') return '&gt;'; 
-            return m;
-        }); 
+    function escapeHtml(str) { if (!str) return ''; return str.replace(/[&<>]/g, m => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;' }[m])); }
+
+    function showView(viewId) {
+        const viewsMap = { feed:'feedView', messages:'messagesView', search:'searchView', profile:'profileView' };
+        Object.values(viewsMap).forEach(v => { const el = document.getElementById(v); if(el) el.style.display = 'none'; });
+        document.getElementById(viewsMap[viewId]).style.display = 'block';
+        document.querySelectorAll('.nav-icons i').forEach(icon => icon.classList.remove('active-nav'));
+        const iconMap = { feed:'navFeed', messages:'navMessages', search:'navSearch', profile:'navProfile' };
+        document.getElementById(iconMap[viewId]).classList.add('active-nav');
+        if (viewId === 'messages' && currentUserObj) loadDialogs();
+        if (viewId === 'profile') showMyProfile();
+        if (viewId === 'search') document.getElementById('searchResults').innerHTML = '';
     }
 
     async function register(email, password, name) {
-        try {
-            const cred = await auth.createUserWithEmailAndPassword(email, password);
-            const uid = cred.user.uid;
-            const userData = { uid, name, email, avatarURL: 'https://via.placeholder.com/96?text=Avatar', createdAt: Date.now() };
-            await db.ref(`users/${uid}`).set(userData);
-            await cred.user.updateProfile({ displayName: name });
-            return true;
-        } catch(e) { throw e; }
-    }
-
-    // Обработка ошибок аутентификации
-    function handleAuthError(error) {
-        if (error.code === 'auth/configuration-not-found') {
-            setupWarning.style.display = 'block';
-            return "Ошибка: Аутентификация не настроена в Firebase Console. Включите вход по Email/Password.";
-        }
-        return error.message;
+        const cred = await auth.createUserWithEmailAndPassword(email, password);
+        const uid = cred.user.uid;
+        await db.ref(`users/${uid}`).set({ uid, name, email, avatarURL: '', createdAt: Date.now() });
+        await cred.user.updateProfile({ displayName: name });
+        return true;
     }
 
     auth.onAuthStateChanged(async (user) => {
         if (user) {
             setupWarning.style.display = 'none';
-            const userDataSnap = await db.ref(`users/${user.uid}`).once('value');
-            let userData = userDataSnap.val();
+            let userData = (await db.ref(`users/${user.uid}`).once('value')).val();
             if (!userData) {
-                userData = { uid: user.uid, name: user.email.split('@')[0], email: user.email, avatarURL: 'https://via.placeholder.com/96?text=Avatar' };
+                userData = { uid: user.uid, name: user.email.split('@')[0], email: user.email, avatarURL: '' };
                 await db.ref(`users/${user.uid}`).set(userData);
             }
-            currentUserObj = { uid: user.uid, name: userData.name, avatarURL: userData.avatarURL };
+            currentUserObj = { uid: user.uid, name: userData.name, avatarURL: userData.avatarURL || '' };
             authSection.style.display = 'none';
             appContainer.style.display = 'block';
             updateSidebar();
             loadFeed();
-            loadSuggestions();
+            loadRealUsers();
             setupAvatarUpload();
             showView('feed');
         } else {
             authSection.style.display = 'block';
             appContainer.style.display = 'none';
             currentUserObj = null;
-            currentChatWith = null;
         }
     });
 
     // Event listeners
     loginTab.onclick = () => { loginTab.classList.add('active'); registerTab.classList.remove('active'); loginFormDiv.style.display = 'block'; registerFormDiv.style.display = 'none'; };
     registerTab.onclick = () => { registerTab.classList.add('active'); loginTab.classList.remove('active'); loginFormDiv.style.display = 'none'; registerFormDiv.style.display = 'block'; };
-    
-    document.getElementById('doLoginBtn').onclick = async () => {
-        const email = document.getElementById('loginEmail').value;
-        const pwd = document.getElementById('loginPassword').value;
-        try { 
-            await auth.signInWithEmailAndPassword(email, pwd); 
-            document.getElementById('loginError').innerText = '';
-        } catch(e) { 
-            document.getElementById('loginError').innerText = handleAuthError(e);
-        }
-    };
-    
-    document.getElementById('doRegisterBtn').onclick = async () => {
+    document.getElementById('doLoginBtn').onclick = async () => { try { await auth.signInWithEmailAndPassword(document.getElementById('loginEmail').value, document.getElementById('loginPassword').value); } catch(e) { document.getElementById('loginError').innerText = e.message; } };
+    document.getElementById('doRegisterBtn').onclick = async () => { 
         const name = document.getElementById('regName').value.trim();
         const email = document.getElementById('regEmail').value;
         const pwd = document.getElementById('regPassword').value;
-        if (pwd.length < 6) {
-            document.getElementById('regError').innerText = 'Пароль должен быть минимум 6 символов';
-            return;
-        }
-        try { 
-            await register(email, pwd, name); 
-            document.getElementById('regError').innerText = '';
-        } catch(e) { 
-            document.getElementById('regError').innerText = handleAuthError(e);
-        }
+        if (pwd.length < 6) { document.getElementById('regError').innerText = 'Пароль ≥6 символов'; return; }
+        try { await register(email, pwd, name); } catch(e) { document.getElementById('regError').innerText = e.message; }
     };
-    
     document.getElementById('logoutBtn').onclick = () => auth.signOut();
     document.getElementById('submitPostBtn').onclick = async () => {
-        if (!currentUserObj) return;
         const text = document.getElementById('postText').value.trim();
-        if (!text) return;
-        const post = { authorId: currentUserObj.uid, authorName: currentUserObj.name, authorAvatar: currentUserObj.avatarURL, text, timestamp: Date.now() };
-        await db.ref('posts').push(post);
+        if (!text || !currentUserObj) return;
+        await db.ref('posts').push({ authorId: currentUserObj.uid, authorName: currentUserObj.name, authorAvatar: currentUserObj.avatarURL || '', text, timestamp: Date.now() });
         document.getElementById('postText').value = '';
     };
     document.getElementById('sendMsgBtn').onclick = () => sendMessage(document.getElementById('messageInput').value);
