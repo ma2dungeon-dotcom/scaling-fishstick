@@ -75,6 +75,16 @@
             font-size: 13px;
             margin-top: 10px;
         }
+        .info-banner {
+            background: #fff3cd;
+            border: 1px solid #ffecb5;
+            color: #856404;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: left;
+        }
         /* Main App Layout */
         .app-container {
             display: none;
@@ -261,6 +271,11 @@
 
 <!-- Auth Section -->
 <div id="authSection" class="auth-container">
+    <div class="info-banner" id="setupWarning" style="display:none;">
+        ⚠️ <strong>Настройка Firebase:</strong> Ошибка аутентификации. 
+        Пожалуйста, включите вход по Email/Password в консоли Firebase.<br>
+        <strong>Инструкция:</strong> Перейдите в Firebase Console → Authentication → Sign-in methods → Включите "Email/Password".
+    </div>
     <div class="auth-tabs">
         <div id="loginTab" class="auth-tab active">Вход</div>
         <div id="registerTab" class="auth-tab">Регистрация</div>
@@ -274,7 +289,7 @@
     <div id="registerForm" class="auth-form" style="display: none;">
         <input type="text" id="regName" placeholder="Имя пользователя">
         <input type="email" id="regEmail" placeholder="Email">
-        <input type="password" id="regPassword" placeholder="Пароль">
+        <input type="password" id="regPassword" placeholder="Пароль (минимум 6 символов)">
         <button id="doRegisterBtn">Зарегистрироваться</button>
         <div id="regError" class="error-msg"></div>
     </div>
@@ -379,12 +394,19 @@
         messagingSenderId: "807177135718",
         appId: "1:807177135718:web:3701e2061715842a046fa7"
     };
-    const app = firebase.initializeApp(firebaseConfig);
-    const auth = firebase.auth();
-    const db = firebase.database();
-    const storage = firebase.storage();
+    
+    let app, auth, db, storage;
+    
+    try {
+        app = firebase.initializeApp(firebaseConfig);
+        auth = firebase.auth();
+        db = firebase.database();
+        storage = firebase.storage();
+    } catch(e) {
+        console.error("Firebase init error:", e);
+    }
 
-    let currentUserObj = null; // { uid, name, avatarURL }
+    let currentUserObj = null;
     let currentChatWith = null;
 
     // DOM elements
@@ -394,6 +416,7 @@
     const registerTab = document.getElementById('registerTab');
     const loginFormDiv = document.getElementById('loginForm');
     const registerFormDiv = document.getElementById('registerForm');
+    const setupWarning = document.getElementById('setupWarning');
 
     // Views
     const views = { feed: 'feedView', messages: 'messagesView', search: 'searchView', profile: 'profileView' };
@@ -406,22 +429,21 @@
         });
         document.getElementById(views[viewId]).style.display = 'block';
         currentView = viewId;
-        // обновить активную иконку
         document.querySelectorAll('.nav-icons i').forEach(icon => icon.classList.remove('active-nav'));
         const activeIcon = document.getElementById(`nav${viewId.charAt(0).toUpperCase() + viewId.slice(1)}`);
         if (activeIcon) activeIcon.classList.add('active-nav');
-        if (viewId === 'messages') loadDialogs();
+        if (viewId === 'messages' && currentUserObj) loadDialogs();
         if (viewId === 'search') { }
-        if (viewId === 'profile') showMyProfile();
+        if (viewId === 'profile' && currentUserObj) showMyProfile();
     }
 
-    // Helper: получить данные пользователя по uid
     async function getUserData(uid) {
-        const snap = await db.ref(`users/${uid}`).once('value');
-        return snap.val();
+        try {
+            const snap = await db.ref(`users/${uid}`).once('value');
+            return snap.val();
+        } catch(e) { return null; }
     }
 
-    // Обновить левый сайдбар
     async function updateSidebar() {
         if (!currentUserObj) return;
         const userData = await getUserData(currentUserObj.uid);
@@ -434,8 +456,8 @@
         currentUserObj.avatarURL = avatar;
     }
 
-    // Загрузка ленты (посты всех)
-    async function loadFeed() {
+    function loadFeed() {
+        if (!db) return;
         const postsRef = db.ref('posts');
         postsRef.on('value', (snapshot) => {
             const posts = [];
@@ -453,7 +475,7 @@
                 div.innerHTML = `
                     <div class="user-row">
                         <img src="${post.authorAvatar || 'https://via.placeholder.com/40'}" class="avatar-sm">
-                        <b>${post.authorName}</b>
+                        <b>${escapeHtml(post.authorName)}</b>
                         <span style="font-size:12px; color:#65676b;">${new Date(post.timestamp).toLocaleString()}</span>
                     </div>
                     <div>${escapeHtml(post.text)}</div>
@@ -463,14 +485,14 @@
         });
     }
 
-    // Поиск пользователей по имени
     function searchUsers(query) {
+        if (!db) return;
         const usersRef = db.ref('users');
         usersRef.once('value', (snap) => {
             const results = [];
             snap.forEach(child => {
                 const user = child.val();
-                if (user.uid !== currentUserObj.uid && user.name && user.name.toLowerCase().includes(query.toLowerCase())) {
+                if (user.uid !== currentUserObj?.uid && user.name && user.name.toLowerCase().includes(query.toLowerCase())) {
                     results.push({ uid: child.key, name: user.name, avatarURL: user.avatarURL });
                 }
             });
@@ -481,7 +503,7 @@
             results.forEach(u => {
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${u.avatarURL || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${u.name}</span>`;
+                div.innerHTML = `<img src="${u.avatarURL || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${escapeHtml(u.name)}</span>`;
                 div.onclick = () => openUserProfile(u.uid);
                 container.appendChild(div);
             });
@@ -496,13 +518,13 @@
     async function loadProfileById(uid) {
         const userData = await getUserData(uid);
         if (!userData) return;
-        const isOwn = (uid === currentUserObj.uid);
+        const isOwn = (uid === currentUserObj?.uid);
         const container = document.getElementById('profileDetailCard');
         container.innerHTML = `
             <div style="text-align:center;">
                 <img src="${userData.avatarURL || 'https://via.placeholder.com/120'}" style="width:120px; height:120px; border-radius:50%; object-fit:cover;">
-                <h2>${userData.name}</h2>
-                <div>${userData.email || ''}</div>
+                <h2>${escapeHtml(userData.name)}</h2>
+                <div>${escapeHtml(userData.email || '')}</div>
                 ${!isOwn ? `<button id="startChatBtn" style="margin-top:12px; background:#2d81e0; color:white; padding:8px 20px; border-radius:20px;">Написать сообщение</button>` : ''}
             </div>
         `;
@@ -517,11 +539,11 @@
     }
 
     async function showMyProfile() {
-        loadProfileById(currentUserObj.uid);
+        if (currentUserObj) loadProfileById(currentUserObj.uid);
     }
 
-    // Диалоги и сообщения
     async function loadDialogs() {
+        if (!db || !currentUserObj) return;
         const msgsRef = db.ref(`messages/${currentUserObj.uid}`);
         msgsRef.on('value', async (snap) => {
             const dialogsMap = new Map();
@@ -538,7 +560,7 @@
                 const partnerAvatar = partnerData?.avatarURL || 'https://via.placeholder.com/40';
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${partnerAvatar}" class="avatar-sm"><div><b>${partnerName}</b><div style="font-size:12px">${lastMsg.substring(0,30)}</div></div>`;
+                div.innerHTML = `<img src="${partnerAvatar}" class="avatar-sm"><div><b>${escapeHtml(partnerName)}</b><div style="font-size:12px">${escapeHtml(lastMsg.substring(0,30))}</div></div>`;
                 div.onclick = () => openChatWith(withId);
                 dialogListDiv.appendChild(div);
             }
@@ -550,13 +572,14 @@
         currentChatWith = partnerId;
         const chatHeader = document.getElementById('chatHeader');
         getUserData(partnerId).then(u => {
-            chatHeader.innerHTML = `<strong>Чат с ${u?.name || 'пользователем'}</strong>`;
+            chatHeader.innerHTML = `<strong>Чат с ${escapeHtml(u?.name || 'пользователем')}</strong>`;
         });
         document.getElementById('sendMsgArea').style.display = 'flex';
         loadMessages(partnerId);
     }
 
     function loadMessages(partnerId) {
+        if (!db || !currentUserObj) return;
         const chatId = generateChatId(currentUserObj.uid, partnerId);
         const messagesRef = db.ref(`chat_rooms/${chatId}/messages`);
         messagesRef.on('value', (snap) => {
@@ -583,7 +606,7 @@
     }
 
     async function sendMessage(text) {
-        if (!currentChatWith || !text.trim()) return;
+        if (!currentChatWith || !text.trim() || !db || !currentUserObj) return;
         const chatId = generateChatId(currentUserObj.uid, currentChatWith);
         const newMsgRef = db.ref(`chat_rooms/${chatId}/messages`).push();
         const msgObj = {
@@ -593,7 +616,6 @@
             timestamp: Date.now()
         };
         await newMsgRef.set(msgObj);
-        // Обновить последнее сообщение в диалогах обоих пользователей
         const updates = {};
         updates[`messages/${currentUserObj.uid}/${currentChatWith}/lastMessage`] = text;
         updates[`messages/${currentUserObj.uid}/${currentChatWith}/updated`] = Date.now();
@@ -603,8 +625,8 @@
         document.getElementById('messageInput').value = '';
     }
 
-    // Загрузка рекомендаций (пользователи, кроме себя)
     async function loadSuggestions() {
+        if (!db || !currentUserObj) return;
         const usersRef = db.ref('users');
         usersRef.once('value', (snap) => {
             const users = [];
@@ -616,34 +638,39 @@
             users.slice(0, 5).forEach(u => {
                 const div = document.createElement('div');
                 div.className = 'user-list-item';
-                div.innerHTML = `<img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${u.name}</span>`;
+                div.innerHTML = `<img src="${u.avatar || 'https://via.placeholder.com/40'}" class="avatar-sm"><span>${escapeHtml(u.name)}</span>`;
                 div.onclick = () => openUserProfile(u.uid);
                 container.appendChild(div);
             });
         });
     }
 
-    // Avatar upload
     function setupAvatarUpload() {
         const fileInput = document.getElementById('avatarUploadInput');
         fileInput.addEventListener('change', async (e) => {
             const file = e.target.files[0];
-            if (!file) return;
+            if (!file || !storage || !currentUserObj) return;
             const storageRef = storage.ref(`avatars/${currentUserObj.uid}`);
             const uploadTask = storageRef.put(file);
             uploadTask.on('state_changed', null, null, async () => {
                 const url = await storageRef.getDownloadURL();
                 await db.ref(`users/${currentUserObj.uid}`).update({ avatarURL: url });
                 updateSidebar();
-                // обновить посты и везде
                 alert('Аватар обновлён!');
             });
         });
     }
 
-    function escapeHtml(str) { return str.replace(/[&<>]/g, function(m){if(m==='&') return '&amp;'; if(m==='<') return '&lt;'; if(m==='>') return '&gt;'; return m;}); }
+    function escapeHtml(str) { 
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m){
+            if(m==='&') return '&amp;'; 
+            if(m==='<') return '&lt;'; 
+            if(m==='>') return '&gt;'; 
+            return m;
+        }); 
+    }
 
-    // Регистрация нового пользователя
     async function register(email, password, name) {
         try {
             const cred = await auth.createUserWithEmailAndPassword(email, password);
@@ -655,9 +682,18 @@
         } catch(e) { throw e; }
     }
 
-    // Обработка входа и смены состояния
+    // Обработка ошибок аутентификации
+    function handleAuthError(error) {
+        if (error.code === 'auth/configuration-not-found') {
+            setupWarning.style.display = 'block';
+            return "Ошибка: Аутентификация не настроена в Firebase Console. Включите вход по Email/Password.";
+        }
+        return error.message;
+    }
+
     auth.onAuthStateChanged(async (user) => {
         if (user) {
+            setupWarning.style.display = 'none';
             const userDataSnap = await db.ref(`users/${user.uid}`).once('value');
             let userData = userDataSnap.val();
             if (!userData) {
@@ -672,30 +708,48 @@
             loadSuggestions();
             setupAvatarUpload();
             showView('feed');
-            // дополнительно слушаем диалоги при открытии вкладки
         } else {
             authSection.style.display = 'block';
             appContainer.style.display = 'none';
             currentUserObj = null;
+            currentChatWith = null;
         }
     });
 
-    // Event listeners UI
+    // Event listeners
     loginTab.onclick = () => { loginTab.classList.add('active'); registerTab.classList.remove('active'); loginFormDiv.style.display = 'block'; registerFormDiv.style.display = 'none'; };
     registerTab.onclick = () => { registerTab.classList.add('active'); loginTab.classList.remove('active'); loginFormDiv.style.display = 'none'; registerFormDiv.style.display = 'block'; };
+    
     document.getElementById('doLoginBtn').onclick = async () => {
         const email = document.getElementById('loginEmail').value;
         const pwd = document.getElementById('loginPassword').value;
-        try { await auth.signInWithEmailAndPassword(email, pwd); } catch(e) { document.getElementById('loginError').innerText = e.message; }
+        try { 
+            await auth.signInWithEmailAndPassword(email, pwd); 
+            document.getElementById('loginError').innerText = '';
+        } catch(e) { 
+            document.getElementById('loginError').innerText = handleAuthError(e);
+        }
     };
+    
     document.getElementById('doRegisterBtn').onclick = async () => {
         const name = document.getElementById('regName').value.trim();
         const email = document.getElementById('regEmail').value;
         const pwd = document.getElementById('regPassword').value;
-        try { await register(email, pwd, name); } catch(e) { document.getElementById('regError').innerText = e.message; }
+        if (pwd.length < 6) {
+            document.getElementById('regError').innerText = 'Пароль должен быть минимум 6 символов';
+            return;
+        }
+        try { 
+            await register(email, pwd, name); 
+            document.getElementById('regError').innerText = '';
+        } catch(e) { 
+            document.getElementById('regError').innerText = handleAuthError(e);
+        }
     };
+    
     document.getElementById('logoutBtn').onclick = () => auth.signOut();
     document.getElementById('submitPostBtn').onclick = async () => {
+        if (!currentUserObj) return;
         const text = document.getElementById('postText').value.trim();
         if (!text) return;
         const post = { authorId: currentUserObj.uid, authorName: currentUserObj.name, authorAvatar: currentUserObj.avatarURL, text, timestamp: Date.now() };
@@ -711,4 +765,3 @@
 </script>
 </body>
 </html>
-```
