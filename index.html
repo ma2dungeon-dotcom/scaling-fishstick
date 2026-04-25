@@ -1,677 +1,1307 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>VK Clone 2.0 | Firebase</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>MA2Dungeon Dash 🔷</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+      color: #fff;
+      overflow-x: hidden;
+      min-height: 100vh;
+    }
     
-    <!-- Firebase SDKs -->
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-storage-compat.js"></script>
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+    }
     
-    <!-- Icons & Fonts -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
+    header {
+      text-align: center;
+      padding: 20px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      margin-bottom: 20px;
+      backdrop-filter: blur(10px);
+    }
     
-    <style>
-        :root {
-            --vk-blue: #0077FF;
-            --vk-bg: #edeef0;
-            --vk-card: #ffffff;
-            --vk-text: #000000;
-            --vk-gray: #818c99;
-            --vk-border: #dce1e6;
-            --vk-hover: #f5f6f8;
-            --vk-red: #ff3347;
-            --vk-green: #4bb34b;
-        }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Roboto', sans-serif; }
-        body { background: var(--vk-bg); color: var(--vk-text); height: 100vh; overflow-x: hidden; }
-        
-        /* ===== UTILS ===== */
-        .hidden { display: none !important; }
-        .btn { cursor: pointer; border: none; outline: none; transition: 0.2s; }
-        .btn-primary { background: var(--vk-blue); color: white; padding: 8px 16px; border-radius: 8px; font-weight: 500; }
-        .btn-primary:hover { opacity: 0.9; }
-        .btn-secondary { background: var(--vk-hover); color: var(--vk-blue); padding: 8px 16px; border-radius: 8px; font-weight: 500; }
-        .btn-secondary:hover { background: #ebf0f6; }
-        .btn-danger { background: var(--vk-red); color: white; padding: 8px 16px; border-radius: 8px; }
-        
-        /* ===== AUTH SCREEN ===== */
-        #auth-screen { display: flex; align-items: center; justify-content: center; height: 100vh; background: white; }
-        .auth-container { width: 100%; max-width: 400px; padding: 40px; text-align: center; }
-        .auth-logo { font-size: 40px; color: var(--vk-blue); margin-bottom: 20px; }
-        .auth-input { width: 100%; padding: 12px; margin-bottom: 12px; border: 1px solid var(--vk-border); border-radius: 8px; background: var(--vk-bg); font-size: 16px; }
-        .auth-input:focus { border-color: var(--vk-blue); background: white; }
-        .auth-error { color: var(--vk-red); font-size: 14px; margin-bottom: 12px; min-height: 20px; }
-        /* ===== APP LAYOUT ===== */
-        #app-screen { display: none; min-height: 100vh; }
-        
-        /* Header */
-        header { background: var(--vk-card); height: 48px; position: fixed; top: 0; width: 100%; z-index: 100; border-bottom: 1px solid var(--vk-border); display: flex; align-items: center; justify-content: center; }
-        .header-inner { width: 100%; max-width: 1080px; padding: 0 15px; display: flex; justify-content: space-between; align-items: center; }
-        .logo-icon { color: var(--vk-blue); font-size: 24px; cursor: pointer; }
-        .search-bar { background: var(--vk-bg); padding: 6px 12px; border-radius: 8px; color: var(--vk-gray); display: flex; align-items: center; gap: 8px; width: 200px; }
-        .header-profile { display: flex; align-items: center; gap: 10px; cursor: pointer; }
-        .header-avatar { width: 32px; height: 32px; border-radius: 50%; object-fit: cover; }
-
-        /* Main Grid */
-        .main-wrapper { max-width: 1080px; margin: 60px auto 20px; padding: 0 15px; display: grid; grid-template-columns: 180px 1fr 280px; gap: 15px; }
-        
-        /* Sidebar Left */
-        .sidebar-nav { position: sticky; top: 60px; }
-        .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 6px; color: var(--vk-text); text-decoration: none; border-radius: 4px; cursor: pointer; }
-        .nav-item:hover { background: rgba(0,0,0,0.05); }
-        .nav-item.active { color: var(--vk-blue); font-weight: 500; background: rgba(0,119,255,0.05); }
-        .nav-item i { width: 20px; text-align: center; color: var(--vk-blue); }
-
-        /* Content Area */
-        .content-area { min-height: 500px; }
-        .card { background: var(--vk-card); border-radius: 12px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); margin-bottom: 15px; overflow: hidden; }
-        
-        /* Profile Header */
-        .profile-header { padding: 20px; display: flex; gap: 20px; align-items: flex-start; }
-        .profile-photo-container { position: relative; width: 150px; height: 150px; flex-shrink: 0; }
-        .profile-photo { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 4px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.15); }
-        .photo-upload-overlay { position: absolute; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); color: white; width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-        .profile-details h1 { font-size: 22px; margin-bottom: 5px; }
-        .profile-status { color: var(--vk-gray); font-size: 14px; margin-bottom: 15px; }
-        .profile-actions { display: flex; gap: 10px; }
-        
-        /* Posts */
-        .create-post { padding: 15px; }
-        .post-input { width: 100%; border: none; resize: none; outline: none; font-size: 15px; margin-bottom: 10px; font-family: inherit; }
-        .post-actions-bar { display: flex; justify-content: space-between; align-items: center; border-top: 1px solid var(--vk-border); padding-top: 10px; }
-        
-        .post-item { padding: 15px; border-bottom: 1px solid var(--vk-border); }
-        .post-item:last-child { border-bottom: none; }
-        .post-head { display: flex; gap: 12px; margin-bottom: 10px; }
-        .post-avatar { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; cursor: pointer; }
-        .post-meta { flex: 1; }
-        .post-author { font-weight: 500; font-size: 15px; color: var(--vk-blue); cursor: pointer; }
-        .post-date { font-size: 12px; color: var(--vk-gray); }
-        .post-text { font-size: 15px; line-height: 1.5; white-space: pre-wrap; margin-bottom: 10px; }
-        .post-footer { display: flex; gap: 20px; color: var(--vk-gray); font-size: 14px; }
-        .action-btn { cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s; }
-        .action-btn:hover { color: var(--vk-blue); }        .action-btn.liked { color: var(--vk-red); }
-
-        /* Friends List */
-        .friend-row { display: flex; align-items: center; justify-content: space-between; padding: 10px 15px; border-bottom: 1px solid var(--vk-border); }
-        .friend-info { display: flex; align-items: center; gap: 10px; }
-        .friend-img { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-        
-        /* Music Player */
-        .track-row { display: flex; align-items: center; padding: 10px 15px; cursor: pointer; transition: 0.2s; }
-        .track-row:hover { background: var(--vk-hover); }
-        .track-play { width: 30px; color: var(--vk-blue); margin-right: 10px; }
-        .track-info { flex: 1; }
-        .track-title { font-weight: 500; font-size: 14px; }
-        .track-artist { font-size: 13px; color: var(--vk-gray); }
-        .track-duration { font-size: 13px; color: var(--vk-gray); }
-        .music-player-fixed { position: fixed; bottom: 0; left: 0; width: 100%; background: var(--vk-card); border-top: 1px solid var(--vk-border); padding: 10px 20px; display: flex; align-items: center; gap: 15px; transform: translateY(100%); transition: 0.3s; z-index: 200; }
-        .music-player-fixed.active { transform: translateY(0); }
-
-        /* Chat */
-        .chat-list { height: 500px; overflow-y: auto; padding: 15px; display: flex; flex-direction: column; gap: 10px; }
-        .message { max-width: 70%; padding: 8px 12px; border-radius: 12px; font-size: 14px; line-height: 1.4; }
-        .msg-in { background: var(--vk-hover); align-self: flex-start; border-bottom-left-radius: 2px; }
-        .msg-out { background: var(--vk-blue); color: white; align-self: flex-end; border-bottom-right-radius: 2px; }
-        .chat-input-area { padding: 15px; border-top: 1px solid var(--vk-border); display: flex; gap: 10px; }
-
-        /* Settings */
-        .settings-section { padding: 20px; }
-        .setting-row { margin-bottom: 20px; }
-        .setting-label { display: block; margin-bottom: 8px; font-weight: 500; font-size: 14px; color: var(--vk-gray); }
-
-        /* Responsive */
-        @media (max-width: 900px) {
-            .main-wrapper { grid-template-columns: 1fr; }
-            .sidebar-nav, .right-sidebar { display: none; }
-            /* Mobile Nav Bottom could be added here */
-        }
-    </style>
-</head>
+    h1 {
+      font-size: 2.5rem;
+      background: linear-gradient(45deg, #00d4ff, #7b2cbf, #ff006e);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 20px rgba(0,212,255,0.5);
+      margin-bottom: 10px;
+    }
+    
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 20px 0;
+    }
+    
+    .nav-btn {
+      padding: 12px 24px;      background: linear-gradient(45deg, #667eea, #764ba2);
+      border: none;
+      border-radius: 25px;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .nav-btn:hover, .nav-btn.active {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+      background: linear-gradient(45deg, #764ba2, #667eea);
+    }
+    
+    .screen {
+      display: none;
+      animation: fadeIn 0.4s ease;
+    }
+    
+    .screen.active {
+      display: block;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Game Canvas */
+    #gameCanvas {
+      display: block;
+      margin: 20px auto;
+      background: linear-gradient(to bottom, #1e3c72, #2a5298);
+      border-radius: 10px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+      border: 3px solid #4a69bd;
+    }
+    
+    .game-controls {
+      text-align: center;
+      margin: 15px 0;
+    }
+    
+    .game-btn {
+      padding: 15px 40px;
+      font-size: 1.2rem;
+      background: linear-gradient(45deg, #00d4ff, #0099ff);
+      border: none;      border-radius: 30px;
+      color: white;
+      font-weight: bold;
+      cursor: pointer;
+      margin: 5px;
+      transition: transform 0.2s;
+    }
+    
+    .game-btn:hover {
+      transform: scale(1.05);
+    }
+    
+    .game-btn.danger {
+      background: linear-gradient(45deg, #ff416c, #ff4b2b);
+    }
+    
+    /* Skins Grid */
+    .skins-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 15px;
+      padding: 20px;
+    }
+    
+    .skin-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 15px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: 3px solid transparent;
+    }
+    
+    .skin-card:hover, .skin-card.selected {
+      border-color: #00d4ff;
+      transform: translateY(-5px);
+      background: rgba(0,212,255,0.15);
+    }
+    
+    .skin-preview {
+      width: 80px;
+      height: 80px;
+      margin: 0 auto 10px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      font-weight: bold;    }
+    
+    /* Editor */
+    .editor-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      gap: 20px;
+      height: 600px;
+    }
+    
+    .editor-sidebar {
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      padding: 15px;
+      overflow-y: auto;
+    }
+    
+    .editor-tools {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    
+    .tool-btn {
+      padding: 10px;
+      background: rgba(255,255,255,0.2);
+      border: 2px solid #4a69bd;
+      border-radius: 10px;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s;
+      font-size: 0.9rem;
+    }
+    
+    .tool-btn:hover, .tool-btn.active {
+      background: #00d4ff;
+      border-color: #00d4ff;
+      color: #1a1a2e;
+    }
+    
+    #editorCanvas {
+      background: linear-gradient(to bottom, #2c3e50, #4a69bd);
+      border-radius: 10px;
+      cursor: crosshair;
+      border: 3px solid #4a69bd;
+    }
+    
+    .editor-actions {
+      display: flex;      gap: 10px;
+      margin-top: 15px;
+      flex-wrap: wrap;
+    }
+    
+    /* Levels List */
+    .levels-list {
+      display: grid;
+      gap: 15px;
+      max-height: 500px;
+      overflow-y: auto;
+      padding: 10px;
+    }
+    
+    .level-card {
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
+      padding: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .level-card:hover {
+      background: rgba(0,212,255,0.2);
+      transform: translateX(5px);
+    }
+    
+    .level-info h4 {
+      margin-bottom: 5px;
+      color: #00d4ff;
+    }
+    
+    .level-stats {
+      font-size: 0.9rem;
+      opacity: 0.8;
+    }
+    
+    .level-actions button {
+      margin-left: 8px;
+      padding: 8px 15px;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    
+    .btn-play { background: #00d4ff; color: #1a1a2e; }    .btn-edit { background: #7b2cbf; color: white; }
+    .btn-delete { background: #ff416c; color: white; }
+    
+    /* Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    
+    .modal.active {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: linear-gradient(135deg, #1a1a2e, #16213e);
+      padding: 30px;
+      border-radius: 20px;
+      max-width: 500px;
+      width: 90%;
+      text-align: center;
+      border: 2px solid #00d4ff;
+      animation: modalSlide 0.3s ease;
+    }
+    
+    @keyframes modalSlide {
+      from { transform: translateY(-50px); opacity: 0; }
+      to { transform: translateY(0); opacity: 1; }
+    }
+    
+    .modal input, .modal textarea {
+      width: 100%;
+      padding: 12px;
+      margin: 10px 0;
+      border: 2px solid #4a69bd;
+      border-radius: 10px;
+      background: rgba(255,255,255,0.1);
+      color: white;
+      font-size: 1rem;
+    }
+    
+    .modal input:focus, .modal textarea:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }    
+    /* Score & Stats */
+    .game-stats {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin: 15px 0;
+      font-size: 1.1rem;
+    }
+    
+    .stat {
+      background: rgba(255,255,255,0.15);
+      padding: 10px 20px;
+      border-radius: 25px;
+      min-width: 120px;
+    }
+    
+    .stat-value {
+      font-size: 1.5rem;
+      font-weight: bold;
+      color: #00d4ff;
+    }
+    
+    /* Responsive */
+    @media (max-width: 768px) {
+      .editor-container {
+        grid-template-columns: 1fr;
+        height: auto;
+      }
+      #editorCanvas {
+        height: 400px;
+      }
+      h1 { font-size: 2rem; }
+    }
+    
+    /* Particle effect */
+    .particle {
+      position: absolute;
+      pointer-events: none;
+      border-radius: 50%;
+      animation: particleFade 1s forwards;
+    }
+    
+    @keyframes particleFade {
+      to {
+        opacity: 0;
+        transform: translate(var(--tx), var(--ty)) scale(0);
+      }
+    }
+  </style></head>
 <body>
-
-    <!-- AUTH SCREEN -->
-    <div id="auth-screen">
-        <div class="auth-container">
-            <div class="auth-logo"><i class="fab fa-vk"></i></div>
-            <h2 style="margin-bottom: 20px;">ВКонтакте (Клон)</h2>
-            <div id="auth-error" class="auth-error"></div>
-            
-            <div id="login-block">
-                <input type="email" id="l-email" class="auth-input" placeholder="Email">
-                <input type="password" id="l-pass" class="auth-input" placeholder="Пароль">                <button class="btn btn-primary" style="width: 100%" onclick="handleLogin()">Войти</button>
-                <p style="margin-top: 15px; font-size: 14px; color: var(--vk-gray);">
-                    Нет аккаунта? <a href="#" style="color: var(--vk-blue)" onclick="toggleAuth('signup')">Зарегистрироваться</a>
-                </p>
-            </div>
-
-            <div id="signup-block" class="hidden">
-                <input type="text" id="s-name" class="auth-input" placeholder="Имя и Фамилия">
-                <input type="email" id="s-email" class="auth-input" placeholder="Email">
-                <input type="password" id="s-pass" class="auth-input" placeholder="Пароль (мин. 6 символов)">
-                <button class="btn btn-primary" style="width: 100%" onclick="handleSignup()">Создать аккаунт</button>
-                <p style="margin-top: 15px; font-size: 14px; color: var(--vk-gray);">
-                    Есть аккаунт? <a href="#" style="color: var(--vk-blue)" onclick="toggleAuth('login')">Войти</a>
-                </p>
-            </div>
-        </div>
+  <div class="container">
+    <header>
+      <h1>🔷 MA2Dungeon Dash</h1>
+      <p>Пародия на Geometry Dash с редактором уровней и скинами!</p>
+    </header>
+    
+    <!-- Navigation -->
+    <div class="nav-tabs">
+      <button class="nav-btn active" data-screen="game">🎮 Игра</button>
+      <button class="nav-btn" data-screen="skins">🎨 Скины</button>
+      <button class="nav-btn" data-screen="editor">✏️ Редактор</button>
+      <button class="nav-btn" data-screen="levels">📁 Мои уровни</button>
     </div>
-
-    <!-- APP SCREEN -->
-    <div id="app-screen">
-        <header>
-            <div class="header-inner">
-                <i class="fab fa-vk logo-icon" onclick="navigate('feed')"></i>
-                <div class="search-bar">
-                    <i class="fas fa-search"></i>
-                    <span>Поиск</span>
-                </div>
-                <div class="header-profile" onclick="navigate('profile')">
-                    <img id="hdr-avatar" src="" class="header-avatar">
-                    <span id="hdr-name" style="font-weight: 500; font-size: 14px;">User</span>
-                </div>
-            </div>
-        </header>
-
-        <div class="main-wrapper">
-            <!-- LEFT SIDEBAR -->
-            <aside class="sidebar-nav">
-                <div class="nav-item active" onclick="navigate('feed')" id="nav-feed"><i class="fas fa-newspaper"></i> Новости</div>
-                <div class="nav-item" onclick="navigate('profile')" id="nav-profile"><i class="fas fa-user"></i> Моя страница</div>
-                <div class="nav-item" onclick="navigate('messages')" id="nav-messages"><i class="fas fa-comment"></i> Мессенджер</div>
-                <div class="nav-item" onclick="navigate('friends')" id="nav-friends"><i class="fas fa-user-friends"></i> Друзья</div>
-                <div class="nav-item" onclick="navigate('music')" id="nav-music"><i class="fas fa-music"></i> Музыка</div>
-                <div class="nav-item" onclick="navigate('settings')" id="nav-settings"><i class="fas fa-cog"></i> Настройки</div>
-                <div class="nav-item" onclick="handleLogout()" style="margin-top: 20px; color: var(--vk-red);"><i class="fas fa-sign-out-alt" style="color: var(--vk-red)"></i> Выйти</div>
-            </aside>
-
-            <!-- MAIN CONTENT -->
-            <main class="content-area" id="main-content">
-                <!-- Dynamic Content Injected Here -->
-            </main>
-            <!-- RIGHT SIDEBAR (Recommendations) -->
-            <aside class="right-sidebar">
-                <div class="card" style="padding: 15px;">
-                    <h4 style="margin-bottom: 10px; color: var(--vk-gray);">Интересные страницы</h4>
-                    <div id="suggestions-list">
-                        <!-- Populated by JS -->
-                    </div>
-                </div>
-            </aside>
-        </div>
+    
+    <!-- Game Screen -->
+    <div id="game" class="screen active">
+      <canvas id="gameCanvas" width="900" height="400"></canvas>
+      
+      <div class="game-stats">
+        <div class="stat">Счёт: <span id="score" class="stat-value">0</span></div>
+        <div class="stat">Рекорд: <span id="highScore" class="stat-value">0</span></div>
+        <div class="stat">Скин: <span id="currentSkin" class="stat-value">🔷</span></div>
+      </div>
+      
+      <div class="game-controls">
+        <button class="game-btn" id="startBtn">▶️ Начать</button>
+        <button class="game-btn danger" id="resetBtn">🔄 Сброс</button>
+        <button class="game-btn" id="saveScoreBtn">💾 Сохранить счёт</button>
+      </div>
+      
+      <p style="text-align:center; opacity:0.8; margin-top:10px;">
+        Управление: <strong>Пробел</strong> / <strong>Клик</strong> / <strong>Тап</strong> для прыжка
+      </p>
     </div>
-
-    <!-- MUSIC PLAYER BAR -->
-    <div class="music-player-fixed" id="music-player">
-        <i class="fas fa-step-backward btn"></i>
-        <i class="fas fa-pause-circle btn" style="font-size: 32px; color: var(--vk-blue);" onclick="togglePlayPause()"></i>
-        <i class="fas fa-step-forward btn"></i>
-        <div style="flex: 1;">
-            <div id="player-title" style="font-weight: 500; font-size: 14px;">Track Title</div>
-            <div id="player-artist" style="font-size: 12px; color: var(--vk-gray);">Artist</div>
-        </div>
-        <i class="fas fa-volume-up" style="color: var(--vk-gray);"></i>
+    
+    <!-- Skins Screen -->
+    <div id="skins" class="screen">
+      <h2 style="text-align:center; margin-bottom:20px;">🎨 Выберите скин</h2>
+      <div class="skins-grid" id="skinsGrid">
+        <!-- Skins will be generated by JS -->
+      </div>
+      <p style="text-align:center; margin-top:20px; opacity:0.8;">
+        Нажмите на скин, чтобы выбрать его для игры
+      </p>
     </div>
-
-    <script>
-        // --- CONFIG ---
-        const firebaseConfig = {
-            apiKey: "AIzaSyCPeeNo5x-sa2XeCHY13FurZ_Xb1jkEoyI",
-            authDomain: "ma2dungeon-4019c.firebaseapp.com",
-            databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com",
-            projectId: "ma2dungeon-4019c",
-            storageBucket: "ma2dungeon-4019c.firebasestorage.app",
-            messagingSenderId: "807177135718",
-            appId: "1:807177135718:web:3701e2061715842a046fa7"
+    
+    <!-- Editor Screen -->
+    <div id="editor" class="screen">      <h2 style="text-align:center; margin-bottom:15px;">✏️ Редактор уровней</h2>
+      
+      <div class="editor-container">
+        <div class="editor-sidebar">
+          <h4>🧱 Объекты</h4>
+          <div class="editor-tools">
+            <button class="tool-btn active" data-tool="spike">🔺 Шип</button>
+            <button class="tool-btn" data-tool="block">🟦 Блок</button>
+            <button class="tool-btn" data-tool="coin">🪙 Монета</button>
+            <button class="tool-btn" data-tool="portal">🌀 Портал</button>
+            <button class="tool-btn" data-tool="jump">⬆️ Прыжок</button>
+            <button class="tool-btn" data-tool="erase">🗑️ Удалить</button>
+          </div>
+          
+          <h4 style="margin-top:20px;">⚙️ Настройки</h4>
+          <label>
+            <small>Сложность:</small>
+            <select id="difficulty" style="width:100%; padding:8px; margin:5px 0; border-radius:8px; background:#2a3f5f; color:white; border:none;">
+              <option value="easy">🟢 Лёгкий</option>
+              <option value="medium" selected>🟡 Средний</option>
+              <option value="hard">🔴 Сложный</option>
+              <option value="extreme">💀 Экстрим</option>
+            </select>
+          </label>
+          
+          <div class="editor-actions">
+            <button class="game-btn" id="saveLevelBtn" style="flex:1;">💾 Сохранить</button>
+            <button class="game-btn" id="testLevelBtn" style="flex:1;">🎮 Тест</button>
+          </div>
+          
+          <div style="margin-top:20px; padding:10px; background:rgba(255,255,255,0.1); border-radius:10px;">
+            <small>
+              <strong>Подсказки:</strong><br>
+              • Клик — разместить объект<br>
+              • ПКМ — удалить объект<br>
+              • Колесо — масштаб (скоро)<br>
+              • Ctrl+Z — отмена (скоро)
+            </small>
+          </div>
+        </div>
+        
+        <canvas id="editorCanvas" width="700" height="500"></canvas>
+      </div>
+      
+      <div style="text-align:center; margin-top:15px;">
+        <input type="text" id="levelName" placeholder="Название уровня..." style="padding:10px 15px; width:300px; border-radius:25px; border:2px solid #4a69bd; background:rgba(255,255,255,0.1); color:white;">
+        <button class="game-btn" id="exportLevelBtn" style="margin-left:10px;">📤 Экспорт</button>
+      </div>
+    </div>
+        <!-- Levels Screen -->
+    <div id="levels" class="screen">
+      <h2 style="text-align:center; margin-bottom:20px;">📁 Мои уровни</h2>
+      
+      <div style="display:flex; justify-content:center; gap:10px; margin-bottom:20px; flex-wrap:wrap;">
+        <button class="game-btn" id="refreshLevelsBtn">🔄 Обновить</button>
+        <button class="game-btn" id="createNewLevelBtn">➕ Новый уровень</button>
+        <button class="game-btn" id="importLevelBtn">📥 Импорт</button>
+      </div>
+      
+      <div class="levels-list" id="levelsList">
+        <!-- Levels will be loaded here -->
+        <p style="text-align:center; opacity:0.7; padding:20px;">Загрузка уровней...</p>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Modal for level name -->
+  <div class="modal" id="levelModal">
+    <div class="modal-content">
+      <h3>💾 Сохранить уровень</h3>
+      <input type="text" id="modalLevelName" placeholder="Название уровня *">
+      <textarea id="levelDescription" placeholder="Описание (необязательно)" rows="3"></textarea>
+      <div style="display:flex; gap:10px; margin-top:15px; justify-content:center;">
+        <button class="game-btn" id="confirmSaveBtn">✅ Сохранить</button>
+        <button class="game-btn danger" id="cancelSaveBtn">❌ Отмена</button>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+  
+  <script>
+    // ============================================
+    // ⚠️ ВАЖНО: В продакшене используйте Firebase Security Rules!
+    // ============================================
+    
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCPeeNo5x-sa2XeCHY13FurZ_Xb1jkEoyI",
+      authDomain: "ma2dungeon-4019c.firebaseapp.com",
+      databaseURL: "https://ma2dungeon-4019c-default-rtdb.firebaseio.com",
+      projectId: "ma2dungeon-4019c",
+      storageBucket: "ma2dungeon-4019c.firebasestorage.app",
+      messagingSenderId: "807177135718",
+      appId: "1:807177135718:web:3701e2061715842a046fa7"
+    };
+        // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+    
+    // ============================================
+    // 🎮 GAME ENGINE
+    // ============================================
+    
+    class Game {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.reset();
+        this.loadSkin();
+        this.loadHighScore();
+        this.setupControls();
+        this.gameLoop = this.gameLoop.bind(this);
+        this.isRunning = false;
+      }
+      
+      reset() {
+        this.player = {
+          x: 100,
+          y: this.canvas.height - 60,
+          width: 40,
+          height: 40,
+          velocityY: 0,
+          isJumping: false,
+          rotation: 0
         };
-
-        firebase.initializeApp(firebaseConfig);
-        const auth = firebase.auth();
-        const db = firebase.database();
-        const storage = firebase.storage();
-
-        let currentUser = null;
-        let currentRoute = 'feed';
-        let audioPlayer = new Audio();
-        let isPlaying = false;
-
-        // --- AUTH LOGIC ---
-        function toggleAuth(view) {
-            document.getElementById('login-block').classList.toggle('hidden', view !== 'login');            document.getElementById('signup-block').classList.toggle('hidden', view !== 'signup');
-            document.getElementById('auth-error').textContent = '';
+        this.obstacles = [];
+        this.coins = [];
+        this.particles = [];
+        this.score = 0;
+        this.gameSpeed = 6;
+        this.gravity = 0.6;
+        this.jumpForce = -14;
+        this.groundY = this.canvas.height - 20;
+        this.spawnTimer = 0;
+        this.isGameOver = false;
+        this.cameraX = 0;
+      }
+      
+      loadSkin() {
+        const savedSkin = localStorage.getItem('selectedSkin') || '🔷';
+        this.playerSkin = savedSkin;
+        document.getElementById('currentSkin').textContent = savedSkin;
+      }
+      
+      setSkin(skin) {        this.playerSkin = skin;
+        localStorage.setItem('selectedSkin', skin);
+        document.getElementById('currentSkin').textContent = skin;
+      }
+      
+      loadHighScore() {
+        const saved = localStorage.getItem('dashHighScore');
+        if (saved) {
+          document.getElementById('highScore').textContent = saved;
         }
-
-        async function handleSignup() {
-            const name = document.getElementById('s-name').value;
-            const email = document.getElementById('s-email').value;
-            const pass = document.getElementById('s-pass').value;
-            const errEl = document.getElementById('auth-error');
-
-            if(!name || !email || !pass) return errEl.textContent = "Заполните все поля";
-            
-            try {
-                const cred = await auth.createUserWithEmailAndPassword(email, pass);
-                await cred.user.updateProfile({ displayName: name });
-                
-                // Create DB Entry
-                const avatarUrl = `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&background=random&size=200`;
-                await db.ref('users/' + cred.user.uid).set({
-                    name: name,
-                    email: email,
-                    avatar: avatarUrl,
-                    bio: "Установите статус...",
-                    joined: Date.now()
-                });
-            } catch(e) { errEl.textContent = e.message; }
+      }
+      
+      saveHighScore() {
+        const current = parseInt(document.getElementById('highScore').textContent) || 0;
+        if (this.score > current) {
+          localStorage.setItem('dashHighScore', this.score);
+          document.getElementById('highScore').textContent = this.score;
+          return true;
         }
-
-        async function handleLogin() {
-            const email = document.getElementById('l-email').value;
-            const pass = document.getElementById('l-pass').value;
-            try {
-                await auth.signInWithEmailAndPassword(email, pass);
-            } catch(e) { document.getElementById('auth-error').textContent = "Ошибка входа: " + e.message; }
-        }
-
-        function handleLogout() {
-            auth.signOut();
-            location.reload();
-        }
-
-        auth.onAuthStateChanged(user => {
-            if(user) {
-                currentUser = user;
-                document.getElementById('auth-screen').classList.add('hidden');
-                document.getElementById('app-screen').style.display = 'block'; // Use style to override hidden
-                updateHeader();
-                navigate('feed');
-                loadSuggestions();
-            } else {                document.getElementById('auth-screen').classList.remove('hidden');
-                document.getElementById('app-screen').style.display = 'none';
-            }
+        return false;
+      }
+      
+      saveScoreToFirebase() {
+        const userId = localStorage.getItem('userId') || 'guest_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('userId', userId);
+        
+        const scoreData = {
+          score: this.score,
+          skin: this.playerSkin,
+          timestamp: firebase.database.ServerValue.TIMESTAMP,
+          userAgent: navigator.userAgent.substring(0, 100)
+        };
+        
+        database.ref('scores/' + userId).update(scoreData)
+          .then(() => {
+            alert('✅ Счёт сохранён в облаке!');
+          })
+          .catch(error => {
+            console.error('Ошибка сохранения:', error);
+            alert('⚠️ Не удалось сохранить в облако. Проверьте правила Firebase.');
+          });
+      }
+      
+      setupControls() {
+        const jump = () => {
+          if (!this.isRunning && !this.isGameOver) {
+            this.start();
+            return;
+          }
+          if (!this.player.isJumping && !this.isGameOver) {            this.player.velocityY = this.jumpForce;
+            this.player.isJumping = true;
+            this.createParticles(this.player.x + 20, this.player.y + 40, '#00d4ff', 8);
+          }
+        };
+        
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space' || e.key === ' ') {
+            e.preventDefault();
+            jump();
+          }
         });
-
-        function updateHeader() {
-            if(!currentUser) return;
-            db.ref('users/' + currentUser.uid).once('value', snap => {
-                const data = snap.val();
-                if(data) {
-                    document.getElementById('hdr-name').textContent = data.name;
-                    document.getElementById('hdr-avatar').src = data.avatar;
-                }
-            });
+        
+        this.canvas.addEventListener('click', jump);
+        this.canvas.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          jump();
+        });
+        
+        document.getElementById('startBtn').onclick = () => {
+          if (this.isGameOver) this.reset();
+          this.start();
+        };
+        
+        document.getElementById('resetBtn').onclick = () => {
+          this.reset();
+          this.isRunning = false;
+          this.isGameOver = false;
+          this.draw();
+        };
+        
+        document.getElementById('saveScoreBtn').onclick = () => {
+          this.saveScoreToFirebase();
+        };
+      }
+      
+      start() {
+        if (this.isRunning) return;
+        this.isRunning = true;
+        this.isGameOver = false;
+        requestAnimationFrame(this.gameLoop);
+      }
+      
+      createParticles(x, y, color, count) {
+        for (let i = 0; i < count; i++) {
+          this.particles.push({
+            x, y,
+            vx: (Math.random() - 0.5) * 8,
+            vy: (Math.random() - 0.5) * 8,
+            life: 1,            color,
+            size: Math.random() * 6 + 2
+          });
         }
-
-        // --- NAVIGATION & ROUTING ---
-        function navigate(route) {
-            currentRoute = route;
-            
-            // Update Sidebar Active State
-            document.querySelectorAll('.nav-item').forEach(el => el.classList.remove('active'));
-            const activeNav = document.getElementById('nav-' + route);
-            if(activeNav) activeNav.classList.add('active');
-
-            const content = document.getElementById('main-content');
-            content.innerHTML = '<div style="padding:20px; text-align:center; color:#818c99"><i class="fas fa-spinner fa-spin fa-2x"></i></div>';
-
-            switch(route) {
-                case 'feed': renderFeed(); break;
-                case 'profile': renderProfile(currentUser.uid); break;
-                case 'friends': renderFriends(); break;
-                case 'music': renderMusic(); break;
-                case 'messages': renderMessages(); break;
-                case 'settings': renderSettings(); break;
+      }
+      
+      spawnObstacle() {
+        const types = ['spike', 'block', 'coin'];
+        const type = types[Math.floor(Math.random() * types.length)];
+        const obstacle = {
+          x: this.canvas.width + 50,
+          y: type === 'coin' ? this.groundY - 60 - Math.random() * 80 : this.groundY - 30,
+          width: type === 'coin' ? 25 : 30,
+          height: type === 'coin' ? 25 : 30,
+          type,
+          passed: false
+        };
+        
+        if (type === 'spike' || type === 'block') {
+          this.obstacles.push(obstacle);
+        } else {
+          this.coins.push(obstacle);
+        }
+      }
+      
+      update() {
+        if (!this.isRunning || this.isGameOver) return;
+        
+        // Player physics
+        this.player.velocityY += this.gravity;
+        this.player.y += this.player.velocityY;
+        
+        if (this.player.y >= this.groundY - this.player.height) {
+          this.player.y = this.groundY - this.player.height;
+          this.player.velocityY = 0;
+          this.player.isJumping = false;
+        }
+        
+        // Rotation effect
+        if (this.player.isJumping) {
+          this.player.rotation += 0.15;
+        } else {
+          this.player.rotation = Math.round(this.player.rotation / (Math.PI/2)) * (Math.PI/2);
+        }
+        
+        // Spawn obstacles
+        this.spawnTimer++;
+        if (this.spawnTimer > 80 - Math.min(60, this.score)) {
+          this.spawnObstacle();
+          this.spawnTimer = 0;        }
+        
+        // Update obstacles
+        this.obstacles.forEach(obs => {
+          obs.x -= this.gameSpeed;
+          
+          // Collision detection
+          if (this.checkCollision(this.player, obs) && obs.type === 'spike') {
+            this.gameOver();
+          }
+          
+          // Score
+          if (!obs.passed && obs.x + obs.width < this.player.x) {
+            obs.passed = true;
+            this.score += 10;
+            this.createParticles(obs.x, obs.y, '#00ff88', 5);
+          }
+        });
+        
+        // Update coins
+        this.coins.forEach((coin, index) => {
+          coin.x -= this.gameSpeed;
+          
+          if (this.checkCollision(this.player, coin)) {
+            this.score += 25;
+            this.createParticles(coin.x, coin.y, '#ffd700', 10);
+            this.coins.splice(index, 1);
+          }
+          
+          if (coin.x < -50) {
+            this.coins.splice(index, 1);
+          }
+        });
+        
+        // Remove off-screen obstacles
+        this.obstacles = this.obstacles.filter(obs => obs.x > -50);
+        
+        // Update particles
+        this.particles.forEach((p, i) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.life -= 0.02;
+          p.vy += 0.2;
+          if (p.life <= 0) this.particles.splice(i, 1);
+        });
+        
+        // Update UI
+        document.getElementById('score').textContent = this.score;
+        
+        // Increase difficulty        if (this.score > 0 && this.score % 100 === 0) {
+          this.gameSpeed += 0.3;
+        }
+      }
+      
+      checkCollision(a, b) {
+        return a.x < b.x + b.width - 10 &&
+               a.x + a.width - 10 > b.x &&
+               a.y < b.y + b.height - 10 &&
+               a.y + a.height - 10 > b.y;
+      }
+      
+      gameOver() {
+        this.isRunning = false;
+        this.isGameOver = true;
+        this.saveHighScore();
+        this.createParticles(this.player.x + 20, this.player.y + 20, '#ff416c', 20);
+        
+        setTimeout(() => {
+          if (confirm(`💥 Игра окончена!\nСчёт: ${this.score}\n\nНачать заново?`)) {
+            this.reset();
+            this.start();
+          }
+        }, 100);
+      }
+      
+      draw() {
+        // Clear canvas
+        this.ctx.fillStyle = '#1e3c72';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Draw background stars
+        this.ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        for (let i = 0; i < 50; i++) {
+          const x = (i * 37 + this.cameraX * 0.1) % this.canvas.width;
+          const y = (i * 23) % (this.canvas.height - 100);
+          this.ctx.beginPath();
+          this.ctx.arc(x, y, Math.random() * 1.5 + 0.5, 0, Math.PI * 2);
+          this.ctx.fill();
+        }
+        
+        // Draw ground
+        this.ctx.fillStyle = '#2a5298';
+        this.ctx.fillRect(0, this.groundY, this.canvas.width, this.canvas.height - this.groundY);
+        this.ctx.fillStyle = '#4a69bd';
+        for (let i = 0; i < this.canvas.width; i += 40) {
+          this.ctx.fillRect(i - (this.cameraX % 40), this.groundY, 30, 5);
+        }
+        
+        // Draw coins        this.ctx.font = '25px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.coins.forEach(coin => {
+          this.ctx.fillText('🪙', coin.x, coin.y + 12);
+        });
+        
+        // Draw obstacles
+        this.obstacles.forEach(obs => {
+          if (obs.type === 'spike') {
+            this.ctx.fillStyle = '#ff416c';
+            this.ctx.beginPath();
+            this.ctx.moveTo(obs.x, obs.y + obs.height);
+            this.ctx.lineTo(obs.x + obs.width/2, obs.y);
+            this.ctx.lineTo(obs.x + obs.width, obs.y + obs.height);
+            this.ctx.closePath();
+            this.ctx.fill();
+            // Spike highlight
+            this.ctx.strokeStyle = '#ff6b8b';
+            this.ctx.lineWidth = 2;
+            this.ctx.stroke();
+          } else if (obs.type === 'block') {
+            this.ctx.fillStyle = '#7b2cbf';
+            this.ctx.fillRect(obs.x, obs.y, obs.width, obs.height);
+            this.ctx.strokeStyle = '#9d4edd';
+            this.ctx.lineWidth = 3;
+            this.ctx.strokeRect(obs.x, obs.y, obs.width, obs.height);
+          }
+        });
+        
+        // Draw particles
+        this.particles.forEach(p => {
+          this.ctx.globalAlpha = p.life;
+          this.ctx.fillStyle = p.color;
+          this.ctx.beginPath();
+          this.ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+          this.ctx.fill();
+        });
+        this.ctx.globalAlpha = 1;
+        
+        // Draw player
+        this.ctx.save();
+        this.ctx.translate(this.player.x + this.player.width/2, this.player.y + this.player.height/2);
+        this.ctx.rotate(this.player.rotation);
+        
+        // Player glow effect
+        this.ctx.shadowColor = '#00d4ff';
+        this.ctx.shadowBlur = 15;
+        
+        // Draw player skin        this.ctx.font = '35px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        this.ctx.fillText(this.playerSkin, 0, 2);
+        
+        this.ctx.shadowBlur = 0;
+        this.ctx.restore();
+        
+        // Draw game over overlay
+        if (this.isGameOver) {
+          this.ctx.fillStyle = 'rgba(0,0,0,0.7)';
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          this.ctx.fillStyle = '#fff';
+          this.ctx.font = 'bold 40px Arial';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('💥 GAME OVER', this.canvas.width/2, this.canvas.height/2 - 20);
+          this.ctx.font = '24px Arial';
+          this.ctx.fillText(`Счёт: ${this.score}`, this.canvas.width/2, this.canvas.height/2 + 20);
+        }
+        
+        // Draw start overlay
+        if (!this.isRunning && !this.isGameOver) {
+          this.ctx.fillStyle = 'rgba(0,0,0,0.4)';
+          this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+          this.ctx.fillStyle = '#fff';
+          this.ctx.font = 'bold 32px Arial';
+          this.ctx.textAlign = 'center';
+          this.ctx.fillText('🎮 MA2Dungeon Dash', this.canvas.width/2, this.canvas.height/2 - 30);
+          this.ctx.font = '20px Arial';
+          this.ctx.fillText('Нажми Пробел или Кликни для старта', this.canvas.width/2, this.canvas.height/2 + 10);
+        }
+      }
+      
+      gameLoop() {
+        this.update();
+        this.draw();
+        this.cameraX += this.gameSpeed;
+        
+        if (this.isRunning) {
+          requestAnimationFrame(this.gameLoop);
+        }
+      }
+    }
+    
+    // ============================================
+    // 🎨 SKINS SYSTEM
+    // ============================================
+    
+    const skins = [
+      { id: '🔷', name: 'Синий куб', color: '#00d4ff' },      { id: '🔶', name: 'Оранжевый', color: '#ff9500' },
+      { id: '💎', name: 'Алмаз', color: '#00ffff' },
+      { id: '👾', name: 'Призрак', color: '#e040fb' },
+      { id: '🔥', name: 'Огонь', color: '#ff416c' },
+      { id: '🌈', name: 'Радуга', color: '#ff006e' },
+      { id: '⚡', name: 'Молния', color: '#ffd700' },
+      { id: '🎮', name: 'Геймер', color: '#7b2cbf' },
+      { id: '🤖', name: 'Робот', color: '#4a69bd' },
+      { id: '🦄', name: 'Единорог', color: '#ff6b9d' },
+      { id: '👁️', name: 'Глаз', color: '#00ff88' },
+      { id: '⭐', name: 'Звезда', color: '#ffcc00' }
+    ];
+    
+    function renderSkins() {
+      const grid = document.getElementById('skinsGrid');
+      grid.innerHTML = '';
+      
+      skins.forEach(skin => {
+        const card = document.createElement('div');
+        card.className = 'skin-card';
+        if (localStorage.getItem('selectedSkin') === skin.id) {
+          card.classList.add('selected');
+        }
+        
+        card.innerHTML = `
+          <div class="skin-preview" style="background: ${skin.color}20; color: ${skin.color}">
+            ${skin.id}
+          </div>
+          <div style="font-weight:500">${skin.name}</div>
+        `;
+        
+        card.onclick = () => {
+          document.querySelectorAll('.skin-card').forEach(c => c.classList.remove('selected'));
+          card.classList.add('selected');
+          game.setSkin(skin.id);
+        };
+        
+        grid.appendChild(card);
+      });
+    }
+    
+    // ============================================
+    // ✏️ LEVEL EDITOR
+    // ============================================
+    
+    class LevelEditor {
+      constructor(canvasId) {
+        this.canvas = document.getElementById(canvasId);
+        this.ctx = this.canvas.getContext('2d');
+        this.gridSize = 40;        this.objects = [];
+        this.currentTool = 'spike';
+        this.isDrawing = false;
+        
+        this.setupControls();
+        this.draw();
+      }
+      
+      setupControls() {
+        // Tool selection
+        document.querySelectorAll('.tool-btn').forEach(btn => {
+          btn.onclick = (e) => {
+            document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            this.currentTool = btn.dataset.tool;
+          };
+        });
+        
+        // Canvas drawing
+        this.canvas.addEventListener('mousedown', (e) => this.startDraw(e));
+        this.canvas.addEventListener('mousemove', (e) => this.onDraw(e));
+        this.canvas.addEventListener('mouseup', () => this.isDrawing = false);
+        this.canvas.addEventListener('mouseleave', () => this.isDrawing = false);
+        this.canvas.addEventListener('contextmenu', (e) => {
+          e.preventDefault();
+          this.eraseAt(e);
+        });
+        
+        // Touch support
+        this.canvas.addEventListener('touchstart', (e) => {
+          e.preventDefault();
+          this.startDraw(e.touches[0]);
+        });
+        this.canvas.addEventListener('touchmove', (e) => {
+          e.preventDefault();
+          this.onDraw(e.touches[0]);
+        });
+        this.canvas.addEventListener('touchend', () => this.isDrawing = false);
+        
+        // Save level
+        document.getElementById('saveLevelBtn').onclick = () => {
+          const name = document.getElementById('levelName').value || 'Без названия';
+          this.saveLevel(name);
+        };
+        
+        // Test level
+        document.getElementById('testLevelBtn').onclick = () => {
+          this.testLevel();
+        };
+                // Export
+        document.getElementById('exportLevelBtn').onclick = () => {
+          const data = JSON.stringify({
+            name: document.getElementById('levelName').value || 'Export',
+            objects: this.objects,
+            difficulty: document.getElementById('difficulty').value,
+            exported: new Date().toISOString()
+          });
+          navigator.clipboard.writeText(data).then(() => {
+            alert('✅ Уровень скопирован в буфер обмена!');
+          });
+        };
+      }
+      
+      getGridPos(event) {
+        const rect = this.canvas.getBoundingClientRect();
+        const x = Math.floor((event.clientX - rect.left) / this.gridSize) * this.gridSize;
+        const y = Math.floor((event.clientY - rect.top) / this.gridSize) * this.gridSize;
+        return { x, y };
+      }
+      
+      startDraw(event) {
+        if (event.button === 2) return; // Right click handled separately
+        this.isDrawing = true;
+        this.onDraw(event);
+      }
+      
+      onDraw(event) {
+        if (!this.isDrawing) return;
+        
+        const { x, y } = this.getGridPos(event);
+        const groundY = this.canvas.height - 60;
+        
+        // Don't place objects above ground for some types
+        if (['spike', 'block'].includes(this.currentTool) && y < groundY - 40) return;
+        
+        // Check if object already exists at this position
+        const exists = this.objects.find(obj => obj.x === x && obj.y === y);
+        if (exists) return;
+        
+        if (this.currentTool === 'erase') {
+          this.eraseAt(event);
+          return;
+        }
+        
+        this.objects.push({
+          x, y,
+          type: this.currentTool,
+          id: Date.now() + Math.random()
+        });        
+        this.draw();
+      }
+      
+      eraseAt(event) {
+        const { x, y } = this.getGridPos(event);
+        const index = this.objects.findIndex(obj => 
+          Math.abs(obj.x - x) < this.gridSize && 
+          Math.abs(obj.y - y) < this.gridSize
+        );
+        if (index !== -1) {
+          this.objects.splice(index, 1);
+          this.draw();
+        }
+      }
+      
+      draw() {
+        // Background
+        this.ctx.fillStyle = '#2c3e50';
+        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+        
+        // Grid
+        this.ctx.strokeStyle = 'rgba(255,255,255,0.1)';
+        this.ctx.lineWidth = 1;
+        for (let x = 0; x < this.canvas.width; x += this.gridSize) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(x, 0);
+          this.ctx.lineTo(x, this.canvas.height);
+          this.ctx.stroke();
+        }
+        for (let y = 0; y < this.canvas.height; y += this.gridSize) {
+          this.ctx.beginPath();
+          this.ctx.moveTo(0, y);
+          this.ctx.lineTo(this.canvas.width, y);
+          this.ctx.stroke();
+        }
+        
+        // Ground
+        const groundY = this.canvas.height - 40;
+        this.ctx.fillStyle = '#4a69bd';
+        this.ctx.fillRect(0, groundY, this.canvas.width, 40);
+        
+        // Draw objects
+        this.ctx.font = '30px Arial';
+        this.ctx.textAlign = 'center';
+        this.ctx.textBaseline = 'middle';
+        
+        this.objects.forEach(obj => {
+          let symbol = '';
+          let color = '#fff';          
+          switch(obj.type) {
+            case 'spike': symbol = '🔺'; color = '#ff416c'; break;
+            case 'block': symbol = '🟦'; color = '#7b2cbf'; break;
+            case 'coin': symbol = '🪙'; color = '#ffd700'; break;
+            case 'portal': symbol = '🌀'; color = '#00d4ff'; break;
+            case 'jump': symbol = '⬆️'; color = '#00ff88'; break;
+          }
+          
+          // Object background
+          this.ctx.fillStyle = color + '30';
+          this.ctx.fillRect(obj.x + 5, obj.y + 5, this.gridSize - 10, this.gridSize - 10);
+          this.ctx.strokeStyle = color;
+          this.ctx.lineWidth = 2;
+          this.ctx.strokeRect(obj.x + 5, obj.y + 5, this.gridSize - 10, this.gridSize - 10);
+          
+          // Symbol
+          this.ctx.fillStyle = color;
+          this.ctx.fillText(symbol, obj.x + this.gridSize/2, obj.y + this.gridSize/2);
+        });
+        
+        // Player start position indicator
+        this.ctx.fillStyle = '#00d4ff80';
+        this.ctx.fillRect(50, groundY - 40, 40, 40);
+        this.ctx.fillStyle = '#fff';
+        this.ctx.font = '25px Arial';
+        this.ctx.fillText('🔷', 70, groundY - 20);
+        this.ctx.font = '12px Arial';
+        this.ctx.fillText('Старт', 70, groundY + 10);
+      }
+      
+      saveLevel(name) {
+        const levelData = {
+          name: name,
+          objects: this.objects,
+          difficulty: document.getElementById('difficulty').value,
+          createdAt: firebase.database.ServerValue.TIMESTAMP,
+          creator: localStorage.getItem('userId') || 'anonymous'
+        };
+        
+        const key = database.ref('levels').push().key;
+        database.ref('levels/' + key).set(levelData)
+          .then(() => {
+            alert(`✅ Уровень "${name}" сохранён!`);
+            document.getElementById('levelName').value = '';
+            loadLevelsList();
+          })
+          .catch(error => {
+            console.error('Ошибка:', error);
+            alert('⚠️ Ошибка сохранения. Проверьте правила Firebase.');          });
+      }
+      
+      testLevel() {
+        // Simple test: switch to game and load objects
+        alert('🎮 Тестовый режим: объекты будут добавлены в игру!\n(Полная интеграция в разработке)');
+        // In production: switch to game screen and pass level data
+      }
+    }
+    
+    // ============================================
+    // 📁 LEVELS MANAGEMENT
+    // ============================================
+    
+    function loadLevelsList() {
+      const list = document.getElementById('levelsList');
+      list.innerHTML = '<p style="text-align:center; opacity:0.7;">Загрузка...</p>';
+      
+      database.ref('levels').once('value')
+        .then(snapshot => {
+          const levels = [];
+          snapshot.forEach(child => {
+            levels.push({ id: child.key, ...child.val() });
+          });
+          
+          if (levels.length === 0) {
+            list.innerHTML = '<p style="text-align:center; opacity:0.7;">Уровней пока нет. Создайте первый! ✨</p>';
+            return;
+          }
+          
+          // Sort by newest first
+          levels.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+          
+          list.innerHTML = levels.map(level => `
+            <div class="level-card">
+              <div class="level-info">
+                <h4>${escapeHtml(level.name)}</h4>
+                <div class="level-stats">
+                  🧱 ${level.objects?.length || 0} объектов • 
+                  ${level.difficulty === 'easy' ? '🟢' : level.difficulty === 'medium' ? '🟡' : level.difficulty === 'hard' ? '🔴' : '💀'} 
+                  ${level.difficulty} • 
+                  📅 ${level.createdAt ? new Date(level.createdAt).toLocaleDateString('ru') : '?'}
+                </div>
+              </div>
+              <div class="level-actions">
+                <button class="btn-play" onclick="playLevel('${level.id}')">▶️</button>
+                <button class="btn-edit" onclick="editLevel('${level.id}')">✏️</button>
+                <button class="btn-delete" onclick="deleteLevel('${level.id}')">🗑️</button>
+              </div>
+            </div>          `).join('');
+        })
+        .catch(error => {
+          console.error('Ошибка загрузки уровней:', error);
+          list.innerHTML = '<p style="text-align:center; color:#ff416c;">⚠️ Ошибка загрузки. Проверьте подключение и правила Firebase.</p>';
+        });
+    }
+    
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+    
+    function playLevel(levelId) {
+      database.ref('levels/' + levelId).once('value')
+        .then(snapshot => {
+          const level = snapshot.val();
+          if (level) {
+            alert(`🎮 Запуск уровня: ${level.name}\n\n(В полной версии уровень загрузится в игру)`);
+            // Switch to game screen and load level objects
+            switchScreen('game');
+          }
+        });
+    }
+    
+    function editLevel(levelId) {
+      database.ref('levels/' + levelId).once('value')
+        .then(snapshot => {
+          const level = snapshot.val();
+          if (level) {
+            // Load level into editor
+            if (editor) {
+              editor.objects = level.objects || [];
+              document.getElementById('levelName').value = level.name;
+              document.getElementById('difficulty').value = level.difficulty || 'medium';
+              editor.draw();
+              switchScreen('editor');
             }
+          }
+        });
+    }
+    
+    function deleteLevel(levelId) {
+      if (confirm('🗑️ Удалить этот уровень? Это действие нельзя отменить.')) {
+        database.ref('levels/' + levelId).remove()
+          .then(() => {
+            alert('✅ Уровень удалён');
+            loadLevelsList();
+          })          .catch(error => {
+            console.error('Ошибка удаления:', error);
+            alert('⚠️ Не удалось удалить уровень');
+          });
+      }
+    }
+    
+    // ============================================
+    // 🔄 UI NAVIGATION
+    // ============================================
+    
+    function switchScreen(screenId) {
+      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      
+      document.getElementById(screenId).classList.add('active');
+      document.querySelector(`[data-screen="${screenId}"]`).classList.add('active');
+      
+      // Load data when switching screens
+      if (screenId === 'skins') renderSkins();
+      if (screenId === 'levels') loadLevelsList();
+      if (screenId === 'editor' && editor) editor.draw();
+    }
+    
+    // Navigation buttons
+    document.querySelectorAll('.nav-btn').forEach(btn => {
+      btn.onclick = () => switchScreen(btn.dataset.screen);
+    });
+    
+    // Modal handling
+    document.getElementById('createNewLevelBtn').onclick = () => {
+      switchScreen('editor');
+      if (editor) {
+        editor.objects = [];
+        document.getElementById('levelName').value = '';
+        editor.draw();
+      }
+    };
+    
+    document.getElementById('refreshLevelsBtn').onclick = loadLevelsList;
+    
+    // ============================================
+    // 🚀 INITIALIZATION
+    // ============================================
+    
+    let game, editor;
+    
+    document.addEventListener('DOMContentLoaded', () => {
+      // Initialize game
+      game = new Game('gameCanvas');      
+      // Initialize editor
+      editor = new LevelEditor('editorCanvas');
+      
+      // Render skins
+      renderSkins();
+      
+      // Load levels
+      loadLevelsList();
+      
+      // Keyboard shortcuts
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+          document.getElementById('levelModal').classList.remove('active');
         }
-
-        // --- FEED & POSTS ---
-        async function renderFeed() {
-            const content = document.getElementById('main-content');
-            const userSnap = await db.ref('users/' + currentUser.uid).once('value');
-            const me = userSnap.val();
-
-            content.innerHTML = `
-                <div class="card create-post">
-                    <textarea id="new-post-text" class="post-input" rows="2" placeholder="Что у вас нового?"></textarea>
-                    <div class="post-actions-bar">
-                        <div style="color:var(--vk-blue)"><i class="fas fa-image btn"></i> <i class="fas fa-music btn"></i></div>
-                        <button class="btn btn-primary" onclick="submitPost()">Опубликовать</button>                    </div>
-                </div>
-                <div id="posts-container"></div>
-            `;
-
-            db.ref('posts').limitToLast(20).on('value', snapshot => {
-                const container = document.getElementById('posts-container');
-                if(!container) return;
-                container.innerHTML = '';
-                
-                const posts = [];
-                snapshot.forEach(c => posts.push(c.val()));
-                posts.reverse().forEach(post => {
-                    const date = new Date(post.timestamp).toLocaleString();
-                    const isLiked = post.likes && post.likes[currentUser.uid];
-                    
-                    const div = document.createElement('div');
-                    div.className = 'card post-item';
-                    div.innerHTML = `
-                        <div class="post-head">
-                            <img src="${post.userAvatar}" class="post-avatar" onclick="renderProfile('${post.userId}')">
-                            <div class="post-meta">
-                                <div class="post-author" onclick="renderProfile('${post.userId}')">${post.userName}</div>
-                                <div class="post-date">${date}</div>
-                            </div>
-                        </div>
-                        <div class="post-text">${escapeHtml(post.text)}</div>
-                        <div class="post-footer">
-                            <div class="action-btn ${isLiked ? 'liked' : ''}" onclick="toggleLike('${post.id}')">
-                                <i class="${isLiked ? 'fas' : 'far'} fa-heart"></i> ${post.likeCount || 0}
-                            </div>
-                            <div class="action-btn"><i class="far fa-comment"></i> Комментировать</div>
-                        </div>
-                    `;
-                    container.appendChild(div);
-                });
-            });
-        }
-
-        async function submitPost() {
-            const text = document.getElementById('new-post-text').value;
-            if(!text.trim()) return;
-            
-            const userSnap = await db.ref('users/' + currentUser.uid).once('value');
-            const u = userSnap.val();
-
-            const newRef = db.ref('posts').push();
-            newRef.set({
-                id: newRef.key,
-                userId: currentUser.uid,                userName: u.name,
-                userAvatar: u.avatar,
-                text: text,
-                timestamp: Date.now(),
-                likeCount: 0,
-                likes: {}
-            });
-            document.getElementById('new-post-text').value = '';
-        }
-
-        function toggleLike(postId) {
-            const ref = db.ref('posts/' + postId);
-            ref.transaction(post => {
-                if(post) {
-                    if(!post.likes) post.likes = {};
-                    if(post.likes[currentUser.uid]) {
-                        delete post.likes[currentUser.uid];
-                        post.likeCount = (post.likeCount || 1) - 1;
-                    } else {
-                        post.likes[currentUser.uid] = true;
-                        post.likeCount = (post.likeCount || 0) + 1;
-                    }
-                }
-                return post;
-            });
-        }
-
-        // --- PROFILE ---
-        async function renderProfile(uid) {
-            const isMe = uid === currentUser.uid;
-            const snap = await db.ref('users/' + uid).once('value');
-            const user = snap.val();
-            if(!user) return;
-
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="card profile-header">
-                    <div class="profile-photo-container">
-                        <img src="${user.avatar}" id="profile-big-avatar" class="profile-photo">
-                        ${isMe ? `<label for="avatar-upload" class="photo-upload-overlay"><i class="fas fa-camera"></i></label>
-                        <input type="file" id="avatar-upload" hidden accept="image/*">` : ''}
-                    </div>
-                    <div class="profile-details" style="flex:1">
-                        <h1>${user.name}</h1>
-                        <div class="profile-status">${user.bio || ''}</div>
-                        ${!isMe ? `<button class="btn btn-primary" onclick="addFriend('${uid}')">Добавить в друзья</button>` : ''}
-                    </div>
-                </div>
-                <div class="card" style="padding: 20px;">
-                    <h3>Стена пользователя</h3>                    <p style="color:var(--vk-gray); margin-top:10px">Здесь отображаются посты пользователя...</p>
-                </div>
-            `;
-
-            if(isMe) {
-                document.getElementById('avatar-upload').addEventListener('change', handleAvatarUpload);
-            }
-        }
-
-        function handleAvatarUpload(e) {
-            const file = e.target.files[0];
-            if(!file) return;
-            
-            const storageRef = storage.ref('avatars/' + currentUser.uid + '/' + file.name);
-            const task = storageRef.put(file);
-            
-            task.then(snapshot => snapshot.ref.getDownloadURL()).then(url => {
-                db.ref('users/' + currentUser.uid).update({ avatar: url });
-                updateHeader();
-                renderProfile(currentUser.uid); // Refresh
-            }).catch(err => alert("Ошибка загрузки: " + err.message));
-        }
-
-        // --- FRIENDS ---
-        async function renderFriends() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="card">
-                    <div style="padding:15px; border-bottom:1px solid var(--vk-border)">
-                        <input type="text" id="friend-search" class="auth-input" placeholder="Поиск людей..." onkeyup="searchUsers(this.value)">
-                    </div>
-                    <div id="friends-list-container"></div>
-                </div>
-            `;
-            searchUsers(''); // Load all initially
-        }
-
-        async function searchUsers(query) {
-            const container = document.getElementById('friends-list-container');
-            if(!container) return;
-            
-            // Simple query logic (in real app use elastic search or complex query)
-            const snap = await db.ref('users').once('value');
-            container.innerHTML = '';
-            
-            snap.forEach(child => {
-                const u = child.val();
-                if(u.uid === currentUser.uid) return;
-                if(query && !u.name.toLowerCase().includes(query.toLowerCase())) return;
-                const div = document.createElement('div');
-                div.className = 'friend-row';
-                div.innerHTML = `
-                    <div class="friend-info">
-                        <img src="${u.avatar}" class="friend-img">
-                        <div>
-                            <div style="font-weight:500; color:var(--vk-blue); cursor:pointer" onclick="renderProfile('${child.key}')">${u.name}</div>
-                            <div style="font-size:12px; color:var(--vk-gray)">${u.email}</div>
-                        </div>
-                    </div>
-                    <button class="btn btn-secondary" onclick="alert('Функция дружбы в разработке, но пользователь найден!')">Добавить</button>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        // --- MESSAGES (Global Chat Demo) ---
-        function renderMessages() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="card" style="height: 600px; display:flex; flex-direction:column">
-                    <div style="padding:15px; border-bottom:1px solid var(--vk-border); font-weight:500">Чат (Демо)</div>
-                    <div id="chat-box" class="chat-list"></div>
-                    <div class="chat-input-area">
-                        <input type="text" id="msg-input" class="auth-input" style="margin:0" placeholder="Напишите сообщение...">
-                        <button class="btn btn-primary" onclick="sendMsg()"><i class="fas fa-paper-plane"></i></button>
-                    </div>
-                </div>
-            `;
-
-            db.ref('messages').limitToLast(50).on('child_added', snap => {
-                const msg = snap.val();
-                const box = document.getElementById('chat-box');
-                if(!box) return;
-                
-                const isMe = msg.uid === currentUser.uid;
-                const div = document.createElement('div');
-                div.className = `message ${isMe ? 'msg-out' : 'msg-in'}`;
-                div.innerHTML = `<b>${isMe ? 'Вы' : msg.name}</b>: ${escapeHtml(msg.text)}`;
-                box.appendChild(div);
-                box.scrollTop = box.scrollHeight;
-            });
-        }
-
-        function sendMsg() {
-            const input = document.getElementById('msg-input');
-            const text = input.value;
-            if(!text) return;
-            
-            db.ref('messages').push({                uid: currentUser.uid,
-                name: currentUser.displayName,
-                text: text,
-                time: Date.now()
-            });
-            input.value = '';
-        }
-
-        // --- MUSIC ---
-        // Demo tracks because we can't upload MP3s easily without backend processing
-        const demoTracks = [
-            { title: "Summer Breeze", artist: "Relaxing Vibes", url: "https://www.soundhelix.com/Games/SoundHelix-Song-1.mp3" },
-            { title: "Deep Focus", artist: "Work Music", url: "https://www.soundhelix.com/Games/SoundHelix-Song-2.mp3" },
-            { title: "Night Drive", artist: "Synthwave Boy", url: "https://www.soundhelix.com/Games/SoundHelix-Song-3.mp3" }
-        ];
-
-        function renderMusic() {
-            const content = document.getElementById('main-content');
-            let html = `<div class="card"><h3 style="padding:15px">Моя музыка</h3>`;
-            
-            demoTracks.forEach((t, idx) => {
-                html += `
-                    <div class="track-row" onclick="playTrack(${idx})">
-                        <i class="fas fa-play track-play"></i>
-                        <div class="track-info">
-                            <div class="track-title">${t.title}</div>
-                            <div class="track-artist">${t.artist}</div>
-                        </div>
-                        <div class="track-duration">3:45</div>
-                    </div>
-                `;
-            });
-            html += `</div>`;
-            content.innerHTML = html;
-        }
-
-        function playTrack(idx) {
-            const t = demoTracks[idx];
-            audioPlayer.src = t.url;
-            audioPlayer.play();
-            isPlaying = true;
-            
-            document.getElementById('player-title').textContent = t.title;
-            document.getElementById('player-artist').textContent = t.artist;
-            document.getElementById('music-player').classList.add('active');
-            updatePlayIcon();
-        }
-
-        function togglePlayPause() {
-            if(isPlaying) { audioPlayer.pause(); isPlaying = false; }            else { audioPlayer.play(); isPlaying = true; }
-            updatePlayIcon();
-        }
-
-        function updatePlayIcon() {
-            const icon = document.querySelector('.music-player-fixed .fa-pause-circle, .music-player-fixed .fa-play-circle');
-            // Simplified toggle logic for icon class
-        }
-
-        // --- SETTINGS ---
-        function renderSettings() {
-            const content = document.getElementById('main-content');
-            content.innerHTML = `
-                <div class="card settings-section">
-                    <h2>Настройки</h2>
-                    <hr style="margin:20px 0; border:0; border-top:1px solid var(--vk-border)">
-                    
-                    <div class="setting-row">
-                        <label class="setting-label">Ваше имя</label>
-                        <input type="text" id="set-name" class="auth-input" value="${currentUser.displayName || ''}">
-                        <button class="btn btn-primary" style="margin-top:10px" onclick="saveName()">Сохранить</button>
-                    </div>
-
-                    <div class="setting-row">
-                        <label class="setting-label">Сменить пароль</label>
-                        <input type="password" id="set-pass" class="auth-input" placeholder="Новый пароль">
-                        <button class="btn btn-secondary" style="margin-top:10px" onclick="savePass()">Обновить пароль</button>
-                    </div>
-
-                    <div class="setting-row" style="margin-top:40px">
-                        <button class="btn btn-danger" onclick="deleteAccount()">Удалить аккаунт</button>
-                    </div>
-                </div>
-            `;
-        }
-
-        async function saveName() {
-            const newName = document.getElementById('set-name').value;
-            await currentUser.updateProfile({ displayName: newName });
-            await db.ref('users/' + currentUser.uid).update({ name: newName });
-            updateHeader();
-            alert('Имя сохранено');
-        }
-
-        async function savePass() {
-            const newPass = document.getElementById('set-pass').value;
-            if(newPass.length < 6) return alert('Минимум 6 символов');
-            await currentUser.updatePassword(newPass);
-            alert('Пароль обновлен');
-        }
-        function deleteAccount() {
-            if(confirm("Вы уверены? Это действие нельзя отменить.")) {
-                currentUser.delete().then(() => {
-                    alert("Аккаунт удален");
-                    location.reload();
-                }).catch(e => alert("Ошибка: " + e.message));
-            }
-        }
-
-        // --- UTILS ---
-        function escapeHtml(text) {
-            if (!text) return "";
-            return text
-                .replace(/&/g, "&")
-                .replace(/</g, "<")
-                .replace(/>/g, ">")
-                .replace(/"/g, """)
-                .replace(/'/g, "&#039;");
-        }
-
-        function loadSuggestions() {
-            // Mock suggestions for right sidebar
-            const list = document.getElementById('suggestions-list');
-            const names = ["Иван Иванов", "Мария Смирнова", "Алексей Код"];
-            let html = '';
-            names.forEach(n => {
-                html += `
-                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:10px; cursor:pointer">
-                        <img src="https://ui-avatars.com/api/?name=${n}&size=40" style="width:30px; height:30px; border-radius:50%">
-                        <span style="font-size:13px; color:var(--vk-blue)">${n}</span>
-                    </div>
-                `;
-            });
-            list.innerHTML = html;
-        }
-
-    </script>
+      });
+      
+      // Auto-save skin preference
+      window.addEventListener('beforeunload', () => {
+        localStorage.setItem('selectedSkin', game?.playerSkin || '🔷');
+      });
+      
+      console.log('🎮 MA2Dungeon Dash загружен!');
+      console.log('⚠️ Не забудьте настроить Firebase Security Rules!');
+    });
+    
+    // Global functions for HTML onclick handlers
+    window.playLevel = playLevel;
+    window.editLevel = editLevel;
+    window.deleteLevel = deleteLevel;
+  </script>
 </body>
 </html>
