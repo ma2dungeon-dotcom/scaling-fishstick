@@ -4,11 +4,14 @@
 <meta charset="UTF-8">
 <title>Космический собиратель PRO</title>
 <style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap');
+  
   * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  
   body {
     background: radial-gradient(ellipse at center, #0a0a2e 0%, #000 100%);
     color: #fff;
-    font-family: 'Arial', sans-serif;
+    font-family: 'Orbitron', 'Arial', sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -16,131 +19,285 @@
     min-height: 100vh;
     overflow: hidden;
   }
-  #gameContainer { position: relative; box-shadow: 0 0 60px rgba(74, 170, 255, 0.4); }
-  canvas { display: block; background: #000; border: 3px solid #4af; }
+  
+  #gameContainer { 
+    position: relative; 
+    box-shadow: 0 0 80px rgba(74, 170, 255, 0.6);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+  
+  canvas { 
+    display: block; 
+    background: #000; 
+    border: 3px solid #4af;
+    border-radius: 20px;
+  }
   
   .screen {
     position: absolute;
     top: 0; left: 0;
     width: 100%; height: 100%;
-    background: rgba(0,0,10,0.95);
+    background: rgba(0, 10, 30, 0.95);
+    backdrop-filter: blur(10px);
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
     z-index: 10;
-    padding: 20px;
+    padding: 30px;
+    border-radius: 20px;
   }
+  
   .hidden { display: none !important; }
   
   h1 {
-    font-size: 48px;
-    background: linear-gradient(90deg, #4af, #f4f, #fd3);
+    font-size: 56px;
+    font-weight: 900;
+    background: linear-gradient(90deg, #4af, #f4f, #fd3, #4af);
+    background-size: 200% auto;
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
     margin-bottom: 20px;
     text-align: center;
+    animation: shine 3s linear infinite;
+    text-shadow: 0 0 30px rgba(74, 170, 255, 0.5);
+    letter-spacing: 3px;
   }
-  h2 { color: #4af; margin: 10px 0; }
+  
+  @keyframes shine {
+    to { background-position: 200% center; }
+  }
+  
+  h2 { 
+    color: #4af; 
+    margin: 10px 0;
+    text-shadow: 0 0 10px #4af;
+  }
   
   .btn {
-    background: linear-gradient(135deg, #4af, #28e);
-    border: none;
+    background: linear-gradient(135deg, rgba(74, 170, 255, 0.2), rgba(40, 136, 238, 0.2));
+    border: 2px solid #4af;
     color: #fff;
-    padding: 12px 30px;
+    padding: 15px 40px;
     font-size: 18px;
-    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    border-radius: 50px;
     cursor: pointer;
-    margin: 8px;
-    transition: all 0.2s;
-    box-shadow: 0 4px 15px rgba(74, 170, 255, 0.4);
-    font-weight: bold;
+    margin: 10px;
+    transition: all 0.3s;
+    box-shadow: 0 0 20px rgba(74, 170, 255, 0.4), inset 0 0 20px rgba(74, 170, 255, 0.1);
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    position: relative;
+    overflow: hidden;
   }
-  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 170, 255, 0.6); }
-  .btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; transform: none; }
-  .btn.gold { background: linear-gradient(135deg, #fd3, #f80); }
-  .btn.danger { background: linear-gradient(135deg, #f44, #a00); }
+  
+  .btn::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 0;
+    height: 0;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.3);
+    transform: translate(-50%, -50%);
+    transition: width 0.6s, height 0.6s;
+  }
+  
+  .btn:hover::before {
+    width: 300px;
+    height: 300px;
+  }
+  
+  .btn:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 0 30px rgba(74, 170, 255, 0.8), inset 0 0 30px rgba(74, 170, 255, 0.2);
+    border-color: #fff;
+  }
+  
+  .btn:active {
+    transform: translateY(-1px);
+  }
+  
+  .btn:disabled {
+    background: rgba(100, 100, 100, 0.2);
+    border-color: #555;
+    cursor: not-allowed;
+    box-shadow: none;
+    transform: none;
+  }
+  
+  .btn.gold {
+    background: linear-gradient(135deg, rgba(255, 221, 51, 0.2), rgba(255, 136, 0, 0.2));
+    border-color: #fd3;
+    box-shadow: 0 0 20px rgba(255, 221, 51, 0.4), inset 0 0 20px rgba(255, 221, 51, 0.1);
+  }
+  
+  .btn.gold:hover {
+    box-shadow: 0 0 30px rgba(255, 221, 51, 0.8), inset 0 0 30px rgba(255, 221, 51, 0.2);
+    border-color: #fff;
+  }
+  
+  .btn.danger {
+    background: linear-gradient(135deg, rgba(255, 68, 68, 0.2), rgba(170, 0, 0, 0.2));
+    border-color: #f44;
+    box-shadow: 0 0 20px rgba(255, 68, 68, 0.4), inset 0 0 20px rgba(255, 68, 68, 0.1);
+  }
+  
+  .btn.danger:hover {
+    box-shadow: 0 0 30px rgba(255, 68, 68, 0.8), inset 0 0 30px rgba(255, 68, 68, 0.2);
+    border-color: #fff;
+  }
   
   .stats-bar {
     position: absolute;
-    top: 10px; left: 10px; right: 10px;
+    top: 15px; left: 15px; right: 15px;
     display: flex;
     justify-content: space-between;
     pointer-events: none;
-    font-weight: bold;
-    text-shadow: 0 0 8px #000;
+    font-weight: 700;
+    z-index: 5;
   }
+  
   .stat {
-    background: rgba(0,0,0,0.7);
-    padding: 8px 14px;
-    border-radius: 8px;
+    background: rgba(0, 20, 40, 0.8);
+    backdrop-filter: blur(5px);
+    padding: 10px 20px;
+    border-radius: 25px;
     border: 2px solid rgba(74, 170, 255, 0.5);
     font-size: 16px;
+    box-shadow: 0 0 15px rgba(74, 170, 255, 0.3);
+    text-shadow: 0 0 5px rgba(74, 170, 255, 0.8);
   }
   
   .xp-bar {
     position: absolute;
-    bottom: 10px; left: 10px; right: 10px;
-    height: 20px;
-    background: rgba(0,0,0,0.7);
+    bottom: 15px; left: 15px; right: 15px;
+    height: 25px;
+    background: rgba(0, 20, 40, 0.8);
+    backdrop-filter: blur(5px);
     border: 2px solid #4af;
-    border-radius: 10px;
+    border-radius: 15px;
     overflow: hidden;
+    box-shadow: 0 0 15px rgba(74, 170, 255, 0.3);
   }
+  
   .xp-fill {
     height: 100%;
-    background: linear-gradient(90deg, #4f4, #fd3);
+    background: linear-gradient(90deg, #4f4, #fd3, #f4f);
+    background-size: 200% auto;
+    animation: gradient 2s linear infinite;
     transition: width 0.3s;
+    box-shadow: 0 0 10px rgba(74, 255, 74, 0.5);
   }
+  
+  @keyframes gradient {
+    to { background-position: 200% center; }
+  }
+  
   .xp-text {
     position: absolute;
     width: 100%;
     text-align: center;
-    line-height: 16px;
-    font-size: 12px;
-    font-weight: bold;
-    text-shadow: 0 0 4px #000;
+    line-height: 21px;
+    font-size: 13px;
+    font-weight: 700;
+    text-shadow: 0 0 5px #000, 0 0 10px #000;
+    letter-spacing: 1px;
   }
   
   .shop {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    max-width: 600px;
-    margin: 15px 0;
+    gap: 15px;
+    max-width: 650px;
+    margin: 20px 0;
   }
+  
   .upgrade {
     background: rgba(74, 170, 255, 0.1);
+    backdrop-filter: blur(5px);
     border: 2px solid #4af;
-    border-radius: 10px;
-    padding: 12px;
+    border-radius: 20px;
+    padding: 20px;
     text-align: center;
-    min-width: 200px;
+    min-width: 220px;
+    box-shadow: 0 0 20px rgba(74, 170, 255, 0.2);
+    transition: all 0.3s;
   }
-  .upgrade-title { font-size: 18px; color: #fd3; margin-bottom: 5px; }
-  .upgrade-level { font-size: 14px; color: #aaa; }
-  .upgrade-desc { font-size: 13px; color: #ccc; margin: 5px 0; }
   
-  .info { font-size: 16px; color: #ccc; margin: 8px 0; text-align: center; max-width: 600px; }
-  .big-score { font-size: 64px; color: #fd3; text-shadow: 0 0 20px #fd3; margin: 10px; }
+  .upgrade:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0 30px rgba(74, 170, 255, 0.4);
+  }
+  
+  .upgrade-title { 
+    font-size: 20px; 
+    color: #fd3; 
+    margin-bottom: 8px;
+    text-shadow: 0 0 10px rgba(255, 221, 51, 0.5);
+    font-weight: 700;
+  }
+  
+  .upgrade-level { 
+    font-size: 14px; 
+    color: #aaa;
+    letter-spacing: 1px;
+  }
+  
+  .upgrade-desc { 
+    font-size: 13px; 
+    color: #ccc; 
+    margin: 10px 0;
+    line-height: 1.4;
+  }
+  
+  .info { 
+    font-size: 16px; 
+    color: #ccc; 
+    margin: 10px 0; 
+    text-align: center; 
+    max-width: 600px;
+    line-height: 1.6;
+    letter-spacing: 1px;
+  }
+  
+  .big-score { 
+    font-size: 72px; 
+    color: #fd3; 
+    text-shadow: 0 0 30px #fd3, 0 0 60px #fd3; 
+    margin: 15px;
+    font-weight: 900;
+    letter-spacing: 5px;
+  }
   
   .level-up {
     position: absolute;
     top: 50%; left: 50%;
     transform: translate(-50%, -50%);
-    font-size: 48px;
+    font-size: 56px;
     color: #fd3;
-    text-shadow: 0 0 30px #fd3;
+    text-shadow: 0 0 40px #fd3, 0 0 80px #fd3;
     pointer-events: none;
     animation: levelUp 2s forwards;
     z-index: 5;
+    font-weight: 900;
+    letter-spacing: 5px;
   }
+  
   @keyframes levelUp {
     0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.3); }
     80% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
     100% { opacity: 0; transform: translate(-50%, -90%) scale(0.8); }
+  }
+  
+  .glow-text {
+    text-shadow: 0 0 10px currentColor, 0 0 20px currentColor;
   }
 </style>
 </head>
@@ -162,42 +319,44 @@
   
   <!-- СТАРТОВЫЙ ЭКРАН -->
   <div id="startScreen" class="screen">
-    <h1>🚀 Космический собиратель PRO</h1>
+    <h1>🚀 КОСМИЧЕСКИЙ<br>СОБИРАТЕЛЬ PRO</h1>
     <div class="info">
       Собирай ⭐ звёзды, избегай ☄ астероидов<br>
       Получай опыт, прокачивай корабль, открывай улучшения!
     </div>
-    <div class="info">
+    <div class="info glow-text" style="color:#4af;">
       <b>👤 Игрок:</b> Уровень <span id="playerLevelStart">1</span> |
       💰 <span id="coinsStart">0</span> монет
     </div>
-    <button class="btn" onclick="startGame()">🎮 Начать игру</button>
-    <button class="btn gold" onclick="showShop()">🛠 Магазин улучшений</button>
-    <div class="info" style="margin-top:20px;">
+    <button class="btn" id="startBtn">🎮 Начать игру</button>
+    <button class="btn gold" id="shopBtn">🛠 Магазин улучшений</button>
+    <div class="info" style="margin-top:20px; color:#888;">
       <b>Управление:</b> WASD / Стрелки
     </div>
   </div>
   
   <!-- МАГАЗИН -->
   <div id="shopScreen" class="screen hidden">
-    <h1>🛠 Магазин улучшений</h1>
-    <div class="info">💰 Монеты: <span id="coinsShop" style="color:#fd3;font-size:24px;">0</span></div>
+    <h1>🛠 МАГАЗИН</h1>
+    <div class="info glow-text" style="color:#fd3;">
+      💰 Монеты: <span id="coinsShop" style="font-size:28px;">0</span>
+    </div>
     <div class="shop" id="shopGrid"></div>
-    <button class="btn" onclick="hideShop()">← Назад</button>
+    <button class="btn" id="backBtn">← Назад</button>
   </div>
   
   <!-- КОНЕЦ ИГРЫ -->
   <div id="gameOverScreen" class="screen hidden">
-    <h1 style="background: linear-gradient(90deg, #f44, #f80); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">💥 Игра окончена</h1>
+    <h1 style="background: linear-gradient(90deg, #f44, #f80, #f44); background-size: 200% auto; animation: shine 3s linear infinite;">💥 ИГРА ОКОНЧЕНА</h1>
     <div class="big-score" id="finalScore">0</div>
     <div class="info">
-      Заработано: 💰 <span id="earnedCoins" style="color:#fd3;">0</span> |
-      ⭐ Опыт: <span id="earnedXP" style="color:#4f4;">0</span>
+      Заработано: 💰 <span id="earnedCoins" style="color:#fd3; font-size:24px;">0</span> |
+      ⭐ Опыт: <span id="earnedXP" style="color:#4f4; font-size:24px;">0</span>
     </div>
-    <div class="info" id="levelUpMsg" style="color:#fd3;font-size:20px;"></div>
-    <button class="btn" onclick="startGame()">🔄 Играть снова</button>
-    <button class="btn gold" onclick="showShop()">🛠 Магазин</button>
-    <button class="btn danger" onclick="backToMenu()">🏠 В меню</button>
+    <div class="info glow-text" id="levelUpMsg" style="color:#fd3; font-size:22px;"></div>
+    <button class="btn" id="restartBtn">🔄 Играть снова</button>
+    <button class="btn gold" id="shopBtn2">🛠 Магазин</button>
+    <button class="btn danger" id="menuBtn">🏠 В меню</button>
   </div>
 </div>
 
@@ -209,12 +368,12 @@ let save = {
   xp: 0,
   playerLevel: 1,
   upgrades: {
-    health: 0,    // +1 жизнь за уровень
-    speed: 0,     // +10% скорости
-    magnet: 0,    // притягивание звёзд
-    shield: 0,    // шанс начать со щитом
-    crit: 0,      // шанс x2 очков
-    xpBoost: 0    // +20% опыта
+    health: 0,
+    speed: 0,
+    magnet: 0,
+    shield: 0,
+    crit: 0,
+    xpBoost: 0
   }
 };
 
@@ -224,9 +383,11 @@ function loadSave() {
     if (s) save = { ...save, ...JSON.parse(s) };
   } catch(e) {}
 }
+
 function saveSave() {
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e) {}
 }
+
 loadSave();
 
 function xpForLevel(lvl) { return Math.floor(100 * Math.pow(1.5, lvl - 1)); }
@@ -276,12 +437,17 @@ function renderShop() {
       <div class="upgrade-title">${u.icon} ${u.name}</div>
       <div class="upgrade-level">Уровень ${lvl} / ${u.max}</div>
       <div class="upgrade-desc">${u.desc}</div>
-      <button class="btn gold" ${!canBuy ? 'disabled' : ''} onclick="buyUpgrade('${key}')">
+      <button class="btn gold" ${!canBuy ? 'disabled' : ''} data-upgrade="${key}">
         ${maxed ? 'МАКС' : `💰 ${cost}`}
       </button>
     `;
     grid.appendChild(div);
   }
+  
+  // Добавляем обработчики на кнопки покупки
+  grid.querySelectorAll('button[data-upgrade]').forEach(btn => {
+    btn.addEventListener('click', () => buyUpgrade(btn.dataset.upgrade));
+  });
 }
 
 function buyUpgrade(key) {
@@ -301,10 +467,12 @@ function showShop() {
   document.getElementById('shopScreen').classList.remove('hidden');
   renderShop();
 }
+
 function hideShop() {
   document.getElementById('shopScreen').classList.add('hidden');
   document.getElementById('startScreen').classList.remove('hidden');
 }
+
 function backToMenu() {
   document.getElementById('gameOverScreen').classList.add('hidden');
   document.getElementById('startScreen').classList.remove('hidden');
@@ -315,7 +483,16 @@ function updateMenuStats() {
   document.getElementById('playerLevelStart').textContent = save.playerLevel;
   document.getElementById('coinsStart').textContent = save.coins;
 }
+
 updateMenuStats();
+
+// ============ ОБРАБОТЧИКИ КНОПОК ============
+document.getElementById('startBtn').addEventListener('click', startGame);
+document.getElementById('shopBtn').addEventListener('click', showShop);
+document.getElementById('backBtn').addEventListener('click', hideShop);
+document.getElementById('restartBtn').addEventListener('click', startGame);
+document.getElementById('shopBtn2').addEventListener('click', showShop);
+document.getElementById('menuBtn').addEventListener('click', backToMenu);
 
 // ============ ИГРА ============
 const canvas = document.getElementById('game');
@@ -334,6 +511,7 @@ let audioCtx;
 function initAudio() {
   if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 }
+
 function playSound(freq, duration, type = 'sine', vol = 0.2) {
   if (!audioCtx) return;
   const osc = audioCtx.createOscillator();
@@ -347,6 +525,7 @@ function playSound(freq, duration, type = 'sine', vol = 0.2) {
   osc.start();
   osc.stop(audioCtx.currentTime + duration);
 }
+
 const sfx = {
   collect: () => { playSound(880, 0.1); setTimeout(() => playSound(1320, 0.1), 50); },
   hit: () => playSound(150, 0.3, 'sawtooth', 0.3),
@@ -496,7 +675,6 @@ function update(dt) {
   spawnTimer += dt;
   difficultyTimer += dt;
   
-  // Увеличение сложности
   if (difficultyTimer > 20) {
     difficultyTimer = 0;
     level++;
@@ -504,7 +682,6 @@ function update(dt) {
     showLevelUp();
   }
   
-  // Спавн
   const spawnRate = Math.max(0.3, 1.5 - level * 0.1);
   if (spawnTimer > spawnRate) {
     spawnTimer = 0;
@@ -512,12 +689,10 @@ function update(dt) {
     if (Math.random() < 0.1) spawnPowerup();
   }
   
-  // Таймеры бонусов
   if (shieldTime > 0) shieldTime -= dt;
   if (speedTime > 0) speedTime -= dt;
   if (magnetTime > 0) magnetTime -= dt;
   
-  // Движение игрока
   let dx = 0, dy = 0;
   if (keys['arrowup'] || keys['w']) dy -= 1;
   if (keys['arrowdown'] || keys['s']) dy += 1;
@@ -529,132 +704,4 @@ function update(dt) {
     dx /= len; dy /= len;
     const speed = player.baseSpeed * (1 + save.upgrades.speed * 0.1) * (speedTime > 0 ? 1.5 : 1);
     player.x += dx * speed * dt;
-    player.y += dy * speed * dt;
-  }
-  
-  player.x = Math.max(player.r, Math.min(W - player.r, player.x));
-  player.y = Math.max(player.r, Math.min(H - player.r, player.y));
-  
-  // Фон
-  bgStars.forEach(s => {
-    s.y += s.speed * dt;
-    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
-  });
-  
-  // Звёзды
-  const magnetRange = save.upgrades.magnet * 80 + (magnetTime > 0 ? 200 : 0);
-  for (let i = stars.length - 1; i >= 0; i--) {
-    const s = stars[i];
-    s.pulse += dt * 3;
-    
-    // Магнит
-    if (magnetRange > 0) {
-      const d = dist(player, s);
-      if (d < magnetRange) {
-        const pull = (1 - d / magnetRange) * 400;
-        const angle = Math.atan2(player.y - s.y, player.x - s.x);
-        s.x += Math.cos(angle) * pull * dt;
-        s.y += Math.sin(angle) * pull * dt;
-      }
-    }
-    
-    if (dist(player, s) < player.r + s.r) {
-      const isCrit = Math.random() < save.upgrades.crit * 0.1;
-      const value = s.value * (isCrit ? 2 : 1);
-      score += value;
-      const xp = Math.floor(value / 2);
-      earnedXPThisRun += xp;
-      addXP(xp);
-      spawnParticles(s.x, s.y, 15, '#fd3');
-      sfx.collect();
-      stars.splice(i, 1);
-      spawnStar();
-    }
-  }
-  
-  // Враги
-  for (let i = enemies.length - 1; i >= 0; i--) {
-    const e = enemies[i];
-    e.x += e.vx * dt;
-    e.y += e.vy * dt;
-    e.rotation += e.rotSpeed * dt;
-    
-    if (e.x < -100 || e.x > W + 100 || e.y < -100 || e.y > H + 100) {
-      enemies.splice(i, 1);
-      continue;
-    }
-    
-    if (dist(player, e) < player.r + e.r) {
-      if (shieldTime > 0) {
-        shieldTime = 0;
-        spawnParticles(e.x, e.y, 25, '#4f4');
-        sfx.hit();
-        enemies.splice(i, 1);
-      } else {
-        lives--;
-        spawnParticles(player.x, player.y, 30, '#f44');
-        sfx.hit();
-        enemies.splice(i, 1);
-        if (lives <= 0) {
-          endGame();
-          return;
-        }
-      }
-    }
-  }
-  
-  // Бонусы
-  for (let i = powerups.length - 1; i >= 0; i--) {
-    const p = powerups[i];
-    p.pulse += dt * 4;
-    p.life -= dt;
-    if (p.life <= 0) { powerups.splice(i, 1); continue; }
-    
-    if (dist(player, p) < player.r + p.r) {
-      if (p.type === 'shield') shieldTime = 8;
-      else if (p.type === 'speed') speedTime = 6;
-      else if (p.type === 'magnet') magnetTime = 8;
-      else if (p.type === 'coin') {
-        const amount = 5 + level;
-        save.coins += amount;
-        earnedCoinsThisRun += amount;
-        spawnCoin(p.x, p.y, Math.min(amount, 10));
-      }
-      spawnParticles(p.x, p.y, 20, p.type === 'shield' ? '#4f4' : p.type === 'speed' ? '#f4f' : p.type === 'magnet' ? '#4ff' : '#fd3');
-      sfx.powerup();
-      powerups.splice(i, 1);
-    }
-  }
-  
-  // Монеты (анимация)
-  for (let i = coins.length - 1; i >= 0; i--) {
-    const c = coins[i];
-    c.x += c.vx * dt;
-    c.y += c.vy * dt;
-    c.vx *= 0.95;
-    c.vy *= 0.95;
-    c.life -= dt * 0.8;
-    if (c.life <= 0) coins.splice(i, 1);
-  }
-  
-  // Частицы
-  for (let i = particles.length - 1; i >= 0; i--) {
-    const p = particles[i];
-    p.x += p.vx * dt;
-    p.y += p.vy * dt;
-    p.vx *= 0.95;
-    p.vy *= 0.95;
-    p.life -= dt * 1.5;
-    if (p.life <= 0) particles.splice(i, 1);
-  }
-  
-  // UI
-  document.getElementById('score').textContent = score;
-  document.getElementById('coins').textContent = save.coins;
-  document.getElementById('level').textContent = level;
-  document.getElementById('lives').textContent = lives;
-  
-  const xpNeeded = xpForLevel(save.playerLevel);
-  const pct = Math.min(100, (save.xp / xpNeeded) * 100);
-  document.getElementById('xpFill').style.width = pct + '%';
-  document.getElementById('xpText').textCont
+    player.y += dy * speed * dt
