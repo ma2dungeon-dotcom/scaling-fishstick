@@ -1,958 +1,660 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>MA2Dungeon Dash Pro 🔷</title>
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;600;800&display=swap');
-    
-    * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
-    body {
-      font-family: 'Rubik', sans-serif;
-      background: #1a1a2e;
-      color: #fff;
-      overflow: hidden; /* Чтобы не скроллилось в меню */
-      height: 100vh;
-    }
-
-    /* --- UI LAYOUT --- */
-    .app-container {
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      transition: opacity 0.3s;
-    }
-
-    header {
-      background: linear-gradient(90deg, #16213e, #0f3460);
-      padding: 15px 30px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
-      z-index: 10;
-    }
-
-    h1 {
-      font-size: 1.8rem;
-      background: linear-gradient(45deg, #00d4ff, #e94560);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      font-weight: 800;
-    }
-
-    .user-panel { display: flex; gap: 15px; align-items: center; }
-    .user-badge {
-      background: #e94560;
-      padding: 5px 15px;
-      border-radius: 20px;
-      font-weight: bold;    }
-    
-    button {
-      padding: 8px 16px;
-      border: none;
-      border-radius: 8px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: 0.2s;
-      font-family: inherit;
-    }
-    .btn-primary { background: #00d4ff; color: #000; }
-    .btn-danger { background: #e94560; color: #fff; }
-    .btn-success { background: #4cc9f0; color: #000; }
-    button:hover { transform: scale(1.05); filter: brightness(1.2); }
-
-    /* --- SCREENS --- */
-    .screen { display: none; flex: 1; flex-direction: column; overflow: hidden; }
-    .screen.active { display: flex; }
-
-    /* --- LEVELS MENU (GD Style) --- */
-    .levels-header { text-align: center; padding: 20px; }
-    .levels-container {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      padding: 20px 0;
-    }
-    
-    .levels-scroll {
-      display: flex;
-      gap: 25px;
-      padding: 20px 50px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      scroll-behavior: smooth;
-      height: 220px;
-      align-items: center;
-    }
-    /* Custom Scrollbar */
-    .levels-scroll::-webkit-scrollbar { height: 10px; }
-    .levels-scroll::-webkit-scrollbar-thumb { background: #00d4ff; border-radius: 5px; }
-    .levels-scroll::-webkit-scrollbar-track { background: #16213e; }
-
-    .level-card {
-      min-width: 160px;
-      height: 160px;
-      background: linear-gradient(135deg, #2a5298, #1e3c72);
-      border: 4px solid #00d4ff;      border-radius: 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: 0.3s;
-      position: relative;
-      box-shadow: 0 0 20px rgba(0, 212, 255, 0.2);
-    }
-    .level-card:hover {
-      transform: translateY(-10px) scale(1.05);
-      box-shadow: 0 0 30px rgba(0, 212, 255, 0.6);
-      background: linear-gradient(135deg, #4a69bd, #2a5298);
-    }
-    .level-icon {
-      width: 60px;
-      height: 60px;
-      background: #000;
-      border-radius: 10px;
-      margin-bottom: 10px;
-      border: 2px solid #fff;
-    }
-    .level-name { font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
-    .level-diff { font-size: 0.8rem; padding: 3px 10px; border-radius: 10px; background: rgba(0,0,0,0.5); }
-
-    .diff-easy { color: #4cd964; border: 1px solid #4cd964; }
-    .diff-normal { color: #ff9500; border: 1px solid #ff9500; }
-    .diff-hard { color: #ff3b30; border: 1px solid #ff3b30; }
-    .diff-insane { color: #e040fb; border: 1px solid #e040fb; }
-
-    .create-level-btn {
-      min-width: 160px;
-      height: 160px;
-      border: 4px dashed #666;
-      border-radius: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      font-size: 3rem;
-      color: #666;
-      transition: 0.3s;
-    }
-    .create-level-btn:hover { border-color: #4cc9f0; color: #4cc9f0; background: rgba(76, 201, 240, 0.1); }
-
-    /* --- EDITOR --- */
-    .editor-wrap {
-      display: flex;
-      height: 100%;    }
-    .editor-sidebar {
-      width: 250px;
-      background: #16213e;
-      padding: 20px;
-      display: flex;
-      flex-direction: column;
-      gap: 15px;
-      overflow-y: auto;
-      border-right: 2px solid #0f3460;
-    }
-    .editor-canvas-wrap {
-      flex: 1;
-      position: relative;
-      background: #000;
-    }
-    .tool-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-    }
-    .tool-btn {
-      padding: 15px;
-      background: #0f3460;
-      border: 2px solid transparent;
-      border-radius: 10px;
-      color: white;
-      cursor: pointer;
-      text-align: center;
-    }
-    .tool-btn.active { border-color: #00d4ff; background: #1e3c72; }
-    .tool-btn canvas { margin-bottom: 5px; }
-
-    /* --- FULLSCREEN GAME --- */
-    #gameOverlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: #000;
-      z-index: 1000;
-      display: none;
-      flex-direction: column;
-    }
-    #gameOverlay.active { display: flex; }
-    
-    #gameCanvas {
-      flex: 1;
-      width: 100%;
-      background: linear-gradient(to bottom, #1e3c72, #2a5298);
-    }    
-    .game-ui-top {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      display: flex;
-      gap: 10px;
-      z-index: 1001;
-    }
-    .game-ui-score {
-      position: absolute;
-      top: 20px;
-      right: 20px;
-      font-size: 2rem;
-      font-weight: bold;
-      text-shadow: 2px 2px 0 #000;
-      z-index: 1001;
-    }
-    
-    /* --- MODALS --- */
-    .modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: none;
-      align-items: center;
-      justify-content: center;
-      z-index: 2000;
-    }
-    .modal.active { display: flex; }
-    .modal-content {
-      background: #16213e;
-      padding: 40px;
-      border-radius: 20px;
-      border: 2px solid #00d4ff;
-      width: 400px;
-      text-align: center;
-    }
-    .modal input {
-      width: 100%;
-      padding: 15px;
-      margin: 20px 0;
-      background: #0f3460;
-      border: none;
-      color: white;
-      font-size: 1.2rem;
-      border-radius: 10px;
-      text-align: center;
-    }
-    /* --- SKINS GRID --- */
-    .skins-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
-      gap: 10px;
-      padding: 10px;
-    }
-    .skin-item {
-      background: rgba(255,255,255,0.1);
-      padding: 10px;
-      border-radius: 10px;
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      border: 2px solid transparent;
-    }
-    .skin-item.active { border-color: #00d4ff; background: rgba(0,212,255,0.2); }
-    .skin-preview { width: 40px; height: 40px; margin-bottom: 5px; }
-
-    /* Tabs */
-    .tabs { display: flex; justify-content: center; gap: 10px; padding: 10px; background: #16213e; }
-    .tab { padding: 10px 20px; cursor: pointer; border-bottom: 3px solid transparent; }
-    .tab.active { border-color: #00d4ff; color: #00d4ff; }
-  </style>
+<meta charset="UTF-8">
+<title>Космический собиратель PRO</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; }
+  body {
+    background: radial-gradient(ellipse at center, #0a0a2e 0%, #000 100%);
+    color: #fff;
+    font-family: 'Arial', sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    overflow: hidden;
+  }
+  #gameContainer { position: relative; box-shadow: 0 0 60px rgba(74, 170, 255, 0.4); }
+  canvas { display: block; background: #000; border: 3px solid #4af; }
+  
+  .screen {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,10,0.95);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 10;
+    padding: 20px;
+  }
+  .hidden { display: none !important; }
+  
+  h1 {
+    font-size: 48px;
+    background: linear-gradient(90deg, #4af, #f4f, #fd3);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 20px;
+    text-align: center;
+  }
+  h2 { color: #4af; margin: 10px 0; }
+  
+  .btn {
+    background: linear-gradient(135deg, #4af, #28e);
+    border: none;
+    color: #fff;
+    padding: 12px 30px;
+    font-size: 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin: 8px;
+    transition: all 0.2s;
+    box-shadow: 0 4px 15px rgba(74, 170, 255, 0.4);
+    font-weight: bold;
+  }
+  .btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(74, 170, 255, 0.6); }
+  .btn:disabled { background: #555; cursor: not-allowed; box-shadow: none; transform: none; }
+  .btn.gold { background: linear-gradient(135deg, #fd3, #f80); }
+  .btn.danger { background: linear-gradient(135deg, #f44, #a00); }
+  
+  .stats-bar {
+    position: absolute;
+    top: 10px; left: 10px; right: 10px;
+    display: flex;
+    justify-content: space-between;
+    pointer-events: none;
+    font-weight: bold;
+    text-shadow: 0 0 8px #000;
+  }
+  .stat {
+    background: rgba(0,0,0,0.7);
+    padding: 8px 14px;
+    border-radius: 8px;
+    border: 2px solid rgba(74, 170, 255, 0.5);
+    font-size: 16px;
+  }
+  
+  .xp-bar {
+    position: absolute;
+    bottom: 10px; left: 10px; right: 10px;
+    height: 20px;
+    background: rgba(0,0,0,0.7);
+    border: 2px solid #4af;
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .xp-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #4f4, #fd3);
+    transition: width 0.3s;
+  }
+  .xp-text {
+    position: absolute;
+    width: 100%;
+    text-align: center;
+    line-height: 16px;
+    font-size: 12px;
+    font-weight: bold;
+    text-shadow: 0 0 4px #000;
+  }
+  
+  .shop {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    max-width: 600px;
+    margin: 15px 0;
+  }
+  .upgrade {
+    background: rgba(74, 170, 255, 0.1);
+    border: 2px solid #4af;
+    border-radius: 10px;
+    padding: 12px;
+    text-align: center;
+    min-width: 200px;
+  }
+  .upgrade-title { font-size: 18px; color: #fd3; margin-bottom: 5px; }
+  .upgrade-level { font-size: 14px; color: #aaa; }
+  .upgrade-desc { font-size: 13px; color: #ccc; margin: 5px 0; }
+  
+  .info { font-size: 16px; color: #ccc; margin: 8px 0; text-align: center; max-width: 600px; }
+  .big-score { font-size: 64px; color: #fd3; text-shadow: 0 0 20px #fd3; margin: 10px; }
+  
+  .level-up {
+    position: absolute;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 48px;
+    color: #fd3;
+    text-shadow: 0 0 30px #fd3;
+    pointer-events: none;
+    animation: levelUp 2s forwards;
+    z-index: 5;
+  }
+  @keyframes levelUp {
+    0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    20% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+    80% { opacity: 1; transform: translate(-50%, -70%) scale(1); }
+    100% { opacity: 0; transform: translate(-50%, -90%) scale(0.8); }
+  }
+</style>
 </head>
 <body>
-
-  <!-- APP CONTAINER -->
-  <div class="app-container" id="app">
-    <header>
-      <h1>🔷 MA2Dungeon</h1>
-      <div class="user-panel" id="userPanel">
-        <button onclick="openLogin()" class="btn-primary">Войти</button>
-      </div>
-    </header>
-
-    <div class="tabs">
-      <div class="tab active" onclick="switchTab('menu')">🏠 Уровни</div>
-      <div class="tab" onclick="switchTab('editor')">✏️ Редактор</div>
-      <div class="tab" onclick="switchTab('skins')">🎨 Скины</div>
+<div id="gameContainer">
+  <canvas id="game" width="800" height="600"></canvas>
+  
+  <div id="statsBar" class="stats-bar hidden">
+    <div class="stat">⭐ <span id="score">0</span></div>
+    <div class="stat">💰 <span id="coins">0</span></div>
+    <div class="stat">🎯 Ур. <span id="level">1</span></div>
+    <div class="stat">❤ <span id="lives">3</span></div>
+  </div>
+  
+  <div id="xpBar" class="xp-bar hidden">
+    <div class="xp-fill" id="xpFill" style="width:0%"></div>
+    <div class="xp-text" id="xpText">XP: 0 / 100</div>
+  </div>
+  
+  <!-- СТАРТОВЫЙ ЭКРАН -->
+  <div id="startScreen" class="screen">
+    <h1>🚀 Космический собиратель PRO</h1>
+    <div class="info">
+      Собирай ⭐ звёзды, избегай ☄ астероидов<br>
+      Получай опыт, прокачивай корабль, открывай улучшения!
     </div>
-
-    <!-- MENU SCREEN -->
-    <div id="menuScreen" class="screen active">
-      <div class="levels-header">
-        <h2>Выбери уровень</h2>
-      </div>
-      <div class="levels-container">        <div class="levels-scroll" id="levelsList">
-          <!-- Levels injected here -->
-          <div class="create-level-btn" onclick="openEditor()">+</div>
-        </div>
-      </div>
+    <div class="info">
+      <b>👤 Игрок:</b> Уровень <span id="playerLevelStart">1</span> |
+      💰 <span id="coinsStart">0</span> монет
     </div>
-
-    <!-- EDITOR SCREEN -->
-    <div id="editorScreen" class="screen">
-      <div class="editor-wrap">
-        <div class="editor-sidebar">
-          <h3>Объекты</h3>
-          <div class="tool-grid">
-            <div class="tool-btn active" onclick="setTool('block')">
-              <canvas id="icon-block" width="30" height="30"></canvas>
-              <div>Блок</div>
-            </div>
-            <div class="tool-btn" onclick="setTool('spike')">
-              <canvas id="icon-spike" width="30" height="30"></canvas>
-              <div>Шип</div>
-            </div>
-            <div class="tool-btn" onclick="setTool('coin')">
-              <canvas id="icon-coin" width="30" height="30"></canvas>
-              <div>Монета</div>
-            </div>
-            <div class="tool-btn" onclick="setTool('portal')">
-              <canvas id="icon-portal" width="30" height="30"></canvas>
-              <div>Портал</div>
-            </div>
-            <div class="tool-btn" onclick="setTool('erase')">
-              <div style="font-size:24px">🗑️</div>
-              <div>Стереть</div>
-            </div>
-          </div>
-          
-          <hr style="border-color:#333">
-          
-          <label>Название:</label>
-          <input type="text" id="levelNameInput" placeholder="Мой уровень" value="New Level">
-          
-          <label>Сложность:</label>
-          <select id="levelDiffInput" style="padding:10px; border-radius:5px; background:#0f3460; color:white; border:none;">
-            <option value="easy">Лёгкая</option>
-            <option value="normal" selected>Нормальная</option>
-            <option value="hard">Сложная</option>
-            <option value="insane">Безумная</option>
-          </select>
-
-          <div style="margin-top:auto; display:flex; flex-direction:column; gap:10px;">
-            <button onclick="saveLevelFromEditor()" class="btn-success">💾 Сохранить</button>            <button onclick="switchTab('menu')" class="btn-primary">🏠 В меню</button>
-          </div>
-        </div>
-        <div class="editor-canvas-wrap">
-          <canvas id="editorCanvas"></canvas>
-        </div>
-      </div>
-    </div>
-
-    <!-- SKINS SCREEN -->
-    <div id="skinsScreen" class="screen">
-      <div style="text-align:center; padding:20px;">
-        <h2>Выбери скин</h2>
-        <p style="color:#aaa; margin-bottom:20px;">Нажми, чтобы выбрать</p>
-      </div>
-      <div class="skins-grid" id="skinsGrid" style="max-width:800px; margin:0 auto;"></div>
+    <button class="btn" onclick="startGame()">🎮 Начать игру</button>
+    <button class="btn gold" onclick="showShop()">🛠 Магазин улучшений</button>
+    <div class="info" style="margin-top:20px;">
+      <b>Управление:</b> WASD / Стрелки
     </div>
   </div>
-
-  <!-- FULLSCREEN GAME OVERLAY -->
-  <div id="gameOverlay">
-    <div class="game-ui-top">
-      <button onclick="exitGame()" class="btn-danger"> Меню</button>
-      <button onclick="restartGame()" class="btn-primary">🔄 Рестарт</button>
-    </div>
-    <div class="game-ui-score" id="scoreDisplay">0%</div>
-    <canvas id="gameCanvas"></canvas>
+  
+  <!-- МАГАЗИН -->
+  <div id="shopScreen" class="screen hidden">
+    <h1>🛠 Магазин улучшений</h1>
+    <div class="info">💰 Монеты: <span id="coinsShop" style="color:#fd3;font-size:24px;">0</span></div>
+    <div class="shop" id="shopGrid"></div>
+    <button class="btn" onclick="hideShop()">← Назад</button>
   </div>
-
-  <!-- LOGIN MODAL -->
-  <div class="modal" id="loginModal">
-    <div class="modal-content">
-      <h2>👤 Вход в аккаунт</h2>
-      <p>Данные сохраняются в этом браузере</p>
-      <input type="text" id="usernameInput" placeholder="Никнейм">
-      <button onclick="login()" class="btn-success" style="width:100%; font-size:1.2rem;">Войти / Создать</button>
-      <button onclick="closeLogin()" style="margin-top:10px; background:transparent; color:#888;">Отмена</button>
+  
+  <!-- КОНЕЦ ИГРЫ -->
+  <div id="gameOverScreen" class="screen hidden">
+    <h1 style="background: linear-gradient(90deg, #f44, #f80); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;">💥 Игра окончена</h1>
+    <div class="big-score" id="finalScore">0</div>
+    <div class="info">
+      Заработано: 💰 <span id="earnedCoins" style="color:#fd3;">0</span> |
+      ⭐ Опыт: <span id="earnedXP" style="color:#4f4;">0</span>
     </div>
+    <div class="info" id="levelUpMsg" style="color:#fd3;font-size:20px;"></div>
+    <button class="btn" onclick="startGame()">🔄 Играть снова</button>
+    <button class="btn gold" onclick="showShop()">🛠 Магазин</button>
+    <button class="btn danger" onclick="backToMenu()">🏠 В меню</button>
   </div>
+</div>
 
-  <script>
-    // ==================== CORE CONFIG ====================
-    const GRID_SIZE = 40;
-    const SKINS = [
-      { id: 'blue', color: '#00d4ff', type: 'square' },
-      { id: 'red', color: '#ff416c', type: 'square' },
-      { id: 'green', color: '#00ff88', type: 'square' },
-      { id: 'yellow', color: '#ffd700', type: 'square' },
-      { id: 'purple', color: '#9d4edd', type: 'square' },
-      { id: 'orange', color: '#ff9500', type: 'square' },      { id: 'white', color: '#ffffff', type: 'square' },
-      { id: 'black', color: '#333333', type: 'square' },
-      // Special shapes
-      { id: 'blue-diamond', color: '#00d4ff', type: 'diamond' },
-      { id: 'red-diamond', color: '#ff416c', type: 'diamond' },
-      { id: 'blue-circle', color: '#00d4ff', type: 'circle' },
-      { id: 'green-circle', color: '#00ff88', type: 'circle' },
-      { id: 'yellow-circle', color: '#ffd700', type: 'circle' },
-      { id: 'spiky-red', color: '#ff416c', type: 'spiky' },
-      { id: 'spiky-blue', color: '#00d4ff', type: 'spiky' }
-    ];
+<script>
+// ============ СОХРАНЕНИЕ ПРОГРЕССА ============
+const SAVE_KEY = 'spaceCollectorSave_v1';
+let save = {
+  coins: 0,
+  xp: 0,
+  playerLevel: 1,
+  upgrades: {
+    health: 0,    // +1 жизнь за уровень
+    speed: 0,     // +10% скорости
+    magnet: 0,    // притягивание звёзд
+    shield: 0,    // шанс начать со щитом
+    crit: 0,      // шанс x2 очков
+    xpBoost: 0    // +20% опыта
+  }
+};
 
-    // ==================== STATE ====================
-    let state = {
-      user: localStorage.getItem('ma2_user') || null,
-      skin: localStorage.getItem('ma2_skin') || 'blue',
-      levels: []
-    };
+function loadSave() {
+  try {
+    const s = localStorage.getItem(SAVE_KEY);
+    if (s) save = { ...save, ...JSON.parse(s) };
+  } catch(e) {}
+}
+function saveSave() {
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); } catch(e) {}
+}
+loadSave();
 
-    let game = {
-      active: false,
-      score: 0,
-      player: {},
-      obstacles: [],
-      speed: 6,
-      animationId: null,
-      levelData: null
-    };
+function xpForLevel(lvl) { return Math.floor(100 * Math.pow(1.5, lvl - 1)); }
 
-    let editor = {
-      objects: [],
-      tool: 'block',
-      canvas: null,
-      ctx: null,
-      isDrawing: false,
-      groundY: 0
-    };
+function addXP(amount) {
+  amount = Math.floor(amount * (1 + save.upgrades.xpBoost * 0.2));
+  save.xp += amount;
+  let leveled = false;
+  while (save.xp >= xpForLevel(save.playerLevel)) {
+    save.xp -= xpForLevel(save.playerLevel);
+    save.playerLevel++;
+    save.coins += 50;
+    leveled = true;
+  }
+  saveSave();
+  return { leveled, amount };
+}
 
-    // ==================== INITIALIZATION ====================
-    window.onload = () => {
-      initIcons();
-      renderSkins();
-      
-      if (state.user) {
-        login(state.user);
+// ============ МАГАЗИН ============
+const UPGRADES = {
+  health:  { name: '❤ Здоровье',    desc: '+1 жизнь',            icon: '❤',  baseCost: 50,  max: 10 },
+  speed:   { name: '⚡ Скорость',    desc: '+10% скорости',       icon: '⚡', baseCost: 40,  max: 10 },
+  magnet:  { name: '🧲 Магнит',      desc: 'Притяжение звёзд',    icon: '🧲', baseCost: 80,  max: 5 },
+  shield:  { name: '🛡 Стартовый щит', desc: 'Щит в начале',      icon: '🛡', baseCost: 100, max: 3 },
+  crit:    { name: '💥 Крит',        desc: '+10% шанс x2 очков',  icon: '💥', baseCost: 120, max: 8 },
+  xpBoost: { name: '📚 Опыт',        desc: '+20% получаемого XP', icon: '📚', baseCost: 150, max: 5 }
+};
+
+function upgradeCost(key) {
+  return Math.floor(UPGRADES[key].baseCost * Math.pow(1.8, save.upgrades[key]));
+}
+
+function renderShop() {
+  document.getElementById('coinsShop').textContent = save.coins;
+  const grid = document.getElementById('shopGrid');
+  grid.innerHTML = '';
+  for (const key in UPGRADES) {
+    const u = UPGRADES[key];
+    const lvl = save.upgrades[key];
+    const cost = upgradeCost(key);
+    const maxed = lvl >= u.max;
+    const canBuy = save.coins >= cost && !maxed;
+    
+    const div = document.createElement('div');
+    div.className = 'upgrade';
+    div.innerHTML = `
+      <div class="upgrade-title">${u.icon} ${u.name}</div>
+      <div class="upgrade-level">Уровень ${lvl} / ${u.max}</div>
+      <div class="upgrade-desc">${u.desc}</div>
+      <button class="btn gold" ${!canBuy ? 'disabled' : ''} onclick="buyUpgrade('${key}')">
+        ${maxed ? 'МАКС' : `💰 ${cost}`}
+      </button>
+    `;
+    grid.appendChild(div);
+  }
+}
+
+function buyUpgrade(key) {
+  const cost = upgradeCost(key);
+  if (save.coins >= cost && save.upgrades[key] < UPGRADES[key].max) {
+    save.coins -= cost;
+    save.upgrades[key]++;
+    saveSave();
+    renderShop();
+    updateMenuStats();
+  }
+}
+
+function showShop() {
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('shopScreen').classList.remove('hidden');
+  renderShop();
+}
+function hideShop() {
+  document.getElementById('shopScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+}
+function backToMenu() {
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('startScreen').classList.remove('hidden');
+  updateMenuStats();
+}
+
+function updateMenuStats() {
+  document.getElementById('playerLevelStart').textContent = save.playerLevel;
+  document.getElementById('coinsStart').textContent = save.coins;
+}
+updateMenuStats();
+
+// ============ ИГРА ============
+const canvas = document.getElementById('game');
+const ctx = canvas.getContext('2d');
+const W = canvas.width, H = canvas.height;
+
+const keys = {};
+document.addEventListener('keydown', e => {
+  keys[e.key.toLowerCase()] = true;
+  if (['arrowup','arrowdown','arrowleft','arrowright',' '].includes(e.key.toLowerCase())) e.preventDefault();
+});
+document.addEventListener('keyup', e => keys[e.key.toLowerCase()] = false);
+
+// Звуки
+let audioCtx;
+function initAudio() {
+  if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+}
+function playSound(freq, duration, type = 'sine', vol = 0.2) {
+  if (!audioCtx) return;
+  const osc = audioCtx.createOscillator();
+  const gain = audioCtx.createGain();
+  osc.type = type;
+  osc.frequency.value = freq;
+  gain.gain.setValueAtTime(vol, audioCtx.currentTime);
+  gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+  osc.connect(gain);
+  gain.connect(audioCtx.destination);
+  osc.start();
+  osc.stop(audioCtx.currentTime + duration);
+}
+const sfx = {
+  collect: () => { playSound(880, 0.1); setTimeout(() => playSound(1320, 0.1), 50); },
+  hit: () => playSound(150, 0.3, 'sawtooth', 0.3),
+  powerup: () => { playSound(660, 0.1); setTimeout(() => playSound(880, 0.1), 80); setTimeout(() => playSound(1320, 0.15), 160); },
+  levelUp: () => { playSound(523, 0.15); setTimeout(() => playSound(659, 0.15), 100); setTimeout(() => playSound(784, 0.15), 200); setTimeout(() => playSound(1047, 0.3), 300); },
+  coin: () => playSound(1200, 0.08, 'square', 0.15)
+};
+
+// Игровые объекты
+let player, stars, enemies, powerups, particles, bgStars, coins;
+let score, lives, level, gameRunning, gameTime, spawnTimer, difficultyTimer;
+let shieldTime, speedTime, magnetTime;
+let earnedCoinsThisRun, earnedXPThisRun;
+let lastTime;
+
+function rand(a, b) { return a + Math.random() * (b - a); }
+
+function initBgStars() {
+  bgStars = [];
+  for (let i = 0; i < 150; i++) {
+    bgStars.push({ x: Math.random() * W, y: Math.random() * H, size: Math.random() * 2 + 0.5, speed: Math.random() * 30 + 10 });
+  }
+}
+
+function startGame() {
+  initAudio();
+  
+  player = { x: W/2, y: H/2, r: 14, baseSpeed: 300 };
+  stars = [];
+  enemies = [];
+  powerups = [];
+  particles = [];
+  coins = [];
+  
+  score = 0;
+  lives = 3 + save.upgrades.health;
+  level = 1;
+  gameTime = 0;
+  spawnTimer = 0;
+  difficultyTimer = 0;
+  shieldTime = save.upgrades.shield > 0 ? 5 * save.upgrades.shield : 0;
+  speedTime = 0;
+  magnetTime = 0;
+  earnedCoinsThisRun = 0;
+  earnedXPThisRun = 0;
+  gameRunning = true;
+  
+  for (let i = 0; i < 5; i++) spawnStar();
+  initBgStars();
+  
+  document.getElementById('startScreen').classList.add('hidden');
+  document.getElementById('gameOverScreen').classList.add('hidden');
+  document.getElementById('shopScreen').classList.add('hidden');
+  document.getElementById('statsBar').classList.remove('hidden');
+  document.getElementById('xpBar').classList.remove('hidden');
+  
+  lastTime = performance.now();
+  requestAnimationFrame(gameLoop);
+}
+
+function spawnStar() {
+  stars.push({
+    x: rand(50, W - 50),
+    y: rand(50, H - 50),
+    r: 10,
+    pulse: Math.random() * Math.PI * 2,
+    value: Math.random() < 0.1 ? 50 : 10
+  });
+}
+
+function spawnEnemy() {
+  const type = Math.random() < 0.2 + level * 0.05 ? (Math.random() < 0.5 ? 1 : 2) : 0;
+  let x, y, vx, vy, r;
+  const side = Math.floor(Math.random() * 4);
+  if (side === 0) { x = -30; y = rand(0, H); }
+  else if (side === 1) { x = W + 30; y = rand(0, H); }
+  else if (side === 2) { x = rand(0, W); y = -30; }
+  else { x = rand(0, W); y = H + 30; }
+  
+  const speed = 60 + level * 10;
+  if (type === 0) {
+    const angle = Math.atan2(player.y - y, player.x - x) + rand(-0.5, 0.5);
+    vx = Math.cos(angle) * rand(speed, speed + 60);
+    vy = Math.sin(angle) * rand(speed, speed + 60);
+    r = rand(15, 25);
+  } else if (type === 1) {
+    const angle = Math.atan2(player.y - y, player.x - x);
+    vx = Math.cos(angle) * (speed + 100);
+    vy = Math.sin(angle) * (speed + 100);
+    r = 12;
+  } else {
+    const angle = Math.atan2(player.y - y, player.x - x);
+    vx = Math.cos(angle) * speed * 0.7;
+    vy = Math.sin(angle) * speed * 0.7;
+    r = 30;
+  }
+  
+  enemies.push({ x, y, vx, vy, r, type, rotation: 0, rotSpeed: rand(-2, 2) });
+}
+
+function spawnPowerup() {
+  const types = ['shield', 'speed', 'magnet', 'coin'];
+  const type = types[Math.floor(Math.random() * types.length)];
+  powerups.push({
+    x: rand(50, W - 50),
+    y: rand(50, H - 50),
+    r: 15,
+    type,
+    pulse: 0,
+    life: 10
+  });
+}
+
+function spawnParticles(x, y, count, color, speed = 200) {
+  for (let i = 0; i < count; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = rand(speed * 0.3, speed);
+    particles.push({
+      x, y,
+      vx: Math.cos(angle) * s,
+      vy: Math.sin(angle) * s,
+      r: rand(2, 5),
+      life: 1,
+      color
+    });
+  }
+}
+
+function spawnCoin(x, y, amount) {
+  for (let i = 0; i < amount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const s = rand(100, 200);
+    coins.push({
+      x, y,
+      vx: Math.cos(angle) * s,
+      vy: Math.sin(angle) * s,
+      life: 1,
+      collected: false
+    });
+  }
+}
+
+function dist(a, b) { return Math.hypot(a.x - b.x, a.y - b.y); }
+
+function update(dt) {
+  gameTime += dt;
+  spawnTimer += dt;
+  difficultyTimer += dt;
+  
+  // Увеличение сложности
+  if (difficultyTimer > 20) {
+    difficultyTimer = 0;
+    level++;
+    sfx.levelUp();
+    showLevelUp();
+  }
+  
+  // Спавн
+  const spawnRate = Math.max(0.3, 1.5 - level * 0.1);
+  if (spawnTimer > spawnRate) {
+    spawnTimer = 0;
+    spawnEnemy();
+    if (Math.random() < 0.1) spawnPowerup();
+  }
+  
+  // Таймеры бонусов
+  if (shieldTime > 0) shieldTime -= dt;
+  if (speedTime > 0) speedTime -= dt;
+  if (magnetTime > 0) magnetTime -= dt;
+  
+  // Движение игрока
+  let dx = 0, dy = 0;
+  if (keys['arrowup'] || keys['w']) dy -= 1;
+  if (keys['arrowdown'] || keys['s']) dy += 1;
+  if (keys['arrowleft'] || keys['a']) dx -= 1;
+  if (keys['arrowright'] || keys['d']) dx += 1;
+  
+  if (dx !== 0 || dy !== 0) {
+    const len = Math.hypot(dx, dy);
+    dx /= len; dy /= len;
+    const speed = player.baseSpeed * (1 + save.upgrades.speed * 0.1) * (speedTime > 0 ? 1.5 : 1);
+    player.x += dx * speed * dt;
+    player.y += dy * speed * dt;
+  }
+  
+  player.x = Math.max(player.r, Math.min(W - player.r, player.x));
+  player.y = Math.max(player.r, Math.min(H - player.r, player.y));
+  
+  // Фон
+  bgStars.forEach(s => {
+    s.y += s.speed * dt;
+    if (s.y > H) { s.y = 0; s.x = Math.random() * W; }
+  });
+  
+  // Звёзды
+  const magnetRange = save.upgrades.magnet * 80 + (magnetTime > 0 ? 200 : 0);
+  for (let i = stars.length - 1; i >= 0; i--) {
+    const s = stars[i];
+    s.pulse += dt * 3;
+    
+    // Магнит
+    if (magnetRange > 0) {
+      const d = dist(player, s);
+      if (d < magnetRange) {
+        const pull = (1 - d / magnetRange) * 400;
+        const angle = Math.atan2(player.y - s.y, player.x - s.x);
+        s.x += Math.cos(angle) * pull * dt;
+        s.y += Math.sin(angle) * pull * dt;
+      }
+    }
+    
+    if (dist(player, s) < player.r + s.r) {
+      const isCrit = Math.random() < save.upgrades.crit * 0.1;
+      const value = s.value * (isCrit ? 2 : 1);
+      score += value;
+      const xp = Math.floor(value / 2);
+      earnedXPThisRun += xp;
+      addXP(xp);
+      spawnParticles(s.x, s.y, 15, '#fd3');
+      sfx.collect();
+      stars.splice(i, 1);
+      spawnStar();
+    }
+  }
+  
+  // Враги
+  for (let i = enemies.length - 1; i >= 0; i--) {
+    const e = enemies[i];
+    e.x += e.vx * dt;
+    e.y += e.vy * dt;
+    e.rotation += e.rotSpeed * dt;
+    
+    if (e.x < -100 || e.x > W + 100 || e.y < -100 || e.y > H + 100) {
+      enemies.splice(i, 1);
+      continue;
+    }
+    
+    if (dist(player, e) < player.r + e.r) {
+      if (shieldTime > 0) {
+        shieldTime = 0;
+        spawnParticles(e.x, e.y, 25, '#4f4');
+        sfx.hit();
+        enemies.splice(i, 1);
       } else {
-        openLogin();
-      }
-    };
-    // ==================== DRAWING ENGINE (NO EMOJIS) ====================
-    function drawShape(ctx, type, x, y, size, color) {
-      ctx.fillStyle = color;
-      ctx.strokeStyle = 'white';
-      ctx.lineWidth = 2;
-      
-      const s = size || 40;
-      const half = s / 2;
-      
-      ctx.save();
-      ctx.translate(x + half, y + half);
-
-      if (type === 'square' || type === 'block') {
-        ctx.fillRect(-half, -half, s, s);
-        ctx.strokeRect(-half, -half, s, s);
-        // Inner detail
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.fillRect(-half + 5, -half + 5, s - 10, s - 10);
-      } 
-      else if (type === 'spike') {
-        ctx.beginPath();
-        ctx.moveTo(0, -half);
-        ctx.lineTo(half, half);
-        ctx.lineTo(-half, half);
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      } 
-      else if (type === 'coin') {
-        ctx.beginPath();
-        ctx.arc(0, 0, half - 4, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-        ctx.fillStyle = 'rgba(0,0,0,0.3)';
-        ctx.beginPath();
-        ctx.arc(0, 0, half - 10, 0, Math.PI * 2);
-        ctx.fill();
-      }
-      else if (type === 'portal') {
-        ctx.beginPath();
-        ctx.arc(0, 0, half - 2, 0, Math.PI * 2);
-        ctx.strokeStyle = '#00ffff';
-        ctx.lineWidth = 4;
-        ctx.stroke();
-        ctx.beginPath();
-        ctx.arc(0, 0, half - 8, 0, Math.PI * 2);
-        ctx.fillStyle = 'rgba(0,255,255,0.5)';
-        ctx.fill();
-      }
-      else if (type === 'diamond') {        ctx.rotate(Math.PI / 4);
-        ctx.fillRect(-half * 0.7, -half * 0.7, s * 0.7, s * 0.7);
-        ctx.strokeRect(-half * 0.7, -half * 0.7, s * 0.7, s * 0.7);
-      }
-      else if (type === 'circle') {
-        ctx.beginPath();
-        ctx.arc(0, 0, half, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
-      }
-      else if (type === 'spiky') {
-        ctx.beginPath();
-        for(let i=0; i<8; i++) {
-          ctx.rotate(Math.PI/4);
-          ctx.lineTo(0, -half);
-          ctx.lineTo(half/3, -half/3);
+        lives--;
+        spawnParticles(player.x, player.y, 30, '#f44');
+        sfx.hit();
+        enemies.splice(i, 1);
+        if (lives <= 0) {
+          endGame();
+          return;
         }
-        ctx.closePath();
-        ctx.fill();
-        ctx.stroke();
-      }
-
-      ctx.restore();
-    }
-
-    function initIcons() {
-      // Draw icons for tools
-      ['block', 'spike', 'coin', 'portal'].forEach(type => {
-        const cvs = document.getElementById(`icon-${type}`);
-        if(cvs) {
-          const c = cvs.getContext('2d');
-          c.scale(0.75, 0.75); // Scale down for small icons
-          drawShape(c, type, 0, 0, 40, '#fff');
-        }
-      });
-    }
-
-    // ==================== UI MANAGEMENT ====================
-    function switchTab(tab) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
-      
-      if(tab === 'menu') {
-        document.querySelector('.tab:nth-child(1)').classList.add('active');
-        document.getElementById('menuScreen').classList.add('active');
-        renderLevels();
-      } else if (tab === 'editor') {
-        document.querySelector('.tab:nth-child(2)').classList.add('active');
-        document.getElementById('editorScreen').classList.add('active');
-        initEditor();      } else if (tab === 'skins') {
-        document.querySelector('.tab:nth-child(3)').classList.add('active');
-        document.getElementById('skinsScreen').classList.add('active');
       }
     }
-
-    function renderLevels() {
-      const list = document.getElementById('levelsList');
-      // Keep the "+" button at the end
-      const createBtn = list.querySelector('.create-level-btn');
-      list.innerHTML = '';
-      
-      const userLevels = state.levels.filter(l => l.author === state.user);
-      
-      userLevels.forEach(lvl => {
-        const card = document.createElement('div');
-        card.className = 'level-card';
-        card.onclick = () => playLevel(lvl);
-        
-        // Difficulty color
-        let diffClass = 'diff-normal';
-        let diffText = 'Норм';
-        if(lvl.difficulty === 'easy') { diffClass = 'diff-easy'; diffText = 'Легко'; }
-        if(lvl.difficulty === 'hard') { diffClass = 'diff-hard'; diffText = 'Сложно'; }
-        if(lvl.difficulty === 'insane') { diffClass = 'diff-insane'; diffText = 'Безумие'; }
-        
-        card.innerHTML = `
-          <div class="level-icon"></div>
-          <div class="level-name">${lvl.name}</div>
-          <div class="level-diff ${diffClass}">${diffText}</div>
-        `;
-        
-        // Draw mini preview
-        const iconCanvas = card.querySelector('.level-icon');
-        const ctx = document.createElement('canvas').getContext('2d');
-        // We can't easily append canvas context here, simpler to just use CSS or a tiny canvas
-        const miniCanvas = document.createElement('canvas');
-        miniCanvas.width = 60; miniCanvas.height = 60;
-        miniCanvas.style.width = '60px'; miniCanvas.style.height = '60px';
-        miniCanvas.style.background = '#000';
-        miniCanvas.style.borderRadius = '8px';
-        // Just draw a random shape for preview
-        const mCtx = miniCanvas.getContext('2d');
-        drawShape(mCtx, 'square', 10, 10, 40, '#00d4ff');
-        card.replaceChild(miniCanvas, card.querySelector('.level-icon'));
-        
-        list.appendChild(card);
-      });
-      
-      list.appendChild(createBtn);    }
-
-    function renderSkins() {
-      const grid = document.getElementById('skinsGrid');
-      grid.innerHTML = '';
-      SKINS.forEach(skin => {
-        const el = document.createElement('div');
-        el.className = `skin-item ${state.skin === skin.id ? 'active' : ''}`;
-        el.onclick = () => {
-          state.skin = skin.id;
-          localStorage.setItem('ma2_skin', skin.id);
-          renderSkins();
-        };
-        
-        const cvs = document.createElement('canvas');
-        cvs.className = 'skin-preview';
-        cvs.width = 40; cvs.height = 40;
-        const ctx = cvs.getContext('2d');
-        drawShape(ctx, skin.type, 0, 0, 40, skin.color);
-        
-        el.appendChild(cvs);
-        el.innerHTML += `<div style="font-size:0.8rem; margin-top:5px">${skin.id}</div>`;
-        grid.appendChild(el);
-      });
-    }
-
-    // ==================== ACCOUNTS ====================
-    function openLogin() { document.getElementById('loginModal').classList.add('active'); }
-    function closeLogin() { document.getElementById('loginModal').classList.remove('active'); }
+  }
+  
+  // Бонусы
+  for (let i = powerups.length - 1; i >= 0; i--) {
+    const p = powerups[i];
+    p.pulse += dt * 4;
+    p.life -= dt;
+    if (p.life <= 0) { powerups.splice(i, 1); continue; }
     
-    function login(forceUser) {
-      const name = forceUser || document.getElementById('usernameInput').value.trim();
-      if(!name) return;
-      
-      state.user = name;
-      localStorage.setItem('ma2_user', name);
-      
-      // Load levels
-      const savedLevels = localStorage.getItem('ma2_levels_' + name);
-      state.levels = savedLevels ? JSON.parse(savedLevels) : [];
-      
-      closeLogin();
-      updateUserUI();
-      renderLevels();
-    }
-    
-    function updateUserUI() {
-      document.getElementById('userPanel').innerHTML = `
-        <span class="user-badge">👤 ${state.user}</span>
-        <button onclick="logout()" class="btn-danger" style="font-size:0.8rem">Выйти</button>      `;
-    }
-    
-    function logout() {
-      localStorage.removeItem('ma2_user');
-      location.reload();
-    }
-
-    // ==================== EDITOR LOGIC ====================
-    function openEditor() {
-      if(!state.user) { openLogin(); return; }
-      editor.objects = [];
-      document.getElementById('levelNameInput').value = 'New Level';
-      switchTab('editor');
-    }
-
-    function initEditor() {
-      const canvas = document.getElementById('editorCanvas');
-      const wrap = canvas.parentElement;
-      canvas.width = wrap.clientWidth;
-      canvas.height = wrap.clientHeight;
-      
-      editor.canvas = canvas;
-      editor.ctx = canvas.getContext('2d');
-      editor.groundY = canvas.height - GRID_SIZE * 2; // Ground is 2 blocks high
-      
-      drawEditor();
-      
-      // Mouse Events
-      canvas.onmousedown = (e) => { editor.isDrawing = true; handleEditorClick(e); };
-      canvas.onmousemove = (e) => { if(editor.isDrawing) handleEditorClick(e); };
-      canvas.onmouseup = () => editor.isDrawing = false;
-      canvas.onmouseleave = () => editor.isDrawing = false;
-    }
-
-    function setTool(t) {
-      editor.tool = t;
-      document.querySelectorAll('.tool-btn').forEach(b => b.classList.remove('active'));
-      event.currentTarget.classList.add('active');
-    }
-
-    function handleEditorClick(e) {
-      const rect = editor.canvas.getBoundingClientRect();
-      const x = Math.floor((e.clientX - rect.left) / GRID_SIZE) * GRID_SIZE;
-      const y = Math.floor((e.clientY - rect.top) / GRID_SIZE) * GRID_SIZE;
-      
-      if (editor.tool === 'erase') {
-        editor.objects = editor.objects.filter(o => o.x !== x || o.y !== y);
-      } else {
-        // Remove existing at this spot        editor.objects = editor.objects.filter(o => o.x !== x || o.y !== y);
-        // Add new
-        editor.objects.push({ x, y, type: editor.tool });
+    if (dist(player, p) < player.r + p.r) {
+      if (p.type === 'shield') shieldTime = 8;
+      else if (p.type === 'speed') speedTime = 6;
+      else if (p.type === 'magnet') magnetTime = 8;
+      else if (p.type === 'coin') {
+        const amount = 5 + level;
+        save.coins += amount;
+        earnedCoinsThisRun += amount;
+        spawnCoin(p.x, p.y, Math.min(amount, 10));
       }
-      drawEditor();
+      spawnParticles(p.x, p.y, 20, p.type === 'shield' ? '#4f4' : p.type === 'speed' ? '#f4f' : p.type === 'magnet' ? '#4ff' : '#fd3');
+      sfx.powerup();
+      powerups.splice(i, 1);
     }
-
-    function drawEditor() {
-      const ctx = editor.ctx;
-      const w = editor.canvas.width;
-      const h = editor.canvas.height;
-      const gY = editor.groundY;
-      
-      // BG
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, w, h);
-      
-      // Grid
-      ctx.strokeStyle = 'rgba(255,255,255,0.05)';
-      ctx.lineWidth = 1;
-      for(let x=0; x<w; x+=GRID_SIZE) { ctx.beginPath(); ctx.moveTo(x,0); ctx.lineTo(x,h); ctx.stroke(); }
-      for(let y=0; y<h; y+=GRID_SIZE) { ctx.beginPath(); ctx.moveTo(0,y); ctx.lineTo(w,y); ctx.stroke(); }
-      
-      // Ground
-      ctx.fillStyle = '#0f3460';
-      ctx.fillRect(0, gY, w, h - gY);
-      ctx.fillStyle = '#16213e'; // Ground detail
-      for(let x=0; x<w; x+=GRID_SIZE) {
-        ctx.fillRect(x + 5, gY + 5, GRID_SIZE - 10, GRID_SIZE - 10);
-      }
-      
-      // Objects
-      editor.objects.forEach(obj => {
-        drawShape(ctx, obj.type, obj.x, obj.y, GRID_SIZE, getObjColor(obj.type));
-      });
-      
-      // Ground Line
-      ctx.strokeStyle = '#00d4ff';
-      ctx.lineWidth = 2;
-      ctx.beginPath(); ctx.moveTo(0, gY); ctx.lineTo(w, gY); ctx.stroke();
-    }
-
-    function getObjColor(type) {
-      if(type === 'block') return '#4cc9f0';
-      if(type === 'spike') return '#ff416c';
-      if(type === 'coin') return '#ffd700';
-      if(type === 'portal') return '#e040fb';
-      return '#fff';
-    }
-    function saveLevelFromEditor() {
-      if(!state.user) return;
-      
-      const name = document.getElementById('levelNameInput').value || 'Level';
-      const diff = document.getElementById('levelDiffInput').value;
-      
-      // Check if updating existing
-      const existingIdx = state.levels.findIndex(l => l.name === name && l.author === state.user);
-      
-      const lvlData = {
-        id: existingIdx >= 0 ? state.levels[existingIdx].id : Date.now(),
-        name: name,
-        difficulty: diff,
-        author: state.user,
-        objects: [...editor.objects],
-        length: editor.objects.length // Simplified length
-      };
-      
-      if(existingIdx >= 0) {
-        state.levels[existingIdx] = lvlData;
-      } else {
-        state.levels.push(lvlData);
-      }
-      
-      localStorage.setItem('ma2_levels_' + state.user, JSON.stringify(state.levels));
-      alert('Уровень сохранен!');
-      switchTab('menu');
-    }
-
-    // ==================== GAME ENGINE ====================
-    function playLevel(levelData) {
-      game.levelData = levelData;
-      game.active = true;
-      game.score = 0;
-      game.speed = 6; // Base speed
-      game.obstacles = [...levelData.objects]; // Copy objects
-      game.player = { x: 100, y: 0, dy: 0, grounded: false, rotation: 0 };
-      
-      document.getElementById('gameOverlay').classList.add('active');
-      resizeGameCanvas();
-      
-      // Position player on ground
-      const gY = gameCanvas.height - GRID_SIZE * 2;
-      game.player.y = gY - GRID_SIZE;
-      
-      // Adjust objects relative to new canvas height
-      const offset = gameCanvas.height - editor.canvas.height; // Approximate offset
-      // In a real app we'd need to handle resolution scaling, 
-      // for now we assume 100% height means we re-calculate Y from bottom
-            const groundY = gameCanvas.height - GRID_SIZE * 2;
-      game.obstacles.forEach(o => {
-        // Editor objects are absolute Y. 
-        // If canvas resized, we need to ensure ground matches.
-        // Simple fix: Re-calculate Y based on distance from bottom of editor canvas
-        const distFromBottom = editor.canvas.height - o.y;
-        o.y = gameCanvas.height - distFromBottom;
-      });
-      
-      gameLoop();
-    }
-
-    function restartGame() {
-      game.active = false;
-      cancelAnimationFrame(game.animationId);
-      playLevel(game.levelData);
-    }
-
-    function exitGame() {
-      game.active = false;
-      cancelAnimationFrame(game.animationId);
-      document.getElementById('gameOverlay').classList.remove('active');
-    }
-
-    function resizeGameCanvas() {
-      const canvas = document.getElementById('gameCanvas');
-      canvas.width = window.innerWidth;
-      canvas.height = window.innerHeight;
-    }
-
-    const gameCanvas = document.getElementById('gameCanvas');
-    window.addEventListener('resize', () => {
-      if(game.active) resizeGameCanvas();
-    });
-
-    // Input
-    window.addEventListener('keydown', (e) => {
-      if((e.code === 'Space' || e.code === 'ArrowUp') && game.active) jump();
-    });
-    window.addEventListener('mousedown', (e) => {
-      if(game.active && e.target.id === 'gameCanvas') jump();
-    });
-
-    function jump() {
-      if(game.player.grounded) {
-        game.player.dy = -13; // Jump force
-        game.player.grounded = false;
-      }
-    }
-    function gameLoop() {
-      if(!game.active) return;
-      
-      const ctx = gameCanvas.getContext('2d');
-      const w = gameCanvas.width;
-      const h = gameCanvas.height;
-      const groundY = h - GRID_SIZE * 2;
-      
-      // Logic
-      game.player.dy += 0.8; // Gravity
-      game.player.y += game.player.dy;
-      
-      // Rotation
-      if(!game.player.grounded) game.player.rotation += 0.1;
-      else game.player.rotation = Math.round(game.player.rotation / (Math.PI/2)) * (Math.PI/2);
-      
-      // Ground collision
-      if(game.player.y > groundY - GRID_SIZE) {
-        game.player.y = groundY - GRID_SIZE;
-        game.player.dy = 0;
-        game.player.grounded = true;
-      }
-      
-      // Move objects
-      game.speed += 0.001; // Acceleration
-      let activeObstacles = [];
-      let passed = true;
-      
-      game.obstacles.forEach(obj => {
-        obj.x -= game.speed;
-        
-        // Collision check
-        // Simple AABB
-        const px = game.player.x + 10; // hitbox padding
-        const py = game.player.y + 10;
-        const pw = GRID_SIZE - 20;
-        const ph = GRID_SIZE - 20;
-        
-        const ox = obj.x + 5;
-        const oy = obj.y + 5;
-        const ow = GRID_SIZE - 10;
-        const oh = GRID_SIZE - 10;
-        
-        if(px < ox + ow && px + pw > ox && py < oy + oh && py + ph > oy) {
-           if(obj.type === 'spike' || obj.type === 'block') {
-             // Crash
-             drawDeath(ctx);
-             return;
-           }
-        }        
-        if(obj.x > -50) activeObstacles.push(obj);
-        else passed = false; // Just tracking
-      });
-      
-      game.obstacles = activeObstacles;
-      
-      // Score calculation based on objects passed
-      // (Simplified logic)
-      
-      // Draw
-      // Background
-      ctx.fillStyle = '#1a1a2e';
-      ctx.fillRect(0, 0, w, h);
-      
-      // Parallax BG lines
-      ctx.strokeStyle = 'rgba(255,255,255,0.1)';
-      ctx.lineWidth = 2;
-      for(let i=0; i<10; i++) {
-        let y = (i * 100 + Date.now() * 0.05 * game.speed) % h;
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
-      }
-      
-      // Ground
-      ctx.fillStyle = '#0f3460';
-      ctx.fillRect(0, groundY, w, h - groundY);
-      ctx.fillStyle = '#16213e';
-      for(let x=0; x<w; x+=GRID_SIZE) {
-        let drawX = x - (Date.now() * 0.2 * game.speed) % GRID_SIZE;
-        ctx.fillRect(drawX + 5, groundY + 5, GRID_SIZE - 10, GRID_SIZE - 10);
-      }
-      
-      // Obstacles
-      game.obstacles.forEach(obj => {
-        drawShape(ctx, obj.type, obj.x, obj.y, GRID_SIZE, getObjColor(obj.type));
-      });
-      
-      // Player
-      const skin = SKINS.find(s => s.id === state.skin) || SKINS[0];
-      ctx.save();
-      ctx.translate(game.player.x + GRID_SIZE/2, game.player.y + GRID_SIZE/2);
-      ctx.rotate(game.player.rotation);
-      // Temporary override center for drawShape
-      drawShape(ctx, skin.type, -GRID_SIZE/2, -GRID_SIZE/2, GRID_SIZE, skin.color);
-      ctx.restore();
-      
-      // UI Update
-      // Calculate progress roughly
-      let progress = Math.min(100, Math.floor(game.levelData.objects.length > 0 ? (game.levelData.objects[0].x < 0 ? 100 : 50) : 0));
-      // Better progress: based on time or total objects      // For this simple version:
-      let totalDist = game.levelData.objects.reduce((min, o) => Math.min(min, o.x), 99999);
-      // This is hacky. Let's just do score based on survival.
-      // Actually let's just show "Attempt X" style
-      document.getElementById('scoreDisplay').innerText = Math.floor(Date.now() / 100) + "%"; 
-      
-      game.animationId = requestAnimationFrame(gameLoop);
-    }
-    
-    function drawDeath(ctx) {
-      game.active = false;
-      ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
-      ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height);
-      ctx.fillStyle = 'white';
-      ctx.font = '50px Rubik';
-      ctx.textAlign = 'center';
-      ctx.fillText("CRASH", ctx.canvas.width/2, ctx.canvas.height/2);
-      
-      setTimeout(() => {
-        if(confirm("Попытка провалена! Заново?")) restartGame();
-        else exitGame();
-      }, 100);
-    }
-
-  </script>
-</body>
-</html>
+  }
+  
+  // Монеты (анимация)
+  for (let i = coins.length - 1; i >= 0; i--) {
+    const c = coins[i];
+    c.x += c.vx * dt;
+    c.y += c.vy * dt;
+    c.vx *= 0.95;
+    c.vy *= 0.95;
+    c.life -= dt * 0.8;
+    if (c.life <= 0) coins.splice(i, 1);
+  }
+  
+  // Частицы
+  for (let i = particles.length - 1; i >= 0; i--) {
+    const p = particles[i];
+    p.x += p.vx * dt;
+    p.y += p.vy * dt;
+    p.vx *= 0.95;
+    p.vy *= 0.95;
+    p.life -= dt * 1.5;
+    if (p.life <= 0) particles.splice(i, 1);
+  }
+  
+  // UI
+  document.getElementById('score').textContent = score;
+  document.getElementById('coins').textContent = save.coins;
+  document.getElementById('level').textContent = level;
+  document.getElementById('lives').textContent = lives;
+  
+  const xpNeeded = xpForLevel(save.playerLevel);
+  const pct = Math.min(100, (save.xp / xpNeeded) * 100);
+  document.getElementById('xpFill').style.width = pct + '%';
+  document.getElementById('xpText').textCont
